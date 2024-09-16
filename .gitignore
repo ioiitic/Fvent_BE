@@ -1,0 +1,119 @@
+# Visual Studio Code #
+.vscode/
+
+# Visual Studio 2019 #
+.vs/
+
+# Rider #
+.idea/
+
+# User-specific files #
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results #
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio IntelliSense #
+.vscode/
+.vs/
+
+# Rider #
+.idea/
+*.sln.iml
+
+# NuGet Packages #
+*.nuget.props
+*.paket.restore
+packages/
+# Including commit/push of package files
+*.nupkg
+*.dll
+*.exe
+*.pdb
+
+# MSTest test Results #
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUNIT #
+*.VisualState.xml
+TestResult.xml
+
+# Build Results of an ATL Project #
+[Dd]ebugPS/
+[Rr]eleasePS/
+dlldata.c
+
+# Xamarin-specific #
+bin/
+obj/
+*.apk
+*.ap_
+
+# Gradle #
+.gradle/
+build/
+
+# Java #
+*.class
+
+# C# Windows #
+*.csproj.user
+*.obj
+*.dll
+*.exe
+*.pdb
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+*.lib
+*.sbr
+*.sdf
+ipch/
+obj/
+[Bb]in
+[Dd]ebug/
+[Rr]elease/
+Ankh.NoLoad
+
+# Visual C++ cache files #
+*.VC.db
+
+# Unity generated files #
+Temp/
+Library/
+Logs/
+*.pidb.meta
+*.pidb
+*.booproj
+*.svd
+
+# JSON files #
+*.json
