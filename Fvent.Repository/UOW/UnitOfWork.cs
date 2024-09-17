@@ -9,10 +9,12 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
 {
     private readonly MyDbContext _context = context;
     private readonly IEventRepo _eventRepo = new EventRepo(context);
+    private readonly IEventFollowerRepo _eventFollowerRepo = new EventFollowerRepo(context);
     private readonly IReviewRepo _reviewRepo = new ReviewRepo(context);
     private readonly IUserRepo _userRepo = new UserRepo(context);
 
     public IEventRepo Events => _eventRepo;
+    public IEventFollowerRepo EventFollower => _eventFollowerRepo;
 
     public IReviewRepo Reviews => _reviewRepo;
 

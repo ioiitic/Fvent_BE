@@ -74,4 +74,19 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         return _event.EventId.ToResponse();
     }
+    /// <summary>
+    /// Add event to user Eventfollow
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    public async Task<IdRes> FollowEvent(Guid eventId, FollowEventReq req)
+    {
+        var _eventFollower = req.ToEventFollower(eventId);
+
+        await uOW.EventFollower.AddAsync(_eventFollower);
+        await uOW.SaveChangesAsync();
+
+        return _eventFollower.EventId.ToResponse();
+    }
 }

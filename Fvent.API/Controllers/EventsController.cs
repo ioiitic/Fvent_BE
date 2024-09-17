@@ -17,7 +17,7 @@ public class EventsController(IEventService _eventService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetEvent([FromQuery] Guid id)
+    public async Task<IActionResult> GetEvent(Guid id)
     {
         var res = await _eventService.GetListEvents();
 
@@ -31,6 +31,15 @@ public class EventsController(IEventService _eventService) : ControllerBase
 
         return Ok(res);
     }
+
+    [HttpPost("{id}/follow")]
+    public async Task<IActionResult> FollowEvent(Guid id, [FromBody] FollowEventReq req)
+    {
+        var res = await _eventService.FollowEvent(id, req);
+
+        return Ok(res);
+    }
+
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateEvent([FromRoute] Guid id, [FromBody] UpdateEventReq req)

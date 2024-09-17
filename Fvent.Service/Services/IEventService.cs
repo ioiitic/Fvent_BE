@@ -9,5 +9,6 @@ public interface IEventService
     Task<EventRes> GetEvent(Guid id);
     Task<IdRes> CreateEvent(CreateEventReq req);
     Task<IdRes> UpdateEvent(Guid id, UpdateEventReq req);
+    Task<IdRes> FollowEvent(Guid id, FollowEventReq req);
     Task DeleteEvent(Guid id);
 }
