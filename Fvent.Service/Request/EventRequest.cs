@@ -11,9 +11,8 @@ public record CreateEventReq(string EventName,
                              string ProcessNote,
                              Guid OrganizerId,
                              Guid EventTypeId,
-                             int StatusId);
-
-public record FollowEventReq(Guid userId);
+                             int StatusId,
+                             List<string> eventTags);
 
 public record UpdateEventReq(string EventName,
                              string Description,

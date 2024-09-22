@@ -19,7 +19,7 @@ public class EventsController(IEventService _eventService) : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetEvent(Guid id)
     {
-        var res = await _eventService.GetListEvents();
+        var res = await _eventService.GetEvent(id);
 
         return Ok(res);
     }
@@ -28,14 +28,6 @@ public class EventsController(IEventService _eventService) : ControllerBase
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventReq req)
     {
         var res = await _eventService.CreateEvent(req);
-
-        return Ok(res);
-    }
-
-    [HttpPost("{id}/follow")]
-    public async Task<IActionResult> FollowEvent(Guid id, [FromBody] FollowEventReq req)
-    {
-        var res = await _eventService.FollowEvent(id, req);
 
         return Ok(res);
     }
@@ -55,5 +47,30 @@ public class EventsController(IEventService _eventService) : ControllerBase
         await _eventService.DeleteEvent(id);
 
         return Ok();
+    }
+
+
+    [HttpPost("{id}/follow")]
+    public async Task<IActionResult> FollowEvent(Guid id, [FromBody] Guid userId)
+    {
+        var res = await _eventService.FollowEvent(id, userId);
+
+        return Ok(res);
+    }
+
+    [HttpDelete("{id}/unfollow")]
+    public async Task<IActionResult> UnfollowEvent(Guid id, [FromBody] Guid userId)
+    {
+        await _eventService.UnfollowEvent(id, userId);
+
+        return Ok();
+    }
+
+    [HttpPost("{id}/register")]
+    public async Task<IActionResult> RegisterEvent(Guid id, [FromBody] Guid userId)
+    {
+        var res = await _eventService.RegisterFreeEvent(id, userId);
+
+        return Ok(res);
     }
 }

@@ -8,6 +8,8 @@ public interface IUnitOfWork
     IEventFollowerRepo EventFollower { get; }
     IReviewRepo Reviews { get; }
     IUserRepo Users { get; }
+    IEventRegistrationRepo EventRegistration { get; }
+    IEventTagRepo EventTag { get; }
 
     bool IsUpdate<TEntity>(TEntity entity) where TEntity : class;
     Task SaveChangesAsync();

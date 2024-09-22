@@ -7,9 +7,4 @@ namespace Fvent.Service.Mapper;
 
 public static class EventFollowerMapper
 {
-    public static EventFollower ToEventFollower(this FollowEventReq src, Guid eventId)
-        => new(
-            eventId,
-            src.userId
-            );
 }
