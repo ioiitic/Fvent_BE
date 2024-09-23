@@ -26,3 +26,12 @@ public record UpdateEventReq(string EventName,
                              Guid OrganizerId,
                              Guid EventTypeId,
                              int StatusId);
+public record GetEventsRequest(string? SearchKeyword,
+                                 string Campus,
+                                 DateTime? FromDate,
+                                 DateTime? ToDate,
+                                 string? EventType,
+                                 string OrderBy = "Name",
+                                 bool IsDescending = false,
+                                 int PageNumber = 1,
+                                 int PageSize = 9);

@@ -9,12 +9,13 @@ namespace Fvent.API.Controllers;
 public class EventsController(IEventService _eventService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetList()
+    public async Task<IActionResult> GetList([FromQuery] GetEventsRequest request)
     {
-        var res = await _eventService.GetListEvents();
+        var res = await _eventService.GetListEvents(request);
 
         return Ok(res);
     }
+
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetEvent(Guid id)

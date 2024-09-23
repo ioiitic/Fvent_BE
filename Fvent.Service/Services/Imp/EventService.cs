@@ -1,4 +1,5 @@
-﻿using Fvent.BO.Entities;
+﻿using Fvent.BO.Common;
+using Fvent.BO.Entities;
 using Fvent.BO.Exceptions;
 using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
@@ -41,13 +42,52 @@ public class EventService(IUnitOfWork uOW) : IEventService
         await uOW.SaveChangesAsync();
     }
 
-    public async Task<IList<EventRes>> GetListEvents()
+    public async Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req)
     {
-        var spec = new GetEventSpec();
+        var spec = new GetEventSpec(req.SearchKeyword, req.Campus, req.FromDate, req.ToDate, req.EventType);
+
+        // Apply sorting
+        if (req.OrderBy == "Name")
+        {
+            spec.OrderBy(e => e.EventName, req.IsDescending);
+        }
+        else if (req.OrderBy == "StartTime")
+        {
+            spec.OrderBy(e => e.StartTime, req.IsDescending);
+        }
+        // Add additional sorting options here as needed
+
+        
+        // Apply pagination
+        spec.AddPagination(req.PageNumber, req.PageSize);
+
+        // Get paginated list of events
         var _events = await uOW.Events.GetListAsync(spec);
 
-        return _events.Select(e => e.ToReponse(e.Organizer!.FirstName + " " + e.Organizer!.LastName, e.EventType!.EventTypeName, null)).ToList();
+        // Calculate the total number of items (without paging)
+        var totalItems = _events.Count();
+
+        // Map events to EventRes
+        var eventResponses = _events.Select(e => e.ToReponse(
+            e.Organizer!.FirstName + " " + e.Organizer!.LastName,
+            e.EventType!.EventTypeName,
+            null)).ToList();
+
+        // Calculate total pages
+        var totalPages = (int)Math.Ceiling(totalItems / (double)req.PageSize);
+
+        // Create and return PageResult
+        return new PageResult<EventRes>(
+            eventResponses,
+            req.PageNumber,
+            req.PageSize,
+            eventResponses.Count,
+            totalItems,
+            totalPages
+        );
     }
+
+
 
     public async Task<EventRes> GetEvent(Guid id)
     {
