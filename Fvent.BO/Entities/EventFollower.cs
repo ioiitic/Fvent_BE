@@ -2,6 +2,15 @@
 
 public class EventFollower
 {
+    private DateTime utcNow;
+
+    public EventFollower(Guid eventId, Guid userId)
+    {
+        EventId = eventId;
+        UserId = userId;
+        FollowTime = DateTime.UtcNow;
+    }
+
     public Guid EventFollowerId { get; set; }
     public DateTime FollowTime { get; set; }
 
