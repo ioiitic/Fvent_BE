@@ -5,15 +5,22 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
+using Fvent.Service.Specifications;
 using System.Diagnostics.Tracing;
 using static Fvent.Service.Specifications.EventFollowerSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
+using static Fvent.Service.Specifications.ReviewSpec;
 
 namespace Fvent.Service.Services.Imp;
 
 public class EventService(IUnitOfWork uOW) : IEventService
 {
+    /// <summary>
+    /// Create new Event
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     public async Task<IdRes> CreateEvent(CreateEventReq req)
     {
         var _event = req.ToEvent();
@@ -31,6 +38,12 @@ public class EventService(IUnitOfWork uOW) : IEventService
         return _event.EventId.ToResponse();
     }
 
+    /// <summary>
+    /// Delete An Event
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    /// <exception cref="NotFoundException"></exception>
     public async Task DeleteEvent(Guid id)
     {
         var spec = new GetEventSpec(id);
@@ -42,6 +55,11 @@ public class EventService(IUnitOfWork uOW) : IEventService
         await uOW.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Get List Event with search, sort, filter, paging
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     public async Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req)
     {
         var spec = new GetEventSpec(req.SearchKeyword, req.Campus, req.FromDate, req.ToDate, req.EventType);
@@ -87,7 +105,12 @@ public class EventService(IUnitOfWork uOW) : IEventService
         );
     }
 
-
+    /// <summary>
+    /// Get Event Detail
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    /// <exception cref="NotFoundException"></exception>
 
     public async Task<EventRes> GetEvent(Guid id)
     {
@@ -104,6 +127,14 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         return _event.ToReponse(_event.Organizer!.FirstName + " " + _event.Organizer!.LastName, _event.EventType!.EventTypeName, eventTags);
     }
+
+    /// <summary>
+    /// Update an Available Event
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    /// <exception cref="NotFoundException"></exception>
 
     public async Task<IdRes> UpdateEvent(Guid id, UpdateEventReq req)
     {
@@ -130,56 +161,5 @@ public class EventService(IUnitOfWork uOW) : IEventService
         await uOW.SaveChangesAsync();
 
         return _event.EventId.ToResponse();
-    }
-
-    /// <summary>
-    /// Add event to user Eventfollow
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    public async Task<IdRes> FollowEvent(Guid eventId, Guid userId)
-    {
-        EventFollower _eventFollower = new EventFollower(eventId, userId);
-
-        await uOW.EventFollower.AddAsync(_eventFollower);
-        await uOW.SaveChangesAsync();
-
-        return _eventFollower.EventId.ToResponse();
-    }
-
-    /// <summary>
-    /// Unfollow an event by using eventId and userId
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <param name="userId"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
-
-    public async Task UnfollowEvent(Guid eventId, Guid userId)
-    {
-        var spec = new GetEventFollowerSpec(eventId, userId);
-        var _event = await uOW.EventFollower.FindFirstOrDefaultAsync(spec)
-            ?? throw new NotFoundException(typeof(Event));
-
-        uOW.EventFollower.Delete(_event);
-
-        await uOW.SaveChangesAsync();
-    }
-
-    /// <summary>
-    /// Register Free Event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <param name="userId"></param>
-    /// <returns></returns>
-    public async Task<IdRes> RegisterFreeEvent(Guid eventId, Guid userId)
-    {
-        EventRegistration _eventFollower = new EventRegistration(eventId, userId);
-
-        await uOW.EventRegistration.AddAsync(_eventFollower);
-        await uOW.SaveChangesAsync();
-
-        return _eventFollower.EventId.ToResponse();
     }
 }

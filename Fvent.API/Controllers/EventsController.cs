@@ -1,12 +1,16 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers;
 
-[Route("api/_events")]
+[Route("api/events")]
 [ApiController]
-public class EventsController(IEventService _eventService) : ControllerBase
+public class EventsController(IEventService _eventService,
+                              ICommentService commentService,
+                              IEventFollowerService eventFollowerService,
+                              IEventResgistationService eventResgistationService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetList([FromQuery] GetEventsRequest request)
@@ -54,7 +58,7 @@ public class EventsController(IEventService _eventService) : ControllerBase
     [HttpPost("{id}/follow")]
     public async Task<IActionResult> FollowEvent(Guid id, [FromBody] Guid userId)
     {
-        var res = await _eventService.FollowEvent(id, userId);
+        var res = await eventFollowerService.FollowEvent(id, userId);
 
         return Ok(res);
     }
@@ -62,7 +66,7 @@ public class EventsController(IEventService _eventService) : ControllerBase
     [HttpDelete("{id}/unfollow")]
     public async Task<IActionResult> UnfollowEvent(Guid id, [FromBody] Guid userId)
     {
-        await _eventService.UnfollowEvent(id, userId);
+        await eventFollowerService.UnfollowEvent(id, userId);
 
         return Ok();
     }
@@ -70,7 +74,23 @@ public class EventsController(IEventService _eventService) : ControllerBase
     [HttpPost("{id}/register")]
     public async Task<IActionResult> RegisterEvent(Guid id, [FromBody] Guid userId)
     {
-        var res = await _eventService.RegisterFreeEvent(id, userId);
+        var res = await eventResgistationService.RegisterFreeEvent(id, userId);
+
+        return Ok(res);
+    }
+
+    [HttpGet("{id}/comments")]
+    public async Task<IActionResult> GetComments(Guid id)
+    {
+        var res = await commentService.GetListComments(id);
+
+        return Ok(res);
+    }
+
+    [HttpPost("{id}/comments")]
+    public async Task<IActionResult> CreateComment(Guid id, [FromBody] CreateCommentReq req)
+    {
+        var res = await commentService.CreateComment(id, req);
 
         return Ok(res);
     }
