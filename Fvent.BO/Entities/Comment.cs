@@ -3,7 +3,7 @@
 namespace Fvent.BO.Entities;
 
 public class Comment : ISoftDelete
-{
+{   
     public Guid CommentId { get; set; }
     public Guid EventId { get; set; }
     public Guid UserId { get; set; }
