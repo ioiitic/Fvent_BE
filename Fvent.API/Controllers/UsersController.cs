@@ -1,12 +1,14 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers;
 
 [Route("api/users")]
 [ApiController]
-public class UsersController(IUserService userService) : ControllerBase
+public class UsersController(IUserService userService,
+                             INotificationService notificationService) : ControllerBase
 {
 
     [HttpGet]
@@ -25,10 +27,10 @@ public class UsersController(IUserService userService) : ControllerBase
         return Ok(res);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserReq req)
+    [HttpPost("register")]
+    public async Task<IActionResult> RegisterUser([FromBody] CreateUserReq req)
     {
-        var res = await userService.CreateUser(req);
+        var res = await userService.RegisterUser(req);
 
         return Ok(res);
     }
@@ -47,5 +49,13 @@ public class UsersController(IUserService userService) : ControllerBase
         await userService.DeleteUser(id);
 
         return Ok();
+    }
+
+    [HttpGet("{id}/notifications")]
+    public async Task<IActionResult> GetList(Guid id)
+    {
+        var res = await notificationService.GetListNotifications(id);
+
+        return Ok(res);
     }
 }

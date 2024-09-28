@@ -23,11 +23,9 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
         return new AuthResponse(token);
     }
 
-    public async Task<IdRes> CreateUser(CreateUserReq req)
+    public async Task<IdRes> RegisterUser(CreateUserReq req)
     {
         var user = req.ToUser();
-
-        //user.UserId = Guid.NewGuid();
 
         await uOW.Users.AddAsync(user);
         await uOW.SaveChangesAsync();

@@ -26,8 +26,10 @@ public static class EventMapper
     public static EventRes ToResponse(
         this Event src,
         string organizerName,
-        string eventTypeName)
+        string eventTypeName,
+        List<string> eventTags)
         => new(
+            src.EventId,
             src.EventName,
             src.Description,
             src.StartTime,
@@ -39,7 +41,7 @@ public static class EventMapper
             src.ProcessNote,
             organizerName,
             eventTypeName,
-            src.StatusId);
+            eventTags ?? new List<string>());
 
     public static EventRateRes ToResponse(this double src)
         => new(src);

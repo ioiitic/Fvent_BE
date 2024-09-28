@@ -50,6 +50,10 @@ public static class ServiceConfigs
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IEventResgistationService, EventResgistationService>();
+        services.AddScoped<IEventFollowerService, EventFollowerService>();
+        services.AddScoped<ICommentService, CommentService>();
 
         return services;
     }

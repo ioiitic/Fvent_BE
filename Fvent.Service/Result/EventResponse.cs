@@ -1,6 +1,7 @@
 ﻿namespace Fvent.Service.Result;
 
-public record EventRes(string EventName,
+public record EventRes(Guid eventId,
+                       string EventName,
                        string Description,
                        DateTime StartTime,
                        DateTime EndTime,
