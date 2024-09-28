@@ -10,7 +10,7 @@ namespace Fvent.Service.Services.Imp;
 
 public class UserService(IUnitOfWork uOW) : IUserService
 {
-    public async Task<IdRes> CreateUser(CreateUserReq req)
+    public async Task<IdRes> RegisterUser(CreateUserReq req)
     {
         var user = req.ToUser();
 
