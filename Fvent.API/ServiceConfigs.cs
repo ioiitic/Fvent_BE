@@ -19,9 +19,6 @@ public static class ServiceConfigs
         services.AddControllers(options =>
         {
             options.Filters.Add<GlobalExceptionFilter>();
-        }).AddJsonOptions(options =>
-        {
-            options.JsonSerializerOptions.PropertyNamingPolicy = new KebabCaseNamingPolicy();
         });
 
         services.AddEndpointsApiExplorer(); services.AddSwaggerGen(c =>

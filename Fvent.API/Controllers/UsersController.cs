@@ -8,6 +8,7 @@ namespace Fvent.API.Controllers;
 [ApiController]
 public class UsersController(IUserService userService) : ControllerBase
 {
+
     [HttpGet]
     public async Task<IActionResult> GetList()
     {

@@ -12,3 +12,4 @@ public record EventRes(string EventName,
                        string OrganizerName,
                        string EventTypeName,
                        int StatusId);
+public record EventRateRes(double AvgRate);

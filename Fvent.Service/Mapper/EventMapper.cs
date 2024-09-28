@@ -23,7 +23,7 @@ public static class EventMapper
             src.StatusId,
             DateTime.UtcNow);
 
-    public static EventRes ToReponse(
+    public static EventRes ToResponse(
         this Event src,
         string organizerName,
         string eventTypeName)
@@ -40,4 +40,7 @@ public static class EventMapper
             organizerName,
             eventTypeName,
             src.StatusId);
+
+    public static EventRateRes ToResponse(this double src)
+        => new(src);
 }

@@ -5,6 +5,7 @@ namespace Fvent.Service.Services;
 
 public interface IUserService
 {
+    Task<AuthResponse> Authen(AuthReq req);
     Task<IList<UserRes>> GetListUsers();
     Task<UserRes> GetUser(Guid id);
     Task<IdRes> CreateUser(CreateUserReq req);

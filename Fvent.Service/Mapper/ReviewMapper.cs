@@ -18,11 +18,9 @@ public static class ReviewMapper
 
     public static ReviewRes ToReponse(
         this EventReview src,
-        string eventName,
         string fullname)
         => new(
             src.Rating,
             src.Comment,
-            eventName,
             fullname);
 }

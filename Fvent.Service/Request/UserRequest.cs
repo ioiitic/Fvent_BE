@@ -21,3 +21,5 @@ public record UpdateUserReq(string Username,
                             string CardUrl,
                             string Campus,
                             int RoleId);
+
+public record AuthReq(string Email, string Password);

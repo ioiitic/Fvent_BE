@@ -10,3 +10,5 @@ public record UserRes(string Username,
                       string CardUrl,
                       string Campus,
                       string RoleName);
+
+public record AuthResponse(string Token);
