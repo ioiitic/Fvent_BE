@@ -12,5 +12,6 @@ public record EventRes(Guid eventId,
                        string ProcessNote,
                        string OrganizerName,
                        string EventTypeName,
-                       int StatusId);
+                       int StatusId,
+                       List<string> eventTags); 
 public record EventRateRes(double AvgRate);

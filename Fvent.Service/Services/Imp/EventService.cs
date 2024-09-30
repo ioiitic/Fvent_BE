@@ -7,12 +7,8 @@ using Fvent.Service.Request;
 using Fvent.Service.Result;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
-using Fvent.Service.Specifications;
-using System.Diagnostics.Tracing;
-using static Fvent.Service.Specifications.EventFollowerSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
-using static Fvent.Service.Specifications.ReviewSpec;
 
 namespace Fvent.Service.Services.Imp;
 
@@ -60,8 +56,6 @@ public class EventService(IUnitOfWork uOW) : IEventService
         {
             spec.OrderBy(e => e.StartTime, req.IsDescending);
         }
-        // Add additional sorting options here as needed
-
         
         // Apply pagination
         spec.AddPagination(req.PageNumber, req.PageSize);
@@ -73,7 +67,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var totalItems = _events.Count();
 
         // Map events to EventRes
-        var eventResponses = _events.Select(e => e.ToReponse(
+        var eventResponses = _events.Select(e => e.ToResponse(
             e.Organizer!.FirstName + " " + e.Organizer!.LastName,
             e.EventType!.EventTypeName,
             null)).ToList();
@@ -112,7 +106,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         var eventTags = _eventTag.Select(e => e.Tag).ToList();
 
-        return _event.ToReponse(_event.Organizer!.FirstName + " " + _event.Organizer!.LastName, _event.EventType!.EventTypeName, eventTags);
+        return _event.ToResponse(_event.Organizer!.FirstName + " " + _event.Organizer!.LastName, _event.EventType!.EventTypeName, eventTags);
     }
 
     /// <summary>
