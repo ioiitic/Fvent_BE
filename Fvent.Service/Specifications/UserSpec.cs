@@ -11,9 +11,20 @@ public static class UserSpec
         {
             Include(u => u.Role!);
         }
+
         public GetUserSpec(Guid id)
         {
             Filter(u => u.UserId == id);   
+
+            Include(u => u.Role!);
+        }
+    }
+
+    public class AuthenUserSpec : Specification<User>
+    {
+        public AuthenUserSpec(string Email, string Password)
+        {
+            Filter(u => u.Email.Equals(Email) && u.Password.Equals(Password));
 
             Include(u => u.Role!);
         }

@@ -1,6 +1,6 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
-using Fvent.Service.Services.Imp;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers;
@@ -10,26 +10,38 @@ namespace Fvent.API.Controllers;
 public class UsersController(IUserService userService,
                              INotificationService notificationService) : ControllerBase
 {
+    #region User
+    /// <summary>
+    /// Register user controller
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("register")]
+    public async Task<IActionResult> RegisterUser([FromBody] CreateUserReq req)
+    {
+        var res = await userService.RegisterUser(req);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Get list Users by Admin
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetList()
     {
         var res = await userService.GetListUsers();
 
         return Ok(res);
     }
+    #endregion
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUser([FromQuery] Guid id)
     {
         var res = await userService.GetListUsers();
-
-        return Ok(res);
-    }
-
-    [HttpPost("register")]
-    public async Task<IActionResult> RegisterUser([FromBody] CreateUserReq req)
-    {
-        var res = await userService.RegisterUser(req);
 
         return Ok(res);
     }

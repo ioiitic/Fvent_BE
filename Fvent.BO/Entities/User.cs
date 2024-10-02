@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Common;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Fvent.BO.Entities;
 

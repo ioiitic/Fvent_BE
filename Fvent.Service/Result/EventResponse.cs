@@ -13,4 +13,5 @@ public record EventRes(Guid eventId,
                        string OrganizerName,
                        string EventTypeName,
                        int StatusId,
-                       List<string> eventTags);
+                       List<string> eventTags); 
+public record EventRateRes(double AvgRate);

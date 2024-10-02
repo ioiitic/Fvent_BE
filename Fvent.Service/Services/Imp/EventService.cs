@@ -5,22 +5,16 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
-using Fvent.Service.Specifications;
-using System.Diagnostics.Tracing;
-using static Fvent.Service.Specifications.EventFollowerSpec;
+using Microsoft.IdentityModel.Tokens;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
-using static Fvent.Service.Specifications.ReviewSpec;
 
 namespace Fvent.Service.Services.Imp;
 
 public class EventService(IUnitOfWork uOW) : IEventService
 {
-    /// <summary>
-    /// Create new Event
-    /// </summary>
-    /// <param name="req"></param>
-    /// <returns></returns>
+    #region CRUD Event
     public async Task<IdRes> CreateEvent(CreateEventReq req)
     {
         var _event = req.ToEvent();
@@ -38,12 +32,6 @@ public class EventService(IUnitOfWork uOW) : IEventService
         return _event.EventId.ToResponse();
     }
 
-    /// <summary>
-    /// Delete An Event
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
     public async Task DeleteEvent(Guid id)
     {
         var spec = new GetEventSpec(id);
@@ -55,11 +43,6 @@ public class EventService(IUnitOfWork uOW) : IEventService
         await uOW.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Get List Event with search, sort, filter, paging
-    /// </summary>
-    /// <param name="req"></param>
-    /// <returns></returns>
     public async Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req)
     {
         var spec = new GetEventSpec(req.SearchKeyword, req.Campus, req.FromDate, req.ToDate, req.EventType);
@@ -73,8 +56,6 @@ public class EventService(IUnitOfWork uOW) : IEventService
         {
             spec.OrderBy(e => e.StartTime, req.IsDescending);
         }
-        // Add additional sorting options here as needed
-
         
         // Apply pagination
         spec.AddPagination(req.PageNumber, req.PageSize);
@@ -86,7 +67,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var totalItems = _events.Count();
 
         // Map events to EventRes
-        var eventResponses = _events.Select(e => e.ToReponse(
+        var eventResponses = _events.Select(e => e.ToResponse(
             e.Organizer!.FirstName + " " + e.Organizer!.LastName,
             e.EventType!.EventTypeName,
             null)).ToList();
@@ -125,7 +106,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         var eventTags = _eventTag.Select(e => e.Tag).ToList();
 
-        return _event.ToReponse(_event.Organizer!.FirstName + " " + _event.Organizer!.LastName, _event.EventType!.EventTypeName, eventTags);
+        return _event.ToResponse(_event.Organizer!.FirstName + " " + _event.Organizer!.LastName, _event.EventType!.EventTypeName, eventTags);
     }
 
     /// <summary>
@@ -162,4 +143,56 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         return _event.EventId.ToResponse();
     }
+    #endregion
+
+    #region Event
+    public async Task<EventRateRes> GetEventRate(IdReq req)
+    {
+        var spec = new GetEventRateSpec(req.Id);
+        var reviews = await uOW.Reviews.GetListAsync(spec);
+
+        double res = 0;
+        
+        if (!reviews.IsNullOrEmpty())
+        {
+            res = reviews.Sum(r => r.Rating)*1.0/reviews.Count();
+        }
+
+        return res.ToResponse();
+    }
+    #endregion
+
+    #region Event-User
+    public async Task<IList<UserRes>> GetEventRegisters(IdReq req)
+    {
+        var spec = new GetEventRegistersSpec(req.Id);
+        var events = await uOW.Events.GetListAsync(spec);
+
+        var users = events.SelectMany(e => e.Registrations)
+            .Select(r => r.User);
+
+        return users.Select(u => u.ToReponse(u.Role!.RoleName)).ToList();
+    }
+    #endregion
+
+    #region Event-Review
+    public async Task<IdRes> CreateReview(CreateReviewReq req)
+    {
+        var review = req.ToReview();
+
+        await uOW.Reviews.AddAsync(review);
+        await uOW.SaveChangesAsync();
+
+        return review.EventId.ToResponse();
+    }
+
+    public async Task<IList<ReviewRes>> GetEventReviews(IdReq req)
+    {
+        var spec = new GetEventReviewsSpec(req.Id);
+        var reviews = await uOW.Reviews.GetListAsync(spec);
+
+        return reviews.Select(r => r.ToReponse(r.User!.FirstName + " " + r.User.LastName)).ToList();
+    }
+
+    #endregion
 }

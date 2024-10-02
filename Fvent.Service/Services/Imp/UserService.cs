@@ -4,12 +4,25 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
+using Microsoft.Extensions.Configuration;
 using static Fvent.Service.Specifications.UserSpec;
+using JS = Fvent.Service.Utils.JwtService;
 
 namespace Fvent.Service.Services.Imp;
 
-public class UserService(IUnitOfWork uOW) : IUserService
+public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserService
 {
+    public async Task<AuthResponse> Authen(AuthReq req)
+    {
+        var spec = new AuthenUserSpec(req.Email, req.Password);
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+
+        var token = JS.GenerateToken(user.Username, user.Role!, configuration);
+
+        return new AuthResponse(token);
+    }
+
     public async Task<IdRes> RegisterUser(CreateUserReq req)
     {
         var user = req.ToUser();

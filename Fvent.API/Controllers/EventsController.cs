@@ -1,21 +1,21 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
-using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers;
 
 [Route("api/events")]
 [ApiController]
-public class EventsController(IEventService _eventService,
+public class EventsController(IEventService eventService,
                               ICommentService commentService,
                               IEventFollowerService eventFollowerService,
                               IEventResgistationService eventResgistationService) : ControllerBase
 {
+    #region CRUD Event
     [HttpGet]
     public async Task<IActionResult> GetList([FromQuery] GetEventsRequest request)
     {
-        var res = await _eventService.GetListEvents(request);
+        var res = await eventService.GetListEvents(request);
 
         return Ok(res);
     }
@@ -24,7 +24,7 @@ public class EventsController(IEventService _eventService,
     [HttpGet("{id}")]
     public async Task<IActionResult> GetEvent(Guid id)
     {
-        var res = await _eventService.GetEvent(id);
+        var res = await eventService.GetEvent(id);
 
         return Ok(res);
     }
@@ -32,16 +32,15 @@ public class EventsController(IEventService _eventService,
     [HttpPost]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventReq req)
     {
-        var res = await _eventService.CreateEvent(req);
+        var res = await eventService.CreateEvent(req);
 
         return Ok(res);
     }
 
-
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateEvent([FromRoute] Guid id, [FromBody] UpdateEventReq req)
     {
-        var res = await _eventService.UpdateEvent(id, req);
+        var res = await eventService.UpdateEvent(id, req);
 
         return Ok(res);
     }
@@ -49,11 +48,21 @@ public class EventsController(IEventService _eventService,
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEvent([FromRoute] Guid id)
     {
-        await _eventService.DeleteEvent(id);
+        await eventService.DeleteEvent(id);
 
         return Ok();
     }
+    #endregion
 
+    #region Event
+    [HttpGet]
+    [Route("api/events/{id}/average-rating")]
+    public async Task<IActionResult> GetEventRate([FromRoute] Guid id)
+    {
+        var res = await eventService.GetEventRate(new IdReq(id));
+
+        return Ok(res);
+    }
 
     [HttpPost("{id}/follow")]
     public async Task<IActionResult> FollowEvent(Guid id, [FromBody] Guid userId)
@@ -78,6 +87,40 @@ public class EventsController(IEventService _eventService,
 
         return Ok(res);
     }
+    #endregion
+
+    #region Event-Review
+    [HttpPost]
+    [Route("api/events/{id}/reviews")]
+    public async Task<IActionResult> CreateReview([FromRoute] Guid id, [FromBody] CreateReviewReq req)
+    {
+        var res = await eventService.CreateReview(new CreateReviewReq(req.Rating, req.Comment, id, req.UserId));
+
+        return Ok(res);
+    }
+
+    [HttpGet]
+    [Route("api/events/{id}/reviews")]
+    public async Task<IActionResult> GetEventReviews([FromRoute] Guid id)
+    {
+        var res = await eventService.GetEventReviews(new IdReq(id));
+
+        return Ok(res);
+    }
+    #endregion
+
+    #region Event-User
+    [HttpGet]
+    [Route("api/events/{id}/paticipants")]
+    public async Task<IActionResult> GetEventRegisters([FromRoute] Guid id)
+    {
+        var res = await eventService.GetEventRegisters(new IdReq(id));
+
+        return Ok(res);
+    }
+    #endregion
+
+    #region Event-Comment
 
     [HttpGet("{id}/comments")]
     public async Task<IActionResult> GetComments(Guid id)
@@ -94,4 +137,5 @@ public class EventsController(IEventService _eventService,
 
         return Ok(res);
     }
+    #endregion
 }

@@ -50,4 +50,32 @@ public static class EventSpec
             Include(u => u.EventType!);
         }
     }
+
+    public class GetEventRateSpec : Specification<EventReview>
+    {
+        public GetEventRateSpec(Guid Id)
+        {
+            Filter(er => er.EventId == Id);
+        }
+    }
+
+    public class GetEventRegistersSpec : Specification<Event>
+    {
+        public GetEventRegistersSpec(Guid Id)
+        {
+            Filter(e => e.EventId == Id);
+
+            Include("Registration.User");
+        }
+    }
+
+    public class GetEventReviewsSpec : Specification<EventReview>
+    {
+        public GetEventReviewsSpec(Guid Id)
+        {
+            Filter(e => e.EventId == Id);
+
+            Include(e => e.User!);
+        }
+    }
 }

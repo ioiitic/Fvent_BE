@@ -18,7 +18,7 @@ public class GlobalExceptionFilter : IExceptionFilter
 
         context.Result = new ObjectResult(new
         {
-            innerException = context.Exception.InnerException,
+            innerException = context.Exception.InnerException!.Message,
             error = context.Exception.Message,
             stackTrace = context.Exception.StackTrace,
         })
