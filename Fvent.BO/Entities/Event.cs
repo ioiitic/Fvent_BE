@@ -10,9 +10,7 @@ public class Event : ISoftDelete
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public string Location { get; set; }
-    public string Campus { get; set; }
     public int? MaxAttendees { get; set; }
-    public decimal Price { get; set; } = 0.00m;
     public string ProcessNote { get; set; }
 
     public Guid OrganizerId { get; set; }
@@ -33,9 +31,7 @@ public class Event : ISoftDelete
                  DateTime startTime,
                  DateTime endTime,
                  string location,
-                 string campus,
                  int? maxAttendees,
-                 decimal price,
                  string processNote,
                  Guid organizerId,
                  Guid eventTypeId,
@@ -47,9 +43,7 @@ public class Event : ISoftDelete
         StartTime = startTime;
         EndTime = endTime;
         Location = location;
-        Campus = campus;
         MaxAttendees = maxAttendees;
-        Price = price;
         ProcessNote = processNote;
         OrganizerId = organizerId;
         EventTypeId = eventTypeId;
@@ -62,9 +56,7 @@ public class Event : ISoftDelete
                        DateTime startTime,
                        DateTime endTime,
                        string location,
-                       string campus,
                        int? maxAttendees,
-                       decimal price,
                        string processNote,
                        Guid organizerId,
                        Guid eventTypeId,
@@ -75,9 +67,7 @@ public class Event : ISoftDelete
         StartTime = startTime;
         EndTime = endTime;
         Location = location;
-        Campus = campus;
         MaxAttendees = maxAttendees;
-        Price = price;
         ProcessNote = processNote;
         OrganizerId = organizerId;
         EventTypeId = eventTypeId;

@@ -19,8 +19,6 @@ public class MyDbContext : DbContext
     public DbSet<EventRegistration> EventRegistrations { get; set; }
     public DbSet<EventReview> EventReviews { get; set; }
     public DbSet<Comment> Comments { get; set; }
-    public DbSet<Transaction> Transactions { get; set; }
-    public DbSet<PaymentMethod> PaymentMethods { get; set; }
     public DbSet<EventMedia> EventMedia { get; set; }
     public DbSet<EventFollower> EventFollowers { get; set; }
     public DbSet<Notification> Notifications { get; set; }
@@ -45,6 +43,9 @@ public class MyDbContext : DbContext
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<User>()
+            .HasQueryFilter(u => !u.IsDeleted);
+
         modelBuilder.Entity<Comment>()
             .HasOne(c => c.User)
             .WithMany(u => u.Comments)
