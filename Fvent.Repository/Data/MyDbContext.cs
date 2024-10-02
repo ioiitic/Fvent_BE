@@ -44,7 +44,7 @@ public class MyDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>()
-            .HasQueryFilter(u => !u.IsDeleted);
+            .HasQueryFilter(u => !u.IsDeleted && u.Verified);
 
         modelBuilder.Entity<Comment>()
             .HasOne(c => c.User)
