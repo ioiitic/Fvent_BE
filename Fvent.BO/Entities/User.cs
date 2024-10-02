@@ -14,8 +14,6 @@ public class User : ISoftDelete
     public string LastName { get; set; }
     public string PhoneNumber { get; set; }
     public string CardUrl { get; set; }
-    public string Campus { get; set; }
-    public decimal Balance { get; set; } = 0.00m;
     public bool Verified { get; set; } = false;
 
     public int RoleId { get; set; }
@@ -40,7 +38,6 @@ public class User : ISoftDelete
                 string lastName,
                 string phoneNumber,
                 string cardUrl,
-                string campus,
                 int roleId,
                 DateTime createdAt)
     {
@@ -52,7 +49,6 @@ public class User : ISoftDelete
         LastName = lastName;
         PhoneNumber = phoneNumber;
         CardUrl = cardUrl;
-        Campus = campus;
         RoleId = roleId;
         CreatedAt = createdAt;
     }
@@ -65,7 +61,6 @@ public class User : ISoftDelete
                        string lastName,
                        string phoneNumber,
                        string cardUrl,
-                       string campus,
                        int roleId)
     {
         Username = username;
@@ -76,7 +71,6 @@ public class User : ISoftDelete
         LastName = lastName;
         PhoneNumber = phoneNumber;
         CardUrl = cardUrl;
-        Campus = campus;
         RoleId = roleId;
     }
 }
