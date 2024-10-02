@@ -6,12 +6,10 @@ public record EventRes(Guid eventId,
                        DateTime StartTime,
                        DateTime EndTime,
                        string Location,
-                       string Campus,
                        int? MaxAttendees,
-                       decimal Price,
                        string ProcessNote,
                        string OrganizerName,
                        string EventTypeName,
                        int StatusId,
-                       List<string> eventTags); 
+                       List<string> EventTags); 
 public record EventRateRes(double AvgRate);

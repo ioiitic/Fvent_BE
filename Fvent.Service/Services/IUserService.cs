@@ -6,7 +6,7 @@ namespace Fvent.Service.Services;
 public interface IUserService
 {
     Task<AuthResponse> Authen(AuthReq req);
-    Task<IList<UserRes>> GetListUsers();
+    Task<IList<GetListUserRes>> GetListUsers(GetListUsersReq req);
     Task<UserRes> GetUser(Guid id);
     Task<IdRes> RegisterUser(CreateUserReq req);
     Task<IdRes> UpdateUser(Guid id, UpdateUserReq req);

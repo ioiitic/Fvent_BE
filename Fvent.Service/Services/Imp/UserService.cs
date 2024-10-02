@@ -12,6 +12,13 @@ namespace Fvent.Service.Services.Imp;
 
 public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserService
 {
+    #region User
+    /// <summary>
+    /// Service for User Login
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    /// <exception cref="NotFoundException"></exception>
     public async Task<AuthResponse> Authen(AuthReq req)
     {
         var spec = new AuthenUserSpec(req.Email, req.Password);
@@ -22,6 +29,21 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
 
         return new AuthResponse(token);
     }
+    #endregion
+
+    #region Admin
+    /// <summary>
+    /// Service for Admin Get list users info
+    /// </summary>
+    /// <returns></returns>
+    public async Task<IList<GetListUserRes>> GetListUsers(GetListUsersReq req)
+    {
+        var spec = new GetListUsersSpec(req.Username, req.Email, req.RoleName, req.Verified);
+        var users = await uOW.Users.GetListAsync(spec);
+
+        return users.Select(u => u.ToResponse<GetListUserRes>(u.Role!.RoleName)).ToList();
+    }
+    #endregion
 
     public async Task<IdRes> RegisterUser(CreateUserReq req)
     {
@@ -44,21 +66,13 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
         await uOW.SaveChangesAsync();
     }
 
-    public async Task<IList<UserRes>> GetListUsers()
-    {
-        var spec = new GetUserSpec();
-        var users = await uOW.Users.GetListAsync(spec);
-
-        return users.Select(u => u.ToReponse(u.Role!.RoleName)).ToList();
-    }
-
     public async Task<UserRes> GetUser(Guid id)
     {
         var spec = new GetUserSpec(id);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
-        return user.ToReponse(user.Role!.RoleName);
+        return user.ToResponse<UserRes>(user.Role!.RoleName);
     }
 
     public async Task<IdRes> UpdateUser(Guid id, UpdateUserReq req)
@@ -75,7 +89,6 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
             req.LastName,
             req.PhoneNumber,
             req.CardUrl,
-            req.Campus,
             req.RoleId);
 
         if (uOW.IsUpdate(user))

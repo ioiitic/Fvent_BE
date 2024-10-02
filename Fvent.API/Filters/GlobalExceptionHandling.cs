@@ -18,9 +18,11 @@ public class GlobalExceptionFilter : IExceptionFilter
 
         context.Result = new ObjectResult(new
         {
-            innerException = context.Exception.InnerException!.Message,
             error = context.Exception.Message,
+            innerException = context.Exception.InnerException?.Message,
+#if DEBUG
             stackTrace = context.Exception.StackTrace,
+#endif
         })
         {
             StatusCode = statusCode

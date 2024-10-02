@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers;
-
+    
 [Route("api/users")]
 [ApiController]
 public class UsersController(IUserService userService,
@@ -12,7 +12,7 @@ public class UsersController(IUserService userService,
 {
     #region User
     /// <summary>
-    /// Register user controller
+    /// Controller for User Register
     /// </summary>
     /// <param name="req"></param>
     /// <returns></returns>
@@ -23,28 +23,30 @@ public class UsersController(IUserService userService,
 
         return Ok(res);
     }
+    #endregion
 
+    #region Admin
     /// <summary>
-    /// Get list Users by Admin
+    /// Controller for Admin Get list users info
     /// </summary>
     /// <returns></returns>
     [HttpGet]
     [Authorize(Roles = "admin")]
-    public async Task<IActionResult> GetList()
+    public async Task<IActionResult> GetList([FromQuery] GetListUsersReq req)
     {
-        var res = await userService.GetListUsers();
+        var res = await userService.GetListUsers(req);
 
         return Ok(res);
     }
     #endregion
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetUser([FromQuery] Guid id)
-    {
-        var res = await userService.GetListUsers();
+    //[HttpGet("{id}")]
+    //public async Task<IActionResult> GetUser([FromQuery] Guid id)
+    //{
+    //    var res = await userService.GetListUsers();
 
-        return Ok(res);
-    }
+    //    return Ok(res);
+    //}
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser([FromRoute] Guid id, [FromBody] UpdateUserReq req)

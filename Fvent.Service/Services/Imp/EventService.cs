@@ -92,7 +92,6 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <param name="id"></param>
     /// <returns></returns>
     /// <exception cref="NotFoundException"></exception>
-
     public async Task<EventRes> GetEvent(Guid id)
     {
         var spec = new GetEventSpec(id);
@@ -116,7 +115,6 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <param name="req"></param>
     /// <returns></returns>
     /// <exception cref="NotFoundException"></exception>
-
     public async Task<IdRes> UpdateEvent(Guid id, UpdateEventReq req)
     {
         var spec = new GetEventSpec(id);
@@ -128,9 +126,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
             req.StartTime,
             req.EndTime,
             req.Location,
-            req.Campus,
             req.MaxAttendees,
-            req.Price,
             req.ProcessNote,
             req.OrganizerId,
             req.EventTypeId,
@@ -171,7 +167,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var users = events.SelectMany(e => e.Registrations)
             .Select(r => r.User);
 
-        return users.Select(u => u.ToReponse(u.Role!.RoleName)).ToList();
+        return users.Select(u => u.TosReponse(u.Role!.RoleName)).ToList();
     }
     #endregion
 

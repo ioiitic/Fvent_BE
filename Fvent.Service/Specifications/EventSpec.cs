@@ -15,12 +15,6 @@ public static class EventSpec
                 Filter(e => e.EventName.Contains(searchKeyword) || e.Description.Contains(searchKeyword));
             }
 
-            // Filter by campus
-            if (!string.IsNullOrEmpty(campus))
-            {
-                Filter(e => e.Campus == campus);
-            }
-
             // Filter by date range
             if (fromDate.HasValue)
             {
