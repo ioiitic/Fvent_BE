@@ -11,5 +11,6 @@ namespace Fvent.Service.Services
     {
         Task<IdRes> FollowEvent(Guid id, Guid userId);
         Task UnfollowEvent(Guid eventId, Guid userId);
+        Task<IList<EventRes>> GetFollowedEvents(Guid userId);
     }
 }

@@ -18,15 +18,23 @@ public class NotificationController(INotificationService notificationService) : 
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateReview([FromBody] CreateNotificationReq req)
+    public async Task<IActionResult> CreateNoti([FromBody] CreateNotificationReq req)
     {
         var res = await notificationService.CreateNotification(req);
 
         return Ok(res);
     }
 
+    [HttpPut("{id}/read")]
+    public async Task<IActionResult> ReadNoti(Guid id)
+    {
+        var res = await notificationService.ReadNotification(id);
+
+        return Ok(res);
+    }
+
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteReview([FromRoute] Guid id)
+    public async Task<IActionResult> DeleteNoti([FromRoute] Guid id)
     {
         await notificationService.DeleteNotification(id);
 

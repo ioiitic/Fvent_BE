@@ -51,7 +51,7 @@ public static class ServiceConfigs
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<INotificationService, NotificationService>();
-        services.AddScoped<IEventResgistationService, EventResgistationService>();
+        services.AddScoped<IEventRegistationService, EventRegistationService>();
         services.AddScoped<IEventFollowerService, EventFollowerService>();
         services.AddScoped<ICommentService, CommentService>();
 
