@@ -7,7 +7,7 @@ public static class EventSpec
 {
     public class GetEventSpec : Specification<Event>
     {
-        public GetEventSpec(string? searchKeyword, string campus, DateTime? fromDate, DateTime? toDate, string? eventType)
+        public GetEventSpec(string? searchKeyword, DateTime? fromDate, DateTime? toDate, string? eventType)
         {
             // Filter by search keyword (for event name or description)
             if (!string.IsNullOrEmpty(searchKeyword))

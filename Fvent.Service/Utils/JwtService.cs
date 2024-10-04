@@ -17,11 +17,11 @@ public static class JwtService
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(
-            [
-                new(ClaimTypes.Email, email),
-                new(ClaimTypes.Role, role.RoleName)
-            ]),
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Role, role.RoleName)
+            }),
             Expires = DateTime.UtcNow.AddHours(3),
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key),

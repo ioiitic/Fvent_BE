@@ -1,5 +1,6 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,8 @@ namespace Fvent.API.Controllers;
 [Route("api/users")]
 [ApiController]
 public class UsersController(IUserService userService,
-                             INotificationService notificationService) : ControllerBase
+                             INotificationService notificationService,
+                             IEventFollowerService eventFollowerService) : ControllerBase
 {
     #region User
     /// <summary>
@@ -71,4 +73,20 @@ public class UsersController(IUserService userService,
 
         return Ok(res);
     }
+
+    [HttpDelete("{id}/clear-notification")]
+    public async Task<IActionResult> ClearNoti(Guid id)
+    {
+        await notificationService.ClearNotification(id);
+
+        return Ok();
+    }
+
+    [HttpGet("{userId}/followed-events")]
+    public async Task<IActionResult> GetFollowedEvents(Guid userId)
+    {
+        var res = await eventFollowerService.GetFollowedEvents(userId);
+        return Ok(res);
+    }
+
 }

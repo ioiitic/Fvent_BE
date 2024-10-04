@@ -48,5 +48,24 @@ namespace Fvent.Service.Services.Imp
 
             await uOW.SaveChangesAsync();
         }
+
+        public async Task<IList<EventRes>> GetFollowedEvents(Guid userId)
+        {
+            // Specification to get followed events for a user
+            var spec = new GetEventFollowerSpec(userId);
+
+            // Get the list of followed events
+            var followedEvents = await uOW.EventFollower.GetListAsync(spec);
+
+            // Map followed events to EventRes
+            var followedEventResponses = followedEvents
+                .Select(f => f.Event!.ToResponse(
+                    f.Event.Organizer!.FirstName + " " + f.Event.Organizer.LastName,
+                    f.Event.EventType!.EventTypeName,
+                    null))
+                .ToList();
+
+            return followedEventResponses;
+        }
     }
 }

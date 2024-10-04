@@ -1,5 +1,6 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers;
@@ -9,7 +10,7 @@ namespace Fvent.API.Controllers;
 public class EventsController(IEventService eventService,
                               ICommentService commentService,
                               IEventFollowerService eventFollowerService,
-                              IEventResgistationService eventResgistationService) : ControllerBase
+                              IEventRegistationService eventResgistationService) : ControllerBase
 {
     #region CRUD Event
     [HttpGet]
@@ -87,6 +88,14 @@ public class EventsController(IEventService eventService,
 
         return Ok(res);
     }
+
+    [HttpGet("{eventId}/participants")]
+    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
+    {
+        var res = await eventResgistationService.GetAllParticipantsForEvent(eventId);
+        return Ok(res);
+    }
+
     #endregion
 
     #region Event-Review
