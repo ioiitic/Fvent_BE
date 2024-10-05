@@ -14,7 +14,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
 {
     #region User
     /// <summary>
-    /// Service for User Login
+    /// Implement service for User Login
     /// </summary>
     /// <param name="req"></param>
     /// <returns></returns>
@@ -25,57 +25,34 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
-        var token = JS.GenerateToken(user.Username, user.Role!, configuration);
+        var token = JS.GenerateToken(user.Email, user.Role!, configuration);
 
         return new AuthResponse(token);
     }
-    #endregion
 
-    #region Admin
     /// <summary>
-    /// Service for Admin Get list users info
+    /// Implement service for User Get own info
     /// </summary>
+    /// <param name="email"></param>
     /// <returns></returns>
-    public async Task<IList<GetListUserRes>> GetListUsers(GetListUsersReq req)
+    /// <exception cref="NotFoundException"></exception>
+    public async Task<UserRes> GetByEmail(string email)
     {
-        var spec = new GetListUsersSpec(req.Username, req.Email, req.RoleName, req.Verified);
-        var users = await uOW.Users.GetListAsync(spec);
-
-        return users.Select(u => u.ToResponse<GetListUserRes>(u.Role!.RoleName)).ToList();
-    }
-    #endregion
-
-    public async Task<IdRes> RegisterUser(CreateUserReq req)
-    {
-        var user = req.ToUser();
-
-        await uOW.Users.AddAsync(user);
-        await uOW.SaveChangesAsync();
-
-        return user.UserId.ToResponse();
-    }
-
-    public async Task DeleteUser(Guid id)
-    {
-        var spec = new GetUserSpec(id);
+        var spec = new GetUserSpec(email);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
-        uOW.Users.Delete(user);
-
-        await uOW.SaveChangesAsync();
+        return user.ToResponse<UserRes>();
     }
 
-    public async Task<UserRes> GetUser(Guid id)
-    {
-        var spec = new GetUserSpec(id);
-        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
-            ?? throw new NotFoundException(typeof(User));
-
-        return user.ToResponse<UserRes>(user.Role!.RoleName);
-    }
-
-    public async Task<IdRes> UpdateUser(Guid id, UpdateUserReq req)
+    /// <summary>
+    /// Implement service for User Update info
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    /// <exception cref="NotFoundException"></exception>
+    public async Task<IdRes> Update(Guid id, UpdateUserReq req)
     {
         var spec = new GetUserSpec(id);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
@@ -88,8 +65,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
             req.FirstName,
             req.LastName,
             req.PhoneNumber,
-            req.CardUrl,
-            req.RoleId);
+            req.CardUrl);
 
         if (uOW.IsUpdate(user))
             user.UpdatedAt = DateTime.UtcNow;
@@ -97,5 +73,50 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
         await uOW.SaveChangesAsync();
 
         return user.UserId.ToResponse();
+    }
+    #endregion
+
+    #region Admin
+    /// <summary>
+    /// Service for Admin Get list users info
+    /// </summary>
+    /// <returns></returns>
+    public async Task<IList<GetListUserRes>> GetList(GetListUsersReq req)
+    {
+        var spec = new GetListUsersSpec(req.Username, req.Email, req.RoleName, req.Verified);
+        var users = await uOW.Users.GetListAsync(spec);
+
+        return users.Select(u => u.ToResponse<GetListUserRes>()).ToList();
+    }
+    #endregion
+
+    public async Task<IdRes> Register(CreateUserReq req)
+    {
+        var user = req.ToUser();
+
+        await uOW.Users.AddAsync(user);
+        await uOW.SaveChangesAsync();
+
+        return user.UserId.ToResponse();
+    }
+
+    public async Task Delete(Guid id)
+    {
+        var spec = new GetUserSpec(id);
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+
+        uOW.Users.Delete(user);
+
+        await uOW.SaveChangesAsync();
+    }
+
+    public async Task<UserRes> Get(Guid id)
+    {
+        var spec = new GetUserSpec(id);
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+
+        return user.ToResponse<UserRes>();
     }
 }

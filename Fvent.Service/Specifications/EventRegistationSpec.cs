@@ -9,12 +9,21 @@ public static class EventRegistationSpec
     {
         public GetEventParticipantsSpec(Guid eventId)
         {
-            // Filter to get participants for the given eventId
             Filter(p => p.EventId == eventId);
 
-            // Include the User and User Role entities
             Include(p => p.User!);
             Include(p => p.User!.Role!);
+        }
+    }
+
+    public class GetListUserEventsSpec : Specification<EventRegistration>
+    {
+        public GetListUserEventsSpec(Guid userId)
+        {
+            Filter(r => r.UserId == userId);
+
+            Include("Event.Tags");
+            Include("Event.EventType");
         }
     }
 }

@@ -59,8 +59,7 @@ public class User : ISoftDelete
                        string firstName,
                        string lastName,
                        string phoneNumber,
-                       string cardUrl,
-                       int roleId)
+                       string cardUrl)
     {
         Username = username;
         AvatarUrl = avatarUrl;
@@ -70,6 +69,5 @@ public class User : ISoftDelete
         LastName = lastName;
         PhoneNumber = phoneNumber;
         CardUrl = cardUrl;
-        RoleId = roleId;
     }
 }

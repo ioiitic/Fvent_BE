@@ -7,13 +7,6 @@ public static class UserSpec
 {
     public class GetListUsersSpec : Specification<User>
     {
-        /// <summary>
-        /// Filter for Admin Get list users info
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="email"></param>
-        /// <param name="roleName"></param>
-        /// <param name="verified"></param>
         public GetListUsersSpec(string? username, string? email, string? roleName, bool? verified)
         {
             if (!string.IsNullOrEmpty(username))
@@ -47,6 +40,13 @@ public static class UserSpec
         public GetUserSpec(Guid id)
         {
             Filter(u => u.UserId == id);
+
+            Include(u => u.Role!);
+        }
+
+        public GetUserSpec(string email)
+        {
+            Filter(u => u.Email == email);
 
             Include(u => u.Role!);
         }
