@@ -45,7 +45,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
     public async Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req)
     {
-        var spec = new GetEventSpec(req.SearchKeyword, req.Campus, req.FromDate, req.ToDate, req.EventType);
+        var spec = new GetEventSpec(req.SearchKeyword, req.FromDate, req.ToDate, req.EventType);
 
         // Apply sorting
         if (req.OrderBy == "Name")
@@ -167,7 +167,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var users = events.SelectMany(e => e.Registrations)
             .Select(r => r.User);
 
-        return users.Select(u => u.TosReponse(u.Role!.RoleName)).ToList();
+        return users.Select(u => u.ToResponse<UserRes>(u.Role!.RoleName)).ToList();
     }
     #endregion
 

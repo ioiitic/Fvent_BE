@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace Fvent.Service.Services
 {
-    public interface IEventResgistationService
+    public interface IEventRegistationService
     {
         Task<IdRes> RegisterFreeEvent(Guid id, Guid userId);
+        Task<IList<UserRes>> GetAllParticipantsForEvent(Guid eventId);
     }
 }

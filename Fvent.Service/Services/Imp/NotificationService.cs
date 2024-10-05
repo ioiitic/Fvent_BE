@@ -32,6 +32,35 @@ public class NotificationService(IUnitOfWork uOW) : INotificationService
         await uOW.SaveChangesAsync();
     }
 
+    public async Task<IdRes> ReadNotification(Guid id)
+    {
+        var spec = new GetNotificationSpec(id);
+        var notification = await uOW.Notification.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(Notification));
+        var oldNotification = notification;
+        notification.ReadStatus = (int)ReadStatus.Read;
+
+        uOW.Notification.Update(oldNotification, notification);
+
+        await uOW.SaveChangesAsync();
+
+        return notification.NotificationId.ToResponse();
+    }
+
+    public async Task ClearNotification(Guid userId)
+    {
+        var spec = new GetNotificationByUserSpec(userId);
+        var notifications = await uOW.Notification.GetListAsync(spec);
+
+        foreach (var notification in notifications)
+        {
+            await DeleteNotification(notification.NotificationId);
+        }
+
+        await uOW.SaveChangesAsync();
+
+    }
+
     public async Task<IList<NotificationRes>> GetListNotifications(Guid userId)
     {
         var spec = new GetNotificationByUserSpec(userId);
