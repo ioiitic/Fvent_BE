@@ -12,10 +12,7 @@ public class EventsController(IEventService eventService,
                               IEventFollowerService eventFollowerService,
                               IEventRegistationService eventResgistationService) : ControllerBase
 {
-    #region Student
-    #endregion
-
-    #region CRUD Event
+    #region Event
     [HttpGet]
     public async Task<IActionResult> GetList([FromQuery] GetEventsRequest request)
     {
@@ -23,7 +20,6 @@ public class EventsController(IEventService eventService,
 
         return Ok(res);
     }
-
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetEvent(Guid id)
@@ -58,16 +54,18 @@ public class EventsController(IEventService eventService,
     }
     #endregion
 
-    #region Event
+    #region Event Rating                                                                              
     [HttpGet]
-    [Route("api/events/{id}/average-rating")]
+    [Route("{id}/average-rating")]
     public async Task<IActionResult> GetEventRate([FromRoute] Guid id)
     {
         var res = await eventService.GetEventRate(new IdReq(id));
 
         return Ok(res);
     }
+    #endregion
 
+    #region Event Following
     [HttpPost("{id}/follow")]
     public async Task<IActionResult> FollowEvent(Guid id, [FromBody] Guid userId)
     {
@@ -83,7 +81,9 @@ public class EventsController(IEventService eventService,
 
         return Ok();
     }
+    #endregion
 
+    #region Event Registration
     [HttpPost("{id}/register")]
     public async Task<IActionResult> RegisterEvent(Guid id, [FromBody] Guid userId)
     {
@@ -91,19 +91,11 @@ public class EventsController(IEventService eventService,
 
         return Ok(res);
     }
-
-    [HttpGet("{eventId}/participants")]
-    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
-    {
-        var res = await eventResgistationService.GetAllParticipantsForEvent(eventId);
-        return Ok(res);
-    }
-
     #endregion
 
-    #region Event-Review
+    #region Event Reviewing
     [HttpPost]
-    [Route("api/events/{id}/reviews")]
+    [Route("{id}/reviews")]
     public async Task<IActionResult> CreateReview([FromRoute] Guid id, [FromBody] CreateReviewReq req)
     {
         var res = await eventService.CreateReview(new CreateReviewReq(req.Rating, req.Comment, id, req.UserId));
@@ -112,7 +104,7 @@ public class EventsController(IEventService eventService,
     }
 
     [HttpGet]
-    [Route("api/events/{id}/reviews")]
+    [Route("{id}/reviews")]
     public async Task<IActionResult> GetEventReviews([FromRoute] Guid id)
     {
         var res = await eventService.GetEventReviews(new IdReq(id));
@@ -121,7 +113,7 @@ public class EventsController(IEventService eventService,
     }
     #endregion
 
-    #region Event-User
+    #region Event User
     [HttpGet]
     [Route("api/events/{id}/paticipants")]
     public async Task<IActionResult> GetEventRegisters([FromRoute] Guid id)
@@ -130,10 +122,17 @@ public class EventsController(IEventService eventService,
 
         return Ok(res);
     }
+
+    [HttpGet("{eventId}/participants")]
+    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
+    {
+        var res = await eventResgistationService.GetAllParticipantsForEvent(eventId);
+
+        return Ok(res);
+    }
     #endregion
 
     #region Event-Comment
-
     [HttpGet("{id}/comments")]
     public async Task<IActionResult> GetComments(Guid id)
     {

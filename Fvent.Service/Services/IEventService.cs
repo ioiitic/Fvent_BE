@@ -11,6 +11,11 @@ public interface IEventService
     #endregion
 
     #region CRUD Event
+    /// <summary>
+    /// Get list events
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req);
     Task<EventRes> GetEvent(Guid id);
     Task<IdRes> CreateEvent(CreateEventReq req);
