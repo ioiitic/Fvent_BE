@@ -22,6 +22,22 @@ public static class EventMapper
             DateTime.UtcNow);
 
     public static EventRes ToResponse(
+        this Event src)
+        => new(
+            src.EventId,
+            src.EventName,
+            src.Description,
+            src.StartTime,
+            src.EndTime,
+            src.Location,
+            src.MaxAttendees,
+            src.ProcessNote,
+            src.Organizer!.FirstName + " " + src.Organizer.LastName,
+            src.EventType!.EventTypeName,
+            src.StatusId,
+            src.Tags.Select(t => t.Tag).ToList());
+
+    public static EventRes ToResponse(
         this Event src,
         string organizerName,
         string eventTypeName,

@@ -72,4 +72,16 @@ public static class EventSpec
             Include(e => e.User!);
         }
     }
+
+    public class GetListRecommend : Specification<Event>
+    {
+        public GetListRecommend(IEnumerable<Guid> eventTypes, IEnumerable<string> eventTags)
+        {
+            Filter(e => eventTypes.Any(t => e.EventTypeId == t) || eventTags.Any(type => e.Tags!.Any(tag => tag.Tag.Equals(type))));
+
+            Include(e => e.Organizer!);
+            Include(e => e.EventType!);
+            Include(e => e.Tags!);
+        }
+    }
 }

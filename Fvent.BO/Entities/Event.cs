@@ -19,7 +19,8 @@ public class Event : ISoftDelete
     public User? Organizer { get; set; }
     public EventType? EventType { get; set; }
     public EventStatus? Status { get; set; }
-    public IList<EventRegistration> Registrations { get; set; }
+    public IList<EventRegistration>? Registrations { get; set; }
+    public IList<EventTag>? Tags { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

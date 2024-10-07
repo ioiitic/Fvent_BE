@@ -12,6 +12,9 @@ public class EventsController(IEventService eventService,
                               IEventFollowerService eventFollowerService,
                               IEventRegistationService eventResgistationService) : ControllerBase
 {
+    #region Student
+    #endregion
+
     #region CRUD Event
     [HttpGet]
     public async Task<IActionResult> GetList([FromQuery] GetEventsRequest request)

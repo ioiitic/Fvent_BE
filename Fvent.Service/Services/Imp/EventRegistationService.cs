@@ -40,7 +40,7 @@ namespace Fvent.Service.Services.Imp
 
             // Map participants to UserRes (or any suitable response model)
             var participantResponses = participants
-                .Select(p => p.User!.ToResponse<UserRes>(p.User!.Role!.RoleName))
+                .Select(p => p.User!.ToResponse<UserRes>())
                 .ToList();
 
             return participantResponses;

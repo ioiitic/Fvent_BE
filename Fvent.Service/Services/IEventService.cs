@@ -1,5 +1,4 @@
 ﻿using Fvent.BO.Common;
-using Fvent.BO.Entities;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 
@@ -7,6 +6,10 @@ namespace Fvent.Service.Services;
 
 public interface IEventService
 {
+    #region Student
+    Task<PageResult<EventRes>> GetListRecommend(IdReq req);
+    #endregion
+
     #region CRUD Event
     Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req);
     Task<EventRes> GetEvent(Guid id);

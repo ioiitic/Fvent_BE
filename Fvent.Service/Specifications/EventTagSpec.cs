@@ -12,4 +12,12 @@ public static class EventTagSpec
             Filter(u => u.EventId == eventId);
         }
     }
+
+    public class GetListEventTag : Specification<EventTag>
+    {
+        public GetListEventTag(IEnumerable<Event> events)
+        {
+            Filter(t => events.Any(e => e.EventId == t.EventId));
+        }
+    }
 }

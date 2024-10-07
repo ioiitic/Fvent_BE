@@ -1,5 +1,7 @@
 ﻿using Fvent.BO.Entities;
 using Fvent.Repository.Common;
+using Fvent.Service.Mapper;
+using Fvent.Service.Result;
 
 namespace Fvent.Service.Specifications;
 
@@ -7,14 +9,8 @@ public static class UserSpec
 {
     public class GetListUsersSpec : Specification<User>
     {
-        /// <summary>
-        /// Filter for Admin Get list users info
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="email"></param>
-        /// <param name="roleName"></param>
-        /// <param name="verified"></param>
-        public GetListUsersSpec(string? username, string? email, string? roleName, bool? verified)
+        public GetListUsersSpec(string? username, string? email, string? roleName, bool? verified, string? orderBy,
+                                bool isDescending, int pageNumber, int pageSize)
         {
             if (!string.IsNullOrEmpty(username))
             {
@@ -32,6 +28,16 @@ public static class UserSpec
             {
                 Filter(u => u.Verified == verified);
             }
+            if (orderBy is not null)
+            {
+                switch (orderBy)
+                {
+                    case "email":
+                        OrderBy(u => u.Email, isDescending);
+                        break;
+                }
+            }
+            AddPagination(pageNumber, pageSize);
 
             Include(u => u.Role!);
         }
@@ -47,6 +53,13 @@ public static class UserSpec
         public GetUserSpec(Guid id)
         {
             Filter(u => u.UserId == id);
+
+            Include(u => u.Role!);
+        }
+
+        public GetUserSpec(string email)
+        {
+            Filter(u => u.Email == email);
 
             Include(u => u.Role!);
         }

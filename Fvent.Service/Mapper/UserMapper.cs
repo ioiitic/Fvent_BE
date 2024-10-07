@@ -29,17 +29,17 @@ public static class UserMapper
         );
     }
 
-    public static TEntity ToResponse<TEntity>(this User src, string roleName) where TEntity : class
+    public static TEntity ToResponse<TEntity>(this User src) where TEntity : class
     {
         var result = typeof(TEntity) switch
         {
             Type t when t == typeof(UserRes) =>
-                new UserRes(src.Username, src.AvatarUrl, src.Email, src.Password, src.FirstName, src.LastName,
-                            src.PhoneNumber, src.CardUrl, roleName) as TEntity,
+                new UserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.Password, src.FirstName,
+                            src.LastName, src.PhoneNumber, src.CardUrl, src.Role!.RoleName) as TEntity,
 
             Type t when t == typeof(GetListUserRes) =>
                 new GetListUserRes(src.Username, src.AvatarUrl, src.Email, src.FirstName, src.LastName,
-                                        src.PhoneNumber, src.CardUrl, src.Verified, roleName, src.CreatedAt,
+                                        src.PhoneNumber, src.CardUrl, src.Verified, src.Role!.RoleName, src.CreatedAt,
                                         src.UpdatedAt, src.IsDeleted, src.DeletedAt) as TEntity,
 
             _ => throw new InvalidOperationException($"Unsupported type: {typeof(TEntity).Name}")

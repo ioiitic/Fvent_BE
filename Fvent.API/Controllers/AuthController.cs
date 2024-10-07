@@ -8,7 +8,7 @@ namespace Fvent.API.Controllers;
 [ApiController]
 public class AuthController(IUserService userService) : ControllerBase
 {
-    #region Auth
+    #region User
     /// <summary>
     /// Controller for User Login
     /// </summary>

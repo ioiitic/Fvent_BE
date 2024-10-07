@@ -7,6 +7,7 @@ using Fvent.Service.Request;
 using Fvent.Service.Result;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
 
@@ -14,6 +15,25 @@ namespace Fvent.Service.Services.Imp;
 
 public class EventService(IUnitOfWork uOW) : IEventService
 {
+    #region Student
+    public async Task<PageResult<EventRes>> GetListRecommend(IdReq req)
+    {
+        var registerSpec = new GetListUserEventsSpec(req.Id);
+        var userEventRegister = await uOW.EventRegistration.GetListAsync(registerSpec);
+        var userEvents = userEventRegister.Select(r => r.Event);
+        var eventTypes = userEvents.Select(e => e.EventTypeId).Distinct();
+        var eventTags = userEvents.SelectMany(e => e.Tags!.Select(t => t.Tag)).Distinct();
+
+        var eventSpec = new GetListRecommend(eventTypes, eventTags);
+        Console.WriteLine("Hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        var events = await uOW.Events.GetListAsync(eventSpec);
+
+        var res = events.Select(e => e.ToResponse()).ToList();
+
+        return new PageResult<EventRes>(res, 1, 1, 1, 1, 1);
+    }
+    #endregion
+
     #region CRUD Event
     public async Task<IdRes> CreateEvent(CreateEventReq req)
     {
@@ -167,7 +187,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var users = events.SelectMany(e => e.Registrations)
             .Select(r => r.User);
 
-        return users.Select(u => u.ToResponse<UserRes>(u.Role!.RoleName)).ToList();
+        return users.Select(u => u.ToResponse<UserRes>()).ToList();
     }
     #endregion
 
