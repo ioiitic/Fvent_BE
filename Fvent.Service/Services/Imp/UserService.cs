@@ -1,4 +1,5 @@
-﻿using Fvent.BO.Entities;
+﻿using Fvent.BO.Common;
+using Fvent.BO.Entities;
 using Fvent.BO.Exceptions;
 using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
@@ -81,12 +82,14 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
     /// Service for Admin Get list users info
     /// </summary>
     /// <returns></returns>
-    public async Task<IList<GetListUserRes>> GetList(GetListUsersReq req)
+    public async Task<PageResult<GetListUserRes>> GetList(GetListUsersReq req)
     {
-        var spec = new GetListUsersSpec(req.Username, req.Email, req.RoleName, req.Verified);
-        var users = await uOW.Users.GetListAsync(spec);
+        var spec = new GetListUsersSpec(req.Username, req.Email, req.RoleName, req.Verified, req.OrderBy,
+                                        req.IsDescending, req.PageNumber, req.PageSize);
+        var users = await uOW.Users.GetPageAsync(spec);
 
-        return users.Select(u => u.ToResponse<GetListUserRes>()).ToList();
+        return new PageResult<GetListUserRes>(users.Items.Select(u => u.ToResponse<GetListUserRes>()), users.PageNumber,
+                                              users.PageSize, users.Count, users.TotalItems, users.TotalPages);
     }
     #endregion
 

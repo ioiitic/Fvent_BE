@@ -1,4 +1,5 @@
-﻿using Fvent.Service.Request;
+﻿using Fvent.BO.Common;
+using Fvent.Service.Request;
 using Fvent.Service.Result;
 
 namespace Fvent.Service.Services;
@@ -40,7 +41,7 @@ public interface IUserService
 
     #region Admin
     #endregion
-    Task<IList<GetListUserRes>> GetList(GetListUsersReq req);
+    Task<PageResult<GetListUserRes>> GetList(GetListUsersReq req);
     Task<UserRes> Get(Guid id);
     Task<IdRes> Register(CreateUserReq req);
     Task Delete(Guid id);
