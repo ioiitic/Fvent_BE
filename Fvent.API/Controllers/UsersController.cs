@@ -1,5 +1,6 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -7,9 +8,8 @@ using System.Security.Claims;
 namespace Fvent.API.Controllers;
 
 [ApiController]
-public class UsersController(IUserService userService,
-                             INotificationService notificationService,
-                             IEventFollowerService eventFollowerService) : ControllerBase
+public class UsersController(IUserService userService, IEventService eventService,
+                             INotificationService notificationService, IEventFollowerService eventFollowerService) : ControllerBase
 {
     #region User
     /// <summary>
@@ -58,6 +58,16 @@ public class UsersController(IUserService userService,
     #endregion
 
     #region Student
+    [HttpGet("api/users/recommendation")]
+    public async Task<IActionResult> GetListRecommend()
+    {
+        var email = HttpContext.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+        var user = await userService.GetByEmail(email!);
+
+        var res = await eventService.GetListRecommend(new IdReq(user.UserId));
+
+        return Ok(res);
+    }
     #endregion
 
     #region Admin

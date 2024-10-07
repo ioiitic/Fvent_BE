@@ -10,7 +10,6 @@ using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
-using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp;
 
@@ -19,15 +18,17 @@ public class EventService(IUnitOfWork uOW) : IEventService
     #region Student
     public async Task<PageResult<EventRes>> GetListRecommend(IdReq req)
     {
-        var userSpec = new GetUserSpec(req.Id);
-        var user = await uOW.Users.FindFirstOrDefaultAsync(userSpec)
-            ?? throw new NotFoundException(typeof(User));
-
-        var eventSpec = new GetListUserEventsSpec(req.Id);
-        var userEventRegister = await uOW.EventRegistration.GetListAsync(eventSpec);
+        var registerSpec = new GetListUserEventsSpec(req.Id);
+        var userEventRegister = await uOW.EventRegistration.GetListAsync(registerSpec);
         var userEvents = userEventRegister.Select(r => r.Event);
+        var eventTypes = userEvents.Select(e => e.EventTypeId).Distinct();
+        var eventTags = userEvents.SelectMany(e => e.Tags!.Select(t => t.Tag)).Distinct();
 
-        var res = userEvents.Select(e => e.ToResponse()).ToList();
+        var eventSpec = new GetListRecommend(eventTypes, eventTags);
+        Console.WriteLine("Hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        var events = await uOW.Events.GetListAsync(eventSpec);
+
+        var res = events.Select(e => e.ToResponse()).ToList();
 
         return new PageResult<EventRes>(res, 1, 1, 1, 1, 1);
     }

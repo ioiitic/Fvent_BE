@@ -23,6 +23,7 @@ public static class EventRegistationSpec
             Filter(r => r.UserId == userId);
 
             Include("Event.Tags");
+            Include("Event.Organizer");
             Include("Event.EventType");
         }
     }

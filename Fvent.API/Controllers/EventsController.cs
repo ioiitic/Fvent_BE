@@ -13,13 +13,6 @@ public class EventsController(IEventService eventService,
                               IEventRegistationService eventResgistationService) : ControllerBase
 {
     #region Student
-    [HttpGet("{id}/recommendation")]
-    public async Task<IActionResult> GetListRecommend([FromRoute] Guid id)
-    {
-        var res = await eventService.GetListRecommend(new IdReq(id));
-
-        return Ok(res);
-    }
     #endregion
 
     #region CRUD Event
