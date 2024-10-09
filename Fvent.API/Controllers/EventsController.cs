@@ -17,9 +17,17 @@ public class EventsController(IEventService eventService,
 
     #region CRUD Event
     [HttpGet]
-    public async Task<IActionResult> GetList([FromQuery] GetEventsRequest request)
+    public async Task<IActionResult> GetListEvents([FromQuery] GetEventsRequest request)
     {
         var res = await eventService.GetListEvents(request);
+
+        return Ok(res);
+    }
+
+    [HttpGet("organizer")]
+    public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] IdReq organizerId)
+    {
+        var res = await eventService.GetListEventsByOrganizer(organizerId.Id);
 
         return Ok(res);
     }

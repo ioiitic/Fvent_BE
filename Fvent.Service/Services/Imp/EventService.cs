@@ -159,6 +159,20 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         return _event.EventId.ToResponse();
     }
+
+    public async Task<IList<EventRes>> GetListEventsByOrganizer(Guid organizerId)
+    {
+        var spec = new GetEventByOrganizerSpec(organizerId);
+
+        var _events = await uOW.Events.GetListAsync(spec);
+
+        return _events.Select(e => e.ToResponse(
+                e.Organizer!.FirstName + " " + e.Organizer!.LastName,
+                e.EventType!.EventTypeName,
+                null)).ToList();
+       
+    }
+
     #endregion
 
     #region Event

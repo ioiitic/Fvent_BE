@@ -13,6 +13,7 @@ public interface IEventService
     #region CRUD Event
     Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req);
     Task<EventRes> GetEvent(Guid id);
+    Task<IList<EventRes>> GetListEventsByOrganizer(Guid organizerId);
     Task<IdRes> CreateEvent(CreateEventReq req);
     Task<IdRes> UpdateEvent(Guid id, UpdateEventReq req);
     Task DeleteEvent(Guid id);

@@ -84,4 +84,16 @@ public static class EventSpec
             Include(e => e.Tags!);
         }
     }
+
+    public class GetEventByOrganizerSpec : Specification<Event>
+    {
+        public GetEventByOrganizerSpec(Guid Id)
+        {
+            Filter(e => e.OrganizerId == Id);
+
+            Include(e => e.Tags!);
+            Include(u => u.Organizer!);
+            Include(e => e.EventType!);
+        }
+    }
 }
