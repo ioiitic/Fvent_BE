@@ -77,27 +77,35 @@ public class EventsController(IEventService eventService,
     }
 
     [HttpPost("{id}/follow")]
-    public async Task<IActionResult> FollowEvent(Guid id, [FromBody] Guid userId)
+    public async Task<IActionResult> FollowEvent(Guid id, [FromBody] IdReq userId)
     {
-        var res = await eventFollowerService.FollowEvent(id, userId);
+        var res = await eventFollowerService.FollowEvent(id, userId.Id);
 
         return Ok(res);
     }
 
     [HttpDelete("{id}/unfollow")]
-    public async Task<IActionResult> UnfollowEvent(Guid id, [FromBody] Guid userId)
+    public async Task<IActionResult> UnfollowEvent(Guid id, [FromBody] IdReq userId)
     {
-        await eventFollowerService.UnfollowEvent(id, userId);
+        await eventFollowerService.UnfollowEvent(id, userId.Id);
 
         return Ok();
     }
 
     [HttpPost("{id}/register")]
-    public async Task<IActionResult> RegisterEvent(Guid id, [FromBody] Guid userId)
+    public async Task<IActionResult> RegisterEvent(Guid id, [FromBody] IdReq userId)
     {
-        var res = await eventResgistationService.RegisterFreeEvent(id, userId);
+        var res = await eventResgistationService.RegisterFreeEvent(id, userId.Id);
 
         return Ok(res);
+    }
+
+    [HttpDelete("{id}/unregister")]
+    public async Task<IActionResult> UnRegisterEvent(Guid id, [FromBody] IdReq userId)
+    {
+        await eventResgistationService.UnRegisterEvent(id, userId.Id);
+
+        return Ok();
     }
 
     [HttpGet("{eventId}/participants")]

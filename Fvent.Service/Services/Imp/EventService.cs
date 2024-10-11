@@ -137,10 +137,12 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <exception cref="NotFoundException"></exception>
     public async Task<IdRes> UpdateEvent(Guid id, UpdateEventReq req)
     {
+        // Step 1: Find the event
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
 
+        // Step 2: Update the event with the new details
         _event.Update(req.EventName,
             req.Description,
             req.StartTime,
@@ -153,12 +155,56 @@ public class EventService(IUnitOfWork uOW) : IEventService
             req.StatusId);
 
         if (uOW.IsUpdate(_event))
+        {
             _event.UpdatedAt = DateTime.UtcNow;
+        }
 
+        // Step 3: Save changes to the event
         await uOW.SaveChangesAsync();
+
+        // Step 4: Notify users (track unique users with HashSet)
+        var notifiedUsers = new HashSet<Guid>();
+
+        // Step 5: Notify users who follow the event
+        var followSpec = new GetUserFollowsEventSpec(id); 
+
+        var followedEvents = await uOW.EventFollower.GetListAsync(followSpec);
+        var followedUsers = followedEvents.Select(f => f.UserId).ToList();
+
+        foreach (var userId in followedUsers)
+        {
+            if (notifiedUsers.Add(userId)) // Only notify if userId is not already in the set
+            {
+                // Create notification for the follower
+                var notificationReq = new CreateNotificationReq(userId,
+                                                _event.EventId,
+                                                $"The event '{_event.EventName}' has been updated.");
+                await CreateNotification(notificationReq); 
+            }
+        }
+
+        // Step 6: Notify users who have registered for the event
+        var participantSpec = new GetEventParticipantsSpec(id);
+
+        var participants = await uOW.EventRegistration.GetListAsync(participantSpec);
+        var registeredUsers = participants.Select(p => p.UserId).ToList();
+
+        foreach (var userId in registeredUsers)
+        {
+            if (notifiedUsers.Add(userId)) // Only notify if userId is not already in the set
+            {
+                // Create notification for the participant
+                var notificationReq = new CreateNotificationReq(userId,
+                                                _event.EventId,
+                                                $"The event '{_event.EventName}' has been updated.");
+                await CreateNotification(notificationReq); 
+            }
+        }
 
         return _event.EventId.ToResponse();
     }
+
+
 
     public async Task<IList<EventRes>> GetListEventsByOrganizer(Guid organizerId)
     {
@@ -225,4 +271,12 @@ public class EventService(IUnitOfWork uOW) : IEventService
     }
 
     #endregion
+
+    public async Task CreateNotification(CreateNotificationReq req)
+    {
+        var notification = req.ToNotification();
+
+        await uOW.Notification.AddAsync(notification);
+        await uOW.SaveChangesAsync();
+    }
 }
