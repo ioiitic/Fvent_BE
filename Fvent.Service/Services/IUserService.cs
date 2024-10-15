@@ -44,5 +44,6 @@ public interface IUserService
     Task<PageResult<GetListUserRes>> GetList(GetListUsersReq req);
     Task<UserRes> Get(Guid id);
     Task<IdRes> Register(CreateUserReq req);
+    Task<bool> VerifyEmailAsync(Guid userId, string token);
     Task Delete(Guid id);
 }

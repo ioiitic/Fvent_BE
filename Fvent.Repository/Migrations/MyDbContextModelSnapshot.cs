@@ -495,6 +495,24 @@ namespace Fvent.Repository.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("VerificationToken", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("VerificationTokens");
+                });
+
             modelBuilder.Entity("Fvent.BO.Entities.Comment", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.Event", "Event")
@@ -634,7 +652,7 @@ namespace Fvent.Repository.Migrations
             modelBuilder.Entity("Fvent.BO.Entities.EventTag", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.Event", "Event")
-                        .WithMany()
+                        .WithMany("Tags")
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -694,6 +712,8 @@ namespace Fvent.Repository.Migrations
             modelBuilder.Entity("Fvent.BO.Entities.Event", b =>
                 {
                     b.Navigation("Registrations");
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("Fvent.BO.Entities.User", b =>

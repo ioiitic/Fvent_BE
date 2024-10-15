@@ -11,7 +11,7 @@ using JS = Fvent.Service.Utils.JwtService;
 
 namespace Fvent.Service.Services.Imp;
 
-public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserService
+public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService) : IUserService
 {
     #region User
     /// <summary>
@@ -96,11 +96,49 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
     public async Task<IdRes> Register(CreateUserReq req)
     {
         var user = req.ToUser();
+        user.Verified = false;
 
         await uOW.Users.AddAsync(user);
         await uOW.SaveChangesAsync();
 
+        var token = Guid.NewGuid().ToString();
+        var verificationLink = GenerateVerificationLink(user.UserId, token);
+
+        var verificationToken = new VerificationToken(user.UserId, token);
+        await uOW.VerificationToken.AddAsync(verificationToken);
+        await uOW.SaveChangesAsync();
+
+        // Send the verification email using Gmail SMTP
+        //var emailBody = $"Please verify your email by clicking <a href='{verificationLink}'>here</a>.";
+        var emailBody = EmailTemplates.EmailVerificationTemplate.Replace("{verificationLink}", verificationLink);
+
+        await emailService.SendEmailAsync(user.Email, "Email Verification", emailBody);
+
         return user.UserId.ToResponse();
+    }
+
+    public async Task<bool> VerifyEmailAsync(Guid userId, string token)
+    {
+        // Step 1: Check if the token exists in the database
+        var spec = new GetVerificationTokenSpec(userId, token);
+        var storedToken = await uOW.VerificationToken.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(VerificationToken));
+
+        // Step 2: Verify the user
+        var userSpec = new GetUserSpec(userId);
+        var user = await uOW.Users.FindFirstOrDefaultAsync(userSpec)
+            ?? throw new NotFoundException(typeof(User));
+
+        user.Verified = true; // Mark user as verified
+
+        // Save changes to the user
+        await uOW.SaveChangesAsync();
+
+        // Step 3: Optionally, delete the token after successful verification
+        uOW.VerificationToken.Delete(storedToken);
+        await uOW.SaveChangesAsync();
+
+        return true;
     }
 
     public async Task Delete(Guid id)
@@ -121,5 +159,11 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration) : IUserS
             ?? throw new NotFoundException(typeof(User));
 
         return user.ToResponse<UserRes>();
+    }
+
+    private string GenerateVerificationLink(Guid userId, string token)
+    {
+        // Adjust this URL as needed based on your frontend or API URL
+        return $"https://localhost:7289/api/users/verify-email?userId={userId}&token={token}";
     }
 }

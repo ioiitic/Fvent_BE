@@ -9,8 +9,22 @@ namespace Fvent.API.Controllers;
 
 [ApiController]
 public class UsersController(IUserService userService, IEventService eventService,
-                             INotificationService notificationService, IEventFollowerService eventFollowerService) : ControllerBase
+                             INotificationService notificationService, 
+                             IEventFollowerService eventFollowerService) : ControllerBase
 {
+    [HttpGet("api/users/verify-email")]
+    public async Task<IActionResult> VerifyEmail([FromQuery] Guid userId, [FromQuery] string token)
+    {
+        var result = await userService.VerifyEmailAsync(userId, token);
+        if (result)
+        {
+            return Ok("Email verified successfully!");
+        }
+        else
+        {
+            return BadRequest("Email verification failed.");
+        }
+    }
     #region User
     /// <summary>
     /// Controller for User Register

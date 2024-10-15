@@ -74,4 +74,11 @@ public static class UserSpec
             Include(u => u.Role!);
         }
     }
+    public class GetVerificationTokenSpec : Specification<VerificationToken>
+    {
+        public GetVerificationTokenSpec(Guid userId, string token)
+        {
+            Filter(u => u.UserId == userId && u.Token.Equals(token));
+        }
+    }
 }

@@ -12,6 +12,7 @@ public interface IUnitOfWork
     IEventTagRepo EventTag { get; }
     ICommentRepo Comment { get; }
     INotificationRepo Notification { get; }
+    IVerificationTokenRepo VerificationToken { get; }
 
     bool IsUpdate<TEntity>(TEntity entity) where TEntity : class;
     Task SaveChangesAsync();
