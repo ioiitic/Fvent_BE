@@ -47,6 +47,8 @@ public static class ServiceConfigs
 
         services.AddRepository();
 
+        services.AddHostedService<MyBackgroundService>();
+
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IUserService, UserService>();
