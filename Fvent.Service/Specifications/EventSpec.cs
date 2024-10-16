@@ -84,4 +84,28 @@ public static class EventSpec
             Include(e => e.Tags!);
         }
     }
+
+    public class GetEventByOrganizerSpec : Specification<Event>
+    {
+        public GetEventByOrganizerSpec(Guid Id)
+        {
+            Filter(e => e.OrganizerId == Id);
+
+            Include(e => e.Tags!);
+            Include(u => u.Organizer!);
+            Include(e => e.EventType!);
+        }
+    }
+    public class GetUserFollowsEventSpec : Specification<EventFollower>
+    {
+        public GetUserFollowsEventSpec(Guid eventId)
+        {
+            Filter(f => f.EventId == eventId);
+
+            // Include the related Event entity
+            Include(f => f.Event!);
+            Include(f => f.Event!.Organizer!);
+            Include(f => f.Event!.EventType!);
+        }
+    }
 }

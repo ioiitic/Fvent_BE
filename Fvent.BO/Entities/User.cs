@@ -14,6 +14,7 @@ public class User : ISoftDelete
     public string PhoneNumber { get; set; }
     public string CardUrl { get; set; }
     public bool Verified { get; set; } = false;
+    public bool EmailVerified { get; set; } = false;
 
     public int RoleId { get; set; }
     public Role? Role { get; set; }

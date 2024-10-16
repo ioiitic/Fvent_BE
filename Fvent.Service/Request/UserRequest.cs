@@ -16,3 +16,7 @@ public record CreateUserReq(string Username, string Email, string Password, stri
 
 public record UpdateUserReq(string Username, string AvatarUrl, string Email, string Password, string FirstName,
                             string LastName, string PhoneNumber, string CardUrl, string Campus);
+
+public record ForgotPasswordReq(string email);
+
+//public record ResetPasswordReq(Guid userId, string token, string newPassword);

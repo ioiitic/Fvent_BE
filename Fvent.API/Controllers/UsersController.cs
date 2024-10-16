@@ -2,6 +2,7 @@
 using Fvent.Service.Services;
 using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -9,8 +10,38 @@ namespace Fvent.API.Controllers;
 
 [ApiController]
 public class UsersController(IUserService userService, IEventService eventService,
-                             INotificationService notificationService, IEventFollowerService eventFollowerService) : ControllerBase
+                             INotificationService notificationService, 
+                             IEventFollowerService eventFollowerService) : ControllerBase
 {
+    [HttpGet("api/users/verify-email")]
+    public async Task<IActionResult> VerifyEmail([FromQuery] Guid userId, [FromQuery] string token)
+    {
+        var result = await userService.VerifyEmailAsync(userId, token);
+        if (result)
+        {
+            return Ok("Email verified successfully!");
+        }
+        else
+        {
+            return BadRequest("Email verification failed.");
+        }
+    }
+
+    [HttpPost("api/users/forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordReq request)
+    {
+        await userService.RequestPasswordResetAsync(request.email);
+        return Ok("Password reset link has been sent.");
+    }
+
+    [HttpPost("api/users/reset-password")]
+    public async Task<IActionResult> ResetPassword([FromQuery] Guid userId, [FromQuery] string token, [FromBody] string newPassword)
+    {
+        await userService.ResetPasswordAsync(userId, token, newPassword);
+        return Ok("Password has been reset successfully.");
+    }
+
+
     #region User
     /// <summary>
     /// Controller for User Register

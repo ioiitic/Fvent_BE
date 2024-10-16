@@ -24,6 +24,7 @@ public class MyDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<VerificationToken> VerificationTokens { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -44,7 +45,7 @@ public class MyDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>()
-            .HasQueryFilter(u => !u.IsDeleted && u.Verified);
+            .HasQueryFilter(u => !u.IsDeleted && u.EmailVerified);
 
         modelBuilder.Entity<Comment>()
             .HasOne(c => c.User)
@@ -81,5 +82,8 @@ public class MyDbContext : DbContext
             .WithMany(u => u.Messages)
             .HasForeignKey(c => c.SenderId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<VerificationToken>()
+                    .HasKey(vt => vt.UserId);
     }
 }

@@ -14,12 +14,21 @@ public class EventsController(IEventService eventService,
 {
     #region Event
     [HttpGet]
-    public async Task<IActionResult> GetList([FromQuery] GetEventsRequest request)
+    public async Task<IActionResult> GetListEvents([FromQuery] GetEventsRequest request)
     {
         var res = await eventService.GetListEvents(request);
 
         return Ok(res);
     }
+
+    [HttpGet("organizer")]
+    public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] IdReq organizerId)
+    {
+        var res = await eventService.GetListEventsByOrganizer(organizerId.Id);
+
+        return Ok(res);
+    }
+
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetEvent(Guid id)
@@ -67,17 +76,17 @@ public class EventsController(IEventService eventService,
 
     #region Event Following
     [HttpPost("{id}/follow")]
-    public async Task<IActionResult> FollowEvent(Guid id, [FromBody] Guid userId)
+    public async Task<IActionResult> FollowEvent(Guid id, [FromBody] IdReq userId)
     {
-        var res = await eventFollowerService.FollowEvent(id, userId);
+        var res = await eventFollowerService.FollowEvent(id, userId.Id);
 
         return Ok(res);
     }
 
     [HttpDelete("{id}/unfollow")]
-    public async Task<IActionResult> UnfollowEvent(Guid id, [FromBody] Guid userId)
+    public async Task<IActionResult> UnfollowEvent(Guid id, [FromBody] IdReq userId)
     {
-        await eventFollowerService.UnfollowEvent(id, userId);
+        await eventFollowerService.UnfollowEvent(id, userId.Id);
 
         return Ok();
     }
@@ -85,12 +94,28 @@ public class EventsController(IEventService eventService,
 
     #region Event Registration
     [HttpPost("{id}/register")]
-    public async Task<IActionResult> RegisterEvent(Guid id, [FromBody] Guid userId)
+    public async Task<IActionResult> RegisterEvent(Guid id, [FromBody] IdReq userId)
     {
-        var res = await eventResgistationService.RegisterFreeEvent(id, userId);
+        var res = await eventResgistationService.RegisterFreeEvent(id, userId.Id);
 
         return Ok(res);
     }
+
+    [HttpDelete("{id}/unregister")]
+    public async Task<IActionResult> UnRegisterEvent(Guid id, [FromBody] IdReq userId)
+    {
+        await eventResgistationService.UnRegisterEvent(id, userId.Id);
+
+        return Ok();
+    }
+
+    [HttpGet("{eventId}/participants")]
+    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
+    {
+        var res = await eventResgistationService.GetAllParticipantsForEvent(eventId);
+        return Ok(res);
+    }
+
     #endregion
 
     #region Event Reviewing
