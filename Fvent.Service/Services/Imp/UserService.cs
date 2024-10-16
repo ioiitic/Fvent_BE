@@ -96,7 +96,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     public async Task<IdRes> Register(CreateUserReq req)
     {
         var user = req.ToUser();
-        user.Verified = false;
+        user.EmailVerified = false;
 
         await uOW.Users.AddAsync(user);
         await uOW.SaveChangesAsync();
@@ -109,7 +109,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         await uOW.SaveChangesAsync();
 
         // Send the verification email using Gmail SMTP
-        //var emailBody = $"Please verify your email by clicking <a href='{verificationLink}'>here</a>.";
+ 
         var emailBody = EmailTemplates.EmailVerificationTemplate.Replace("{verificationLink}", verificationLink);
 
         await emailService.SendEmailAsync(user.Email, "Email Verification", emailBody);
@@ -125,21 +125,80 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             ?? throw new NotFoundException(typeof(VerificationToken));
 
         // Step 2: Verify the user
-        var userSpec = new GetUserSpec(userId);
+        var userSpec = new GetUserSpec(userId).SetIgnoreQueryFilters(true);
         var user = await uOW.Users.FindFirstOrDefaultAsync(userSpec)
             ?? throw new NotFoundException(typeof(User));
 
-        user.Verified = true; // Mark user as verified
+        user.EmailVerified = true;
 
         // Save changes to the user
         await uOW.SaveChangesAsync();
 
-        // Step 3: Optionally, delete the token after successful verification
+        // Step 3: Delete the token after successful verification
         uOW.VerificationToken.Delete(storedToken);
         await uOW.SaveChangesAsync();
 
         return true;
     }
+
+    public async Task RequestPasswordResetAsync(string email)
+    {
+        // Step 1: Find user by email
+        var user = await uOW.Users.FindFirstOrDefaultAsync(new GetUserSpec(email))
+            ?? throw new NotFoundException(typeof(User));
+
+        // Step 2: Generate or replace a reset token
+        var storedToken = await uOW.VerificationToken.FindFirstOrDefaultAsync(new GetVerificationTokenSpec(user.UserId));
+
+        if (storedToken != null)
+        {
+            uOW.VerificationToken.Delete(storedToken); // Remove the existing token before generating a new one
+        }
+
+
+        var token = Guid.NewGuid().ToString();
+        var resetToken = new VerificationToken(user.UserId, token, DateTime.UtcNow.AddHours(1));
+
+        // Step 3: Store token in the database
+        await uOW.VerificationToken.AddAsync(resetToken);
+        await uOW.SaveChangesAsync();
+
+        // Step 4: Generate the reset link
+        var resetLink = GenerateResetLink(user.UserId, token);
+
+        // Step 5: Load email template and send email
+        var emailBody = EmailTemplates.PasswordResetTemplate.Replace("{resetLink}", resetLink);
+
+        await emailService.SendEmailAsync(user.Email, "Reset Your Password", emailBody);
+    }
+
+    public async Task ResetPasswordAsync(Guid userId, string token, string newPassword)
+    {
+        // Step 1: Verify the token
+        var spec = new GetVerificationTokenSpec(userId, token);
+        var resetToken = await uOW.VerificationToken.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(VerificationToken));
+
+        // Step 2: Check if token is expired
+        if (resetToken.ExpiryDate < DateTime.UtcNow)
+        {
+            throw new InvalidOperationException("Reset token has expired.");
+        }
+
+        // Step 3: Find the user
+        var user = await uOW.Users.FindFirstOrDefaultAsync(new GetUserSpec(userId))
+            ?? throw new NotFoundException(typeof(User));
+
+        // Step 4: Update user's password
+        user.Password = newPassword;
+        await uOW.SaveChangesAsync();
+
+        // Step 5: Remove the token after successful reset
+        uOW.VerificationToken.Delete(resetToken);
+        await uOW.SaveChangesAsync();
+    }
+
+
 
     public async Task Delete(Guid id)
     {
@@ -163,7 +222,12 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     private string GenerateVerificationLink(Guid userId, string token)
     {
-        // Adjust this URL as needed based on your frontend or API URL
         return $"https://localhost:7289/api/users/verify-email?userId={userId}&token={token}";
     }
+
+    private string GenerateResetLink(Guid userId, string token)
+    {
+        return $"https://localhost:7289/api/users/reset-password?userId={userId}&token={token}";
+    }
+
 }

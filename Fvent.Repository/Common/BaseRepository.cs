@@ -57,6 +57,11 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
 
         if (spec != null)
         {
+            if (spec.IgnoreQueryFilters)
+            {
+                query = query.IgnoreQueryFilters();
+            }
+
             if (spec.Filters is not null)
                 query = query.Where(spec.Filters);
 

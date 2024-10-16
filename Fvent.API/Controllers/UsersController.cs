@@ -2,6 +2,7 @@
 using Fvent.Service.Services;
 using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -25,6 +26,22 @@ public class UsersController(IUserService userService, IEventService eventServic
             return BadRequest("Email verification failed.");
         }
     }
+
+    [HttpPost("api/users/forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordReq request)
+    {
+        await userService.RequestPasswordResetAsync(request.email);
+        return Ok("Password reset link has been sent.");
+    }
+
+    [HttpPost("api/users/reset-password")]
+    public async Task<IActionResult> ResetPassword([FromQuery] Guid userId, [FromQuery] string token, [FromBody] string newPassword)
+    {
+        await userService.ResetPasswordAsync(userId, token, newPassword);
+        return Ok("Password has been reset successfully.");
+    }
+
+
     #region User
     /// <summary>
     /// Controller for User Register

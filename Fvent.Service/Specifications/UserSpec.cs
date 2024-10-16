@@ -80,5 +80,10 @@ public static class UserSpec
         {
             Filter(u => u.UserId == userId && u.Token.Equals(token));
         }
+
+        public GetVerificationTokenSpec(Guid userId)
+        {
+            Filter(u => u.UserId == userId);
+        }
     }
 }

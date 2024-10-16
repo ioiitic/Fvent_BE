@@ -16,5 +16,11 @@ public class VerificationToken
         Token = token;
         ExpiryDate = DateTime.UtcNow.AddHours(24); 
     }
+    public VerificationToken(Guid userId, string token, DateTime expireDate)
+    {
+        UserId = userId;
+        Token = token;
+        ExpiryDate = expireDate;
+    }
 }
 
