@@ -6,6 +6,8 @@ using Fvent.Repository;
 using Fvent.Service.Services;
 using Fvent.Service.Services.Imp;
 using System.Text;
+using System.Net.Mail;
+using System.Net;
 
 namespace Fvent.Service;
 
@@ -54,6 +56,22 @@ public static class ServiceConfigs
         services.AddScoped<IEventRegistationService, EventRegistationService>();
         services.AddScoped<IEventFollowerService, EventFollowerService>();
         services.AddScoped<ICommentService, CommentService>();
+        services.AddTransient<IEmailService, EmailService>();
+        services.AddTransient<SmtpClient>(provider =>
+        {
+            var configuration = provider.GetRequiredService<IConfiguration>();
+            var smtpClient = new SmtpClient
+            {
+                Host = configuration["Smtp:Host"],
+                Port = int.Parse(configuration["Smtp:Port"]),
+                EnableSsl = bool.Parse(configuration["Smtp:EnableSsl"]),
+                Credentials = new NetworkCredential(
+                    configuration["Smtp:Username"],
+                    configuration["Smtp:Password"]
+                )
+            };
+            return smtpClient;
+        });
 
         return services;
     }

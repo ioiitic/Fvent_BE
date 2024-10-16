@@ -13,6 +13,7 @@ public interface ISpecification<TEntity> where TEntity : class
     internal Expression<Func<TEntity, bool>>? Filters { get; }
     internal int PageNumber { get; }
     internal int PageSize { get; }
+    bool IgnoreQueryFilters { get; }
     ISpecification<TEntity> Select(Expression<Func<TEntity, TEntity>> select);
     ISpecification<TEntity> Filter(Expression<Func<TEntity, bool>> filter);
     ISpecification<TEntity> Include(Expression<Func<TEntity, object>> include);
