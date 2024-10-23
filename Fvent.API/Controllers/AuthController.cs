@@ -8,9 +8,9 @@ namespace Fvent.API.Controllers;
 [ApiController]
 public class AuthController(IUserService userService) : ControllerBase
 {
-    #region User
+    #region Auth
     /// <summary>
-    /// Controller for User Login
+    /// POST api/auth/login
     /// </summary>
     /// <param name="req"></param>
     /// <returns></returns>
@@ -18,10 +18,8 @@ public class AuthController(IUserService userService) : ControllerBase
     [Route("login")]
     public async Task<IActionResult> Authen([FromBody] AuthReq req)
     {
-        // Call service
         var res = await userService.Authen(req);
 
-        // Assign token to cookies response
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,

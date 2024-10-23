@@ -12,7 +12,7 @@ using static Fvent.Service.Specifications.EventFollowerSpec;
 
 namespace Fvent.Service.Services.Imp
 {
-    public class EventFollowerService(IUnitOfWork uOW) : IEventFollowerService
+    public class FollowerService(IUnitOfWork uOW) : IFollowerService
     {
         /// <summary>
         /// Add event to user Eventfollow

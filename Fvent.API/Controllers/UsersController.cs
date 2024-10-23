@@ -9,11 +9,14 @@ using System.Security.Claims;
 namespace Fvent.API.Controllers;
 
 [ApiController]
+[Route("api/users")]
 public class UsersController(IUserService userService, IEventService eventService,
                              INotificationService notificationService, 
-                             IEventFollowerService eventFollowerService) : ControllerBase
+                             IFollowerService eventFollowerService,
+                             IRegistationService registationService) : ControllerBase
 {
-    [HttpGet("api/users/verify-email")]
+    #region Email
+    [HttpGet("verify-email")]
     public async Task<IActionResult> VerifyEmail([FromQuery] Guid userId, [FromQuery] string token)
     {
         var result = await userService.VerifyEmailAsync(userId, token);
@@ -26,15 +29,16 @@ public class UsersController(IUserService userService, IEventService eventServic
             return BadRequest("Email verification failed.");
         }
     }
+    #endregion
 
-    [HttpPost("api/users/forgot-password")]
+    [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordReq request)
     {
         await userService.RequestPasswordResetAsync(request.email);
         return Ok("Password reset link has been sent.");
     }
 
-    [HttpPost("api/users/reset-password")]
+    [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromQuery] Guid userId, [FromQuery] string token, [FromBody] string newPassword)
     {
         await userService.ResetPasswordAsync(userId, token, newPassword);
@@ -147,4 +151,17 @@ public class UsersController(IUserService userService, IEventService eventServic
         return Ok(res);
     }
 
+    /// <summary>
+    /// GET api/events/{eventId}/participants
+    /// Get all user 
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpGet("{eventId}/participants")]
+    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
+    {
+        var res = await registationService.GetAllParticipantsForEvent(eventId);
+
+        return Ok(res);
+    }
 }
