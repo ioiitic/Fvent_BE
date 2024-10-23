@@ -14,7 +14,7 @@ using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp
 {
-    public class EventRegistationService(IUnitOfWork uOW) : IEventRegistationService
+    public class RegistationService(IUnitOfWork uOW) : IRegistationService
     {
         /// <summary>
         /// Register Free Event

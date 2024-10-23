@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Fvent.Service.Services
 {
-    public interface IEventFollowerService
+    public interface IFollowerService
     {
         Task<IdRes> FollowEvent(Guid id, Guid userId);
         Task UnfollowEvent(Guid eventId, Guid userId);

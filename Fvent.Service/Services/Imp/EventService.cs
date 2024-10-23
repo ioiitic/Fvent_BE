@@ -15,6 +15,10 @@ namespace Fvent.Service.Services.Imp;
 
 public class EventService(IUnitOfWork uOW) : IEventService
 {
+
+    #region Event
+    #endregion
+
     #region Student
     public async Task<PageResult<EventRes>> GetListRecommend(IdReq req)
     {
@@ -221,27 +225,10 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
     #endregion
 
-    #region Event
-    public async Task<EventRateRes> GetEventRate(IdReq req)
-    {
-        var spec = new GetEventRateSpec(req.Id);
-        var reviews = await uOW.Reviews.GetListAsync(spec);
-
-        double res = 0;
-        
-        if (!reviews.IsNullOrEmpty())
-        {
-            res = reviews.Sum(r => r.Rating)*1.0/reviews.Count();
-        }
-
-        return res.ToResponse();
-    }
-    #endregion
-
     #region Event-User
-    public async Task<IList<UserRes>> GetEventRegisters(IdReq req)
+    public async Task<IList<UserRes>> GetEventRegisters(Guid req)
     {
-        var spec = new GetEventRegistersSpec(req.Id);
+        var spec = new GetEventRegistersSpec(req);
         var events = await uOW.Events.GetListAsync(spec);
 
         var users = events.SelectMany(e => e.Registrations)
@@ -249,27 +236,6 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         return users.Select(u => u.ToResponse<UserRes>()).ToList();
     }
-    #endregion
-
-    #region Event-Review
-    public async Task<IdRes> CreateReview(CreateReviewReq req)
-    {
-        var review = req.ToReview();
-
-        await uOW.Reviews.AddAsync(review);
-        await uOW.SaveChangesAsync();
-
-        return review.EventId.ToResponse();
-    }
-
-    public async Task<IList<ReviewRes>> GetEventReviews(IdReq req)
-    {
-        var spec = new GetEventReviewsSpec(req.Id);
-        var reviews = await uOW.Reviews.GetListAsync(spec);
-
-        return reviews.Select(r => r.ToReponse(r.User!.FirstName + " " + r.User.LastName)).ToList();
-    }
-
     #endregion
 
     public async Task CreateNotification(CreateNotificationReq req)

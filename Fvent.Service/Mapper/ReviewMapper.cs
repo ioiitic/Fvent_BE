@@ -8,11 +8,11 @@ namespace Fvent.Service.Mapper;
 public static class ReviewMapper
 {
     public static EventReview ToReview(
-        this CreateReviewReq src)
+        this CreateReviewReq src, Guid eventId)
         => new(
             src.Rating,
             src.Comment,
-            src.EventId,
+            eventId,
             src.UserId,
             DateTime.UtcNow);
 

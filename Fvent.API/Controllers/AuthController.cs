@@ -9,6 +9,11 @@ namespace Fvent.API.Controllers;
 public class AuthController(IUserService userService) : ControllerBase
 {
     #region Auth
+    /// <summary>
+    /// POST api/auth/login
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     [HttpPost]
     [Route("login")]
     public async Task<IActionResult> Authen([FromBody] AuthReq req)

@@ -5,15 +5,14 @@ using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 using static Fvent.Service.Specifications.ReviewSpec;
-using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp;
 
 public class ReviewService(IUnitOfWork uOW) : IReviewService
 {
-    public async Task<IdRes> CreateReview(CreateReviewReq req)
+    public async Task<IdRes> CreateReview(Guid eventId, CreateReviewReq req)
     {
-        var review = req.ToReview();
+        var review = req.ToReview(eventId);
 
         await uOW.Reviews.AddAsync(review);
         await uOW.SaveChangesAsync();

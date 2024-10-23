@@ -6,17 +6,22 @@ namespace Fvent.Service.Services;
 
 public interface IEventService
 {
-    #region Student
-    Task<PageResult<EventRes>> GetListRecommend(IdReq req);
-    #endregion
-
-    #region CRUD Event
+    #region Event
     /// <summary>
     /// Get list events
     /// </summary>
     /// <param name="req"></param>
     /// <returns></returns>
     Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req);
+    #endregion
+
+
+
+    #region Student
+    Task<PageResult<EventRes>> GetListRecommend(IdReq req);
+    #endregion
+
+    #region CRUD Event
     Task<EventRes> GetEvent(Guid id);
     Task<IList<EventRes>> GetListEventsByOrganizer(Guid organizerId);
     Task<IdRes> CreateEvent(CreateEventReq req);
@@ -24,16 +29,12 @@ public interface IEventService
     Task DeleteEvent(Guid id);
     #endregion
 
-    #region Event
-    Task<EventRateRes> GetEventRate(IdReq req);
-    #endregion
-
-    #region Event-Review
-    Task<IdRes> CreateReview(CreateReviewReq req);
-    Task<IList<ReviewRes>> GetEventReviews(IdReq req);
-    #endregion
-
     #region Event-User
-    Task<IList<UserRes>> GetEventRegisters(IdReq req);
+    /// <summary>
+    /// Test commmand
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns>Tra ve <see cref="IList{UserRes}"/></returns>
+    Task<IList<UserRes>> GetEventRegisters(Guid req);
     #endregion
 }

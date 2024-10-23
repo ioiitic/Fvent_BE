@@ -7,7 +7,7 @@ public interface IReviewService
 {
     Task<IList<ReviewRes>> GetListReviews();
     Task<ReviewRes> GetReview(Guid id);
-    Task<IdRes> CreateReview(CreateReviewReq req);
+    Task<IdRes> CreateReview(Guid eventId, CreateReviewReq req);
     Task<IdRes> UpdateReview(Guid id, UpdateReviewReq req);
     Task DeleteReview(Guid id);
 }
