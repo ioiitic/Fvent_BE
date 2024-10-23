@@ -52,6 +52,11 @@ public class Event : ISoftDelete
         CreatedAt = createdAt;
     }
 
+    public void Update(int statusId)
+    {
+        StatusId = statusId;
+    }
+
     public void Update(string eventName,
                        string description,
                        DateTime startTime,
