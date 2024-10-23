@@ -56,7 +56,7 @@ public class ReviewService(IUnitOfWork uOW) : IReviewService
 
         review.Update(req.Rating,
             req.Comment,
-            req.EventId,
+            review.EventId,
             req.UserId);
 
         if (uOW.IsUpdate(review))

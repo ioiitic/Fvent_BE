@@ -13,6 +13,8 @@ public interface IUnitOfWork
     ICommentRepo Comment { get; }
     INotificationRepo Notification { get; }
     IVerificationTokenRepo VerificationToken { get; }
+    IEventTypeRepo EventType { get; }
+    IEventMediaRepo EventMedia { get; }
 
     bool IsUpdate<TEntity>(TEntity entity) where TEntity : class;
     Task SaveChangesAsync();

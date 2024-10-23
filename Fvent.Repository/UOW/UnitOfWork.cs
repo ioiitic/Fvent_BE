@@ -17,6 +17,8 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
     private readonly ICommentRepo _commentRepo = new CommentRepo(context);
     private readonly INotificationRepo _notificationRepo = new NotificationRepo(context);   
     private readonly IVerificationTokenRepo _verificationTokenRepo = new VerificationTokenRepo(context);
+    private readonly IEventTypeRepo _eventTypeRepo = new EventTypeRepo(context);
+    private readonly IEventMediaRepo _eventMediaRepo = new EventMediaRepo(context);
 
     public IEventRepo Events => _eventRepo;
     public IEventFollowerRepo EventFollower => _eventFollowerRepo;
@@ -30,6 +32,8 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
     public ICommentRepo Comment => _commentRepo;
     public INotificationRepo Notification => _notificationRepo;
     public IVerificationTokenRepo VerificationToken => _verificationTokenRepo;
+    public IEventTypeRepo EventType => _eventTypeRepo;
+    public IEventMediaRepo EventMedia => _eventMediaRepo;
 
     public bool IsUpdate<TEntity>(TEntity entity) where TEntity : class
         => _context.Entry(entity).State == EntityState.Modified;

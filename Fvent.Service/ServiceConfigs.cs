@@ -57,6 +57,7 @@ public static class ServiceConfigs
         services.AddScoped<IRegistationService, RegistationService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IEventTypeService, EventTypeService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<SmtpClient>(provider =>
         {

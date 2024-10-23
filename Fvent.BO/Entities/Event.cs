@@ -21,6 +21,7 @@ public class Event : ISoftDelete
     public EventStatus? Status { get; set; }
     public IList<EventRegistration>? Registrations { get; set; }
     public IList<EventTag>? Tags { get; set; }
+    public IList<EventMedia>? EventMedia { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
