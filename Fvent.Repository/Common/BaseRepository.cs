@@ -27,27 +27,24 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
 
     public async Task<PageResult<TEntity>> GetPageAsync(ISpecification<TEntity> spec)
     {
-        IQueryable<TEntity> query = Query(spec);
+        IQueryable <TEntity> query = Query(spec);
 
-        // Apply pagination before retrieving items
+        var items = await query.ToListAsync();
+
+        var totalItems = await query.CountAsync();
+
         if (spec.PageNumber > 0 && spec.PageSize > 0)
         {
             var skip = (spec.PageNumber - 1) * spec.PageSize;
             query = query.Skip(skip).Take(spec.PageSize);
         }
 
-        // Get paginated items
-        var items = await query.ToListAsync();
+        var count = await query.CountAsync();
 
-        // Calculate total items without pagination
-        var totalItems = await Query(spec).CountAsync();
+        var totalPages = (int)Ceiling(totalItems / (double)spec.PageSize);
 
-        // Calculate total pages
-        var totalPages = (int)Math.Ceiling(totalItems / (double)spec.PageSize);
-
-        return new PageResult<TEntity>(items, spec.PageNumber, spec.PageSize, items.Count, totalItems, totalPages);
+        return new PageResult<TEntity>(items, spec.PageNumber, spec.PageSize, count, totalItems, totalPages);
     }
-
 
     public async Task<TEntity?> FindFirstOrDefaultAsync(ISpecification<TEntity> spec)
     {
