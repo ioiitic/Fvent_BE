@@ -107,6 +107,10 @@ namespace Fvent.Repository.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("LinkEvent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -116,6 +120,10 @@ namespace Fvent.Repository.Migrations
 
                     b.Property<Guid>("OrganizerId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PasswordMeeting")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProcessNote")
                         .IsRequired()

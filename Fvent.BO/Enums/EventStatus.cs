@@ -1,4 +1,4 @@
-﻿public enum EventStatus
+﻿public enum EventStatuses
 {
     Draft = 0,
     Published = 1,
