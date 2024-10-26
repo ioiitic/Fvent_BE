@@ -15,8 +15,6 @@ public interface IEventService
     Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req);
     #endregion
 
-
-
     #region Student
     Task<PageResult<EventRes>> GetListRecommend(IdReq req);
     #endregion

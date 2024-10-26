@@ -60,7 +60,7 @@ public class NotificationController(INotificationService notificationService) : 
     [HttpDelete("{notiId}")]
     public async Task<IActionResult> DeleteNoti([FromRoute] Guid notiId)
     {
-        await notificationService.DeleteNotification(id);
+        await notificationService.DeleteNotification(notiId);
 
         return Ok();
     }

@@ -16,6 +16,12 @@ public class UsersController(IUserService userService, IEventService eventServic
                              IRegistationService registationService) : ControllerBase
 {
     #region Email
+    /// <summary>
+    /// GET api/users/verify-email
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpGet("verify-email")]
     public async Task<IActionResult> VerifyEmail([FromQuery] Guid userId, [FromQuery] string token)
     {
@@ -29,7 +35,6 @@ public class UsersController(IUserService userService, IEventService eventServic
             return BadRequest("Email verification failed.");
         }
     }
-    #endregion
 
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordReq request)
@@ -44,6 +49,7 @@ public class UsersController(IUserService userService, IEventService eventServic
         await userService.ResetPasswordAsync(userId, token, newPassword);
         return Ok("Password has been reset successfully.");
     }
+    #endregion
 
 
     #region User
