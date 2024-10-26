@@ -53,6 +53,13 @@ public class EventService(IUnitOfWork uOW) : IEventService
         }
         await uOW.SaveChangesAsync();
 
+        EventMedia poster = new EventMedia(_event.EventId, (int)MediaType.Poster, req.posterImg);
+        EventMedia thumbnail = new EventMedia(_event.EventId, (int)MediaType.Thumbnail, req.thumbnailImg);
+
+        await uOW.EventMedia.AddAsync(poster);
+        await uOW.EventMedia.AddAsync(thumbnail);
+        await uOW.SaveChangesAsync();
+
         return _event.EventId.ToResponse();
     }
 

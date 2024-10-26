@@ -1,8 +1,8 @@
 ﻿namespace Fvent.Service.Request;
 
 public record CreateEventReq(string EventName, string Description, DateTime StartTime, DateTime EndTime, string Location,
-                             int? MaxAttendees, string ProcessNote, Guid OrganizerId, Guid EventTypeId, int StatusId,
-                             List<string> eventTags);
+                             int? MaxAttendees, string ProcessNote, Guid OrganizerId, Guid EventTypeId,
+                             int StatusId, string posterImg, string thumbnailImg, List<string> eventTags);
 
 public record UpdateEventReq(string EventName, string Description, DateTime StartTime, DateTime EndTime, string Location,
                              int? MaxAttendees, string ProcessNote, Guid OrganizerId, Guid EventTypeId, int StatusId);
