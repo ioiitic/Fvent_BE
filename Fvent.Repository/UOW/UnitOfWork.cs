@@ -19,6 +19,7 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
     private readonly IVerificationTokenRepo _verificationTokenRepo = new VerificationTokenRepo(context);
     private readonly IEventTypeRepo _eventTypeRepo = new EventTypeRepo(context);
     private readonly IEventMediaRepo _eventMediaRepo = new EventMediaRepo(context);
+    private readonly ITagRepo _tagRepo = new TagRepo(context);
 
     public IEventRepo Events => _eventRepo;
     public IEventFollowerRepo EventFollower => _eventFollowerRepo;
@@ -34,6 +35,7 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
     public IVerificationTokenRepo VerificationToken => _verificationTokenRepo;
     public IEventTypeRepo EventType => _eventTypeRepo;
     public IEventMediaRepo EventMedia => _eventMediaRepo;
+    public ITagRepo Tag => _tagRepo;
 
     public bool IsUpdate<TEntity>(TEntity entity) where TEntity : class
         => _context.Entry(entity).State == EntityState.Modified;

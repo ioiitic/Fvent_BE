@@ -222,12 +222,15 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     private string GenerateVerificationLink(Guid userId, string token)
     {
-        return $"https://localhost:7289/api/users/verify-email?userId={userId}&token={token}";
+        //return $"https://localhost:7289/api/users/verify-email?userId={userId}&token={token}";
+        return $"https://fvent.somee.com/api/users/verify-email?userId={userId}&token={token}";
+
     }
 
     private string GenerateResetLink(Guid userId, string token)
     {
-        return $"https://localhost:7289/api/users/reset-password?userId={userId}&token={token}";
+        //return $"https://localhost:7289/api/users/reset-password?userId={userId}&token={token}";
+        return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
     }
 
 }
