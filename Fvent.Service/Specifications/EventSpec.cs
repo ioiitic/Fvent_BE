@@ -1,5 +1,6 @@
 ﻿using Fvent.BO.Entities;
 using Fvent.Repository.Common;
+using System.Drawing.Printing;
 
 namespace Fvent.Service.Specifications;
 
@@ -7,22 +8,26 @@ public static class EventSpec
 {
     public class GetEventSpec : Specification<Event>
     {
-        public GetEventSpec(string? searchKeyword, DateTime? fromDate, DateTime? toDate, string? eventType)
+        public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, string? eventType, string? eventTag,
+                            string orderBy, bool isDescending, int pageNumber, int pageSize)
         {
             // Filter by search keyword (for event name or description)
             if (!string.IsNullOrEmpty(searchKeyword))
             {
-                Filter(e => e.EventName.Contains(searchKeyword) || e.Description.Contains(searchKeyword));
+                Filter(e => e.EventName.Contains(searchKeyword) || e.Description.Contains(searchKeyword) || e.Organizer!.Username.Contains(searchKeyword));
             }
 
-            // Filter by date range
-            if (fromDate.HasValue)
+            // Filter by month for StartTime and EndTime
+            if (inMonth.HasValue)
             {
-                Filter(e => e.StartTime >= fromDate.Value);
-            }
-            if (toDate.HasValue)
-            {
-                Filter(e => e.EndTime <= toDate.Value);
+                var month = inMonth.Value;
+                var year = DateTime.UtcNow.Year;
+                if (inYear.HasValue)
+                {
+                    year = inYear.Value;
+                }
+                
+                Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
 
             // Filter by event type
@@ -31,10 +36,41 @@ public static class EventSpec
                 Filter(e => e.EventType!.EventTypeName == eventType);
             }
 
+            // Filter by event tag (assuming each event has an IList<EventTag> called Tags)
+            if (!string.IsNullOrEmpty(eventTag))
+            {
+                Filter(e => e.Tags!.Any(tag => tag.Tag == eventTag));
+            }
+
+            if (orderBy is not null)
+            {
+                switch (orderBy)
+                {
+                    case "StartTime":
+                        OrderBy(u => u.StartTime, isDescending);
+                        break;
+                    case "EndTime":
+                        OrderBy(u => u.EndTime, isDescending);
+                        break;
+                    case "Name":
+                        OrderBy(u => u.EventName, isDescending);
+                        break;
+                }
+            }
+
+            // Filter by event type
+            if (!string.IsNullOrEmpty(eventType))
+            {
+                Filter(e => e.EventType!.EventTypeName == eventType);
+            }
+
+            AddPagination(pageNumber, pageSize);
+
             // Include related entities
             Include(e => e.Organizer!);
             Include(e => e.EventType!);
             Include(e => e.EventMedia!);
+            Include(e => e.Tags!);
         }
 
         public GetEventSpec(Guid id)
