@@ -6,6 +6,7 @@ using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 using Fvent.Service.Specifications;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using static Fvent.Service.Specifications.EventRegistationSpec;
@@ -77,46 +78,25 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
     public async Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req)
     {
-        var spec = new GetEventSpec(req.SearchKeyword, req.FromDate, req.ToDate, req.EventType);
-
-        // Apply sorting
-        if (req.OrderBy == "Name")
-        {
-            spec.OrderBy(e => e.EventName, req.IsDescending);
-        }
-        else if (req.OrderBy == "StartTime")
-        {
-            spec.OrderBy(e => e.StartTime, req.IsDescending);
-        }
-        
-        // Apply pagination
-        spec.AddPagination(req.PageNumber, req.PageSize);
+        var spec = new GetEventSpec(req.SearchKeyword, req.InMonth, req.InYear, req.EventType, req.EventTag, req.OrderBy, req.IsDescending, req.PageNumber, req.PageSize);
 
         // Get paginated list of events
-        var _events = await uOW.Events.GetListAsync(spec);
+        var _events = await uOW.Events.GetPageAsync(spec);
 
-        // Calculate the total number of items (without paging)
-        var totalItems = _events.Count();
+        // Map each event to EventRes with the ToResponse extension method
+        var eventResponses = _events.Items.Select(eventEntity => eventEntity.ToResponse()).ToList();
 
-        // Map events to EventRes
-        var eventResponses = _events.Select(e => e.ToResponse(
-            e.Organizer!.FirstName + " " + e.Organizer!.LastName,
-            e.EventType!.EventTypeName,
-            null)).ToList();
-
-        // Calculate total pages
-        var totalPages = (int)Math.Ceiling(totalItems / (double)req.PageSize);
-
-        // Create and return PageResult
         return new PageResult<EventRes>(
             eventResponses,
-            req.PageNumber,
-            req.PageSize,
-            eventResponses.Count,
-            totalItems,
-            totalPages
+            _events.PageNumber,
+            _events.PageSize,
+            _events.Count,
+            _events.TotalItems,
+            _events.TotalPages
         );
     }
+
+
 
     /// <summary>
     /// Get Event Detail
