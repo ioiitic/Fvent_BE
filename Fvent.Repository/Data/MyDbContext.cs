@@ -15,7 +15,6 @@ public class MyDbContext : DbContext
     public DbSet<Tag> Tags { get; set; }
     public DbSet<EventFile> EventFiles { get; set; }
     public DbSet<EventType> EventTypes { get; set; }
-    public DbSet<EventStatus> EventStatuses { get; set; }
     public DbSet<EventRegistration> EventRegistrations { get; set; }
     public DbSet<EventReview> EventReviews { get; set; }
     public DbSet<Comment> Comments { get; set; }

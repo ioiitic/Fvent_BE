@@ -7,13 +7,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CC2373CB-66B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{E0A2079C-1151-4308-A1D9-850D86E1DBA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fvent.API", "Fvent.API\Fvent.API.csproj", "{F37D25F0-6B86-4238-A94E-2D076CC03745}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fvent.API", "Fvent.API\Fvent.API.csproj", "{F37D25F0-6B86-4238-A94E-2D076CC03745}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fvent.BO", "Fvent.BO\Fvent.BO.csproj", "{89E6EE9F-CEB2-4660-979E-E03C04BAEE7D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fvent.BO", "Fvent.BO\Fvent.BO.csproj", "{89E6EE9F-CEB2-4660-979E-E03C04BAEE7D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fvent.Repository", "Fvent.Repository\Fvent.Repository.csproj", "{A94B3CBD-6F7E-4C61-8A3D-F24B5AC7FAA5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fvent.Repository", "Fvent.Repository\Fvent.Repository.csproj", "{A94B3CBD-6F7E-4C61-8A3D-F24B5AC7FAA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fvent.Service", "Fvent.Service\Fvent.Service.csproj", "{505E24B9-9414-4631-BBD5-6EBC88E0F78A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fvent.Service", "Fvent.Service\Fvent.Service.csproj", "{505E24B9-9414-4631-BBD5-6EBC88E0F78A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8FF8929C-5D3E-40E8-ACBB-8392E5FC778E}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

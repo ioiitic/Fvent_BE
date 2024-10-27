@@ -9,4 +9,12 @@ public class EventMedia
     public DateTime UploadedAt { get; set; }
 
     public Event Event { get; set; }
+
+    public EventMedia(Guid eventId, int mediaType, string mediaUrl)
+    {
+        EventId=eventId;
+        MediaType=mediaType;
+        MediaUrl=mediaUrl;
+        UploadedAt=DateTime.UtcNow;
+    }
 }

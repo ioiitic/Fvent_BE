@@ -34,6 +34,7 @@ public static class EventSpec
             // Include related entities
             Include(e => e.Organizer!);
             Include(e => e.EventType!);
+            Include(e => e.EventMedia!);
         }
 
         public GetEventSpec(Guid id)
@@ -42,6 +43,7 @@ public static class EventSpec
 
             Include(u => u.Organizer!);
             Include(u => u.EventType!);
+            Include(u => u.EventMedia!);
         }
     }
 
@@ -60,6 +62,10 @@ public static class EventSpec
             Filter(e => e.EventId == Id);
 
             Include("Registration.User");
+            Include(e => e.Organizer!);
+            Include(e => e.EventType!);
+            Include(e => e.Tags!);
+            Include(e => e.EventMedia!);
         }
     }
 
@@ -82,6 +88,7 @@ public static class EventSpec
             Include(e => e.Organizer!);
             Include(e => e.EventType!);
             Include(e => e.Tags!);
+            Include(e => e.EventMedia!);
         }
     }
 
@@ -94,6 +101,7 @@ public static class EventSpec
             Include(e => e.Tags!);
             Include(u => u.Organizer!);
             Include(e => e.EventType!);
+            Include(e => e.EventMedia!);
         }
     }
     public class GetUserFollowsEventSpec : Specification<EventFollower>

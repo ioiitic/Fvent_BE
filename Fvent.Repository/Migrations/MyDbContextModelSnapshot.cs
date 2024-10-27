@@ -423,6 +423,10 @@ namespace Fvent.Repository.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("SvgContent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("TagName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -606,7 +610,7 @@ namespace Fvent.Repository.Migrations
             modelBuilder.Entity("Fvent.BO.Entities.EventMedia", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.Event", "Event")
-                        .WithMany()
+                        .WithMany("EventMedia")
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -714,6 +718,8 @@ namespace Fvent.Repository.Migrations
 
             modelBuilder.Entity("Fvent.BO.Entities.Event", b =>
                 {
+                    b.Navigation("EventMedia");
+
                     b.Navigation("Registrations");
 
                     b.Navigation("Tags");

@@ -10,6 +10,8 @@ public record EventRes(Guid eventId,
                        string ProcessNote,
                        string OrganizerName,
                        string EventTypeName,
+                       string PosterImg,
+                       string ThumbnailImg,
                        int StatusId,
                        List<string> EventTags); 
 public record EventRateRes(double AvgRate);

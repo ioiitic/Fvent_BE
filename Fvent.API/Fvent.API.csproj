@@ -14,5 +14,9 @@
     <ProjectReference Include="..\Fvent.BO\Fvent.BO.csproj" />
     <ProjectReference Include="..\Fvent.Service\Fvent.Service.csproj" />
   </ItemGroup>
+  
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
 
 </Project>

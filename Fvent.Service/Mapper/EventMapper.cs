@@ -34,6 +34,8 @@ public static class EventMapper
             src.ProcessNote,
             src.Organizer!.FirstName + " " + src.Organizer.LastName,
             src.EventType!.EventTypeName,
+            src.EventMedia.Where( j=> j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
+            src.EventMedia.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.StatusId,
             src.Tags.Select(t => t.Tag).ToList());
 
@@ -53,6 +55,8 @@ public static class EventMapper
             src.ProcessNote,
             organizerName,
             eventTypeName,
+            src.EventMedia.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
+            src.EventMedia.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.StatusId,
             eventTags);
 
