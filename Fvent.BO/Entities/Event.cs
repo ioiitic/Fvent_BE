@@ -12,32 +12,23 @@ public class Event : ISoftDelete
     public string Location { get; set; }
     public int? MaxAttendees { get; set; }
     public string ProcessNote { get; set; }
+    public EventStatus Status { get; set; }
 
     public Guid OrganizerId { get; set; }
     public Guid EventTypeId { get; set; }
-    public int StatusId { get; set; }
     public User? Organizer { get; set; }
     public EventType? EventType { get; set; }
-    public EventStatus? Status { get; set; }
     public IList<EventRegistration>? Registrations { get; set; }
     public IList<EventTag>? Tags { get; set; }
-    public IList<EventMedia>? EventMedia { get; set; }
+    public IList<EventMedia>? EventMedias { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime? DeletedAt { get; set; }
 
-    public Event(string eventName,
-                 string description,
-                 DateTime startTime,
-                 DateTime endTime,
-                 string location,
-                 int? maxAttendees,
-                 string processNote,
-                 Guid organizerId,
-                 Guid eventTypeId,
-                 int statusId,
+    public Event(string eventName, string description, DateTime startTime, DateTime endTime, string location,
+                 int? maxAttendees, string processNote, EventStatus status, Guid organizerId, Guid eventTypeId,
                  DateTime createdAt)
     {
         EventName = eventName;
@@ -49,20 +40,12 @@ public class Event : ISoftDelete
         ProcessNote = processNote;
         OrganizerId = organizerId;
         EventTypeId = eventTypeId;
-        StatusId = statusId;
+        Status = status;
         CreatedAt = createdAt;
     }
 
-    public void Update(string eventName,
-                       string description,
-                       DateTime startTime,
-                       DateTime endTime,
-                       string location,
-                       int? maxAttendees,
-                       string processNote,
-                       Guid organizerId,
-                       Guid eventTypeId,
-                       int statusId)
+    public void Update(string eventName, string description, DateTime startTime, DateTime endTime, string location,
+                       int? maxAttendees, string processNote, EventStatus status, Guid organizerId, Guid eventTypeId)
     {
         EventName = eventName;
         Description = description;
@@ -73,6 +56,6 @@ public class Event : ISoftDelete
         ProcessNote = processNote;
         OrganizerId = organizerId;
         EventTypeId = eventTypeId;
-        StatusId = statusId;
+        Status = status;
     }
 }

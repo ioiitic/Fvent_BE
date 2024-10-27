@@ -1,5 +1,6 @@
 ﻿using Fvent.BO.Entities;
 using Fvent.Repository.Common;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Fvent.Service.Specifications;
 
@@ -34,7 +35,7 @@ public static class EventSpec
             // Include related entities
             Include(e => e.Organizer!);
             Include(e => e.EventType!);
-            Include(e => e.EventMedia!);
+            Include(e => e.EventMedias!);
         }
 
         public GetEventSpec(Guid id)
@@ -43,29 +44,44 @@ public static class EventSpec
 
             Include(u => u.Organizer!);
             Include(u => u.EventType!);
-            Include(u => u.EventMedia!);
+            Include(u => u.EventMedias!);
         }
     }
 
     public class GetEventRateSpec : Specification<EventReview>
     {
-        public GetEventRateSpec(Guid Id)
+        public GetEventRateSpec(Guid id)
         {
-            Filter(er => er.EventId == Id);
+            Filter(er => er.EventId == id);
         }
     }
 
-    public class GetEventRegistersSpec : Specification<Event>
+    public class GetRegisteredEventsSpec : Specification<Event>
     {
-        public GetEventRegistersSpec(Guid Id)
+        public GetRegisteredEventsSpec(Guid userId)
         {
-            Filter(e => e.EventId == Id);
+            Filter(e => e.Registrations!.Any(r => r.UserId == userId));
 
-            Include("Registration.User");
+            Include("Registrations.User.Role");
             Include(e => e.Organizer!);
             Include(e => e.EventType!);
             Include(e => e.Tags!);
-            Include(e => e.EventMedia!);
+            Include(e => e.EventMedias!);
+        }
+
+    }
+
+    public class GetRegisteredUsersSpec : Specification<Event>
+    {
+        public GetRegisteredUsersSpec(Guid eventId)
+        {
+            Filter(e => e.EventId == eventId);
+
+            Include("Registrations.User.Role");
+            Include(e => e.Organizer!);
+            Include(e => e.EventType!);
+            Include(e => e.Tags!);
+            Include(e => e.EventMedias!);
         }
     }
 
@@ -88,7 +104,7 @@ public static class EventSpec
             Include(e => e.Organizer!);
             Include(e => e.EventType!);
             Include(e => e.Tags!);
-            Include(e => e.EventMedia!);
+            Include(e => e.EventMedias!);
         }
     }
 
@@ -101,7 +117,7 @@ public static class EventSpec
             Include(e => e.Tags!);
             Include(u => u.Organizer!);
             Include(e => e.EventType!);
-            Include(e => e.EventMedia!);
+            Include(e => e.EventMedias!);
         }
     }
     public class GetUserFollowsEventSpec : Specification<EventFollower>

@@ -13,5 +13,6 @@ public interface IEventService
     Task<IdRes> CreateEvent(CreateEventReq req);
     Task<IdRes> UpdateEvent(Guid id, UpdateEventReq req);
     Task DeleteEvent(Guid id);
-    Task<IList<UserRes>> GetEventRegisters(Guid req);
+    Task<IList<UserRes>> GetRegisteredUsers(Guid eventId);
+    Task<IList<EventRes>> GetRegisteredEvents(Guid userId);
 }

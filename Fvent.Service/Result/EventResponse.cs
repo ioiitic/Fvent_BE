@@ -1,6 +1,6 @@
 ﻿namespace Fvent.Service.Result;
 
-public record EventRes(Guid eventId,
+public record EventRes(Guid EventId,
                        string EventName,
                        string Description,
                        DateTime StartTime,
@@ -12,6 +12,6 @@ public record EventRes(Guid eventId,
                        string EventTypeName,
                        string PosterImg,
                        string ThumbnailImg,
-                       int StatusId,
+                       EventStatus Status,
                        List<string> EventTags); 
 public record EventRateRes(double AvgRate);

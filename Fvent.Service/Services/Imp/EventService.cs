@@ -5,6 +5,7 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
+using Fvent.Service.Specifications;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using static Fvent.Service.Specifications.EventRegistationSpec;
@@ -46,15 +47,15 @@ public class EventService(IUnitOfWork uOW) : IEventService
         await uOW.Events.AddAsync(_event);
         await uOW.SaveChangesAsync();
         
-        foreach (var item in req.eventTags)
+        foreach (var item in req.EventTags)
         {
             EventTag tag = new EventTag(_event.EventId, (string)item);
             await uOW.EventTag.AddAsync(tag);
         }
         await uOW.SaveChangesAsync();
 
-        EventMedia poster = new EventMedia(_event.EventId, (int)MediaType.Poster, req.posterImg);
-        EventMedia thumbnail = new EventMedia(_event.EventId, (int)MediaType.Thumbnail, req.thumbnailImg);
+        EventMedia poster = new(_event.EventId, (int)MediaType.Poster, req.PosterImg);
+        EventMedia thumbnail = new(_event.EventId, (int)MediaType.Thumbnail, req.ThumbnailImg);
 
         await uOW.EventMedia.AddAsync(poster);
         await uOW.EventMedia.AddAsync(thumbnail);
@@ -161,9 +162,9 @@ public class EventService(IUnitOfWork uOW) : IEventService
             req.Location,
             req.MaxAttendees,
             req.ProcessNote,
+            req.Status,
             req.OrganizerId,
-            req.EventTypeId,
-            req.StatusId);
+            req.EventTypeId);
 
         if (uOW.IsUpdate(_event))
         {
@@ -223,22 +224,26 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         var _events = await uOW.Events.GetListAsync(spec);
 
-        return _events.Select(e => e.ToResponse(
-                e.Organizer!.FirstName + " " + e.Organizer!.LastName,
-                e.EventType!.EventTypeName,
-                null)).ToList();
-       
+        return _events.Select(e => e.ToResponse(e.Organizer!.FirstName + " " + e.Organizer!.LastName,
+                                                e.EventType!.EventTypeName, null)).ToList();
     }
-
     #endregion
 
     #region Event-User
-    public async Task<IList<UserRes>> GetEventRegisters(Guid req)
+    public async Task<IList<EventRes>> GetRegisteredEvents(Guid userId)
     {
-        var spec = new GetEventRegistersSpec(req);
+        var spec = new GetRegisteredEventsSpec(userId);
         var events = await uOW.Events.GetListAsync(spec);
 
-        var users = events.SelectMany(e => e.Registrations)
+        return events.Select(e => e.ToResponse()).ToList();
+    }
+
+    public async Task<IList<UserRes>> GetRegisteredUsers(Guid eventId)
+    {
+        var spec = new GetRegisteredUsersSpec(eventId);
+        var events = await uOW.Events.GetListAsync(spec);
+
+        var users = events.SelectMany(e => e.Registrations!)
             .Select(r => r.User);
 
         return users.Select(u => u.ToResponse<UserRes>()).ToList();

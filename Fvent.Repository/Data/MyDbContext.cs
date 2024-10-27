@@ -27,7 +27,6 @@ public class MyDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-
         IConfigurationRoot configuration = new ConfigurationBuilder()
             //Note: Remove this to migrationdotnet
             //.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Fvent.API/"))

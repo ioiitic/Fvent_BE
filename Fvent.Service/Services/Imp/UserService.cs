@@ -26,7 +26,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
-        var token = JS.GenerateToken(user.Email, user.Role!, configuration);
+        var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
 
         return new AuthResponse(token);
     }
@@ -109,15 +109,13 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         await uOW.SaveChangesAsync();
 
         // Send the verification email using Gmail SMTP
- 
         var emailBody = EmailTemplates.EmailVerificationTemplate.Replace("{verificationLink}", verificationLink);
-
         await emailService.SendEmailAsync(user.Email, "Email Verification", emailBody);
 
         return user.UserId.ToResponse();
     }
 
-    public async Task<bool> VerifyEmailAsync(Guid userId, string token)
+    public async Task VerifyEmailAsync(Guid userId, string token)
     {
         // Step 1: Check if the token exists in the database
         var spec = new GetVerificationTokenSpec(userId, token);
@@ -128,7 +126,6 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var userSpec = new GetUserSpec(userId).SetIgnoreQueryFilters(true);
         var user = await uOW.Users.FindFirstOrDefaultAsync(userSpec)
             ?? throw new NotFoundException(typeof(User));
-
         user.EmailVerified = true;
 
         // Save changes to the user
@@ -138,7 +135,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         uOW.VerificationToken.Delete(storedToken);
         await uOW.SaveChangesAsync();
 
-        return true;
+        return;
     }
 
     public async Task RequestPasswordResetAsync(string email)
