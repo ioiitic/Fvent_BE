@@ -1,38 +1,80 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
 using Fvent.Service.Services.Imp;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Fvent.API.Controllers;
 
 [Route("api/events")]
 [ApiController]
-public class EventsController(IEventService eventService,
-                              ICommentService commentService,
-                              IEventFollowerService eventFollowerService,
-                              IEventRegistationService eventResgistationService) : ControllerBase
+public class EventsController(IEventService eventService, ICommentService commentService,
+                              IFollowerService followerService, IRatingService ratingService,
+                              IRegistationService registationService, IReviewService reviewService,
+                              IUserService userService) : ControllerBase
 {
-    #region Student
-    #endregion
-
-    #region CRUD Event
+    #region Event
+    /// <summary>
+    /// Get list events
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     [HttpGet]
-    public async Task<IActionResult> GetList([FromQuery] GetEventsRequest request)
+    public async Task<IActionResult> GetListEvents([FromQuery] GetEventsRequest request)
     {
         var res = await eventService.GetListEvents(request);
 
         return Ok(res);
     }
 
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetEvent(Guid id)
+    /// <summary>
+    /// Get an event detail
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpGet("{eventId}")]
+    public async Task<IActionResult> GetEvent(Guid eventId)
     {
-        var res = await eventService.GetEvent(id);
+        var res = await eventService.GetEvent(eventId);
 
         return Ok(res);
     }
 
+    /// <summary>
+    /// Get list events belong to organizer
+    /// </summary>
+    /// <param name="organizerId"></param>
+    /// <returns></returns>
+    [HttpGet("organizer")]
+    public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] IdReq organizerId)
+    {
+        var res = await eventService.GetListEventsByOrganizer(organizerId.Id);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Get list events recommended for user
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("recommendation")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> GetListRecommend()
+    {
+        var email = HttpContext.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+        var user = await userService.GetByEmail(email!);
+
+        var res = await eventService.GetListRecommend(new IdReq(user.UserId));
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Create an event
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     [HttpPost]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventReq req)
     {
@@ -41,111 +83,178 @@ public class EventsController(IEventService eventService,
         return Ok(res);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateEvent([FromRoute] Guid id, [FromBody] UpdateEventReq req)
+    /// <summary>
+    /// Update event info
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPut("{eventId}")]
+    public async Task<IActionResult> UpdateEvent([FromRoute] Guid eventId, [FromBody] UpdateEventReq req)
     {
-        var res = await eventService.UpdateEvent(id, req);
+        var res = await eventService.UpdateEvent(eventId, req);
 
         return Ok(res);
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteEvent([FromRoute] Guid id)
+    /// <summary>
+    /// Soft delete an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpDelete("{eventId}")]
+    public async Task<IActionResult> DeleteEvent([FromRoute] Guid eventId)
     {
-        await eventService.DeleteEvent(id);
+        await eventService.DeleteEvent(eventId);
 
         return Ok();
     }
     #endregion
 
-    #region Event
-    [HttpGet]
-    [Route("api/events/{id}/average-rating")]
-    public async Task<IActionResult> GetEventRate([FromRoute] Guid id)
+    #region Event Comment
+    /// <summary>
+    /// Get comments of an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpGet("{eventId}/comments")]
+    public async Task<IActionResult> GetComments(Guid eventId)
     {
-        var res = await eventService.GetEventRate(new IdReq(id));
+        var res = await commentService.GetListComments(eventId);
 
         return Ok(res);
     }
 
-    [HttpPost("{id}/follow")]
-    public async Task<IActionResult> FollowEvent(Guid id, [FromBody] Guid userId)
+    /// <summary>
+    /// Comment on an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("{eventId}/comments")]
+    public async Task<IActionResult> CreateComment(Guid eventId, [FromBody] CreateCommentReq req)
     {
-        var res = await eventFollowerService.FollowEvent(id, userId);
+        var res = await commentService.CreateComment(eventId, req);
+
+        return Ok(res);
+    }
+    #endregion
+
+    #region Event Following
+    /// <summary>
+    /// Follow an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    [HttpPost("{eventId}/follow")]
+    public async Task<IActionResult> FollowEvent(Guid eventId, [FromBody] IdReq userId)
+    {
+        var res = await followerService.FollowEvent(eventId, userId.Id);
 
         return Ok(res);
     }
 
-    [HttpDelete("{id}/unfollow")]
-    public async Task<IActionResult> UnfollowEvent(Guid id, [FromBody] Guid userId)
+    /// <summary>
+    /// Unfollow an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    [HttpDelete("{eventId}/unfollow")]
+    public async Task<IActionResult> UnfollowEvent(Guid eventId, [FromBody] IdReq userId)
     {
-        await eventFollowerService.UnfollowEvent(id, userId);
+        await followerService.UnfollowEvent(eventId, userId.Id);
+
+        return Ok();
+    }
+    #endregion
+
+    #region Event Rating
+    /// <summary>
+    /// Get averate rating of an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpGet("{eventId}/average-rating")]
+    public async Task<IActionResult> GetEventRate([FromRoute] Guid eventId)
+    {
+        var res = await ratingService.GetEventRate(eventId);
+
+        return Ok(res);
+    }
+    #endregion
+
+    #region Event Registration
+    /// <summary>
+    /// Register an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    [HttpPost("{eventId}/register")]
+    public async Task<IActionResult> RegisterEvent(Guid eventId, [FromBody] IdReq userId)
+    {
+        var res = await registationService.RegisterFreeEvent(eventId, userId.Id);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Unregister an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    [HttpDelete("{eventId}/unregister")]
+    public async Task<IActionResult> UnRegisterEvent(Guid eventId, [FromBody] IdReq userId)
+    {
+        await registationService.UnRegisterEvent(eventId, userId.Id);
 
         return Ok();
     }
 
-    [HttpPost("{id}/register")]
-    public async Task<IActionResult> RegisterEvent(Guid id, [FromBody] Guid userId)
-    {
-        var res = await eventResgistationService.RegisterFreeEvent(id, userId);
-
-        return Ok(res);
-    }
-
+    /// <summary>
+    /// Get all users registered an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
     [HttpGet("{eventId}/participants")]
     public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
     {
-        var res = await eventResgistationService.GetAllParticipantsForEvent(eventId);
+        var res = await eventService.GetRegisteredUsers(eventId);
+
         return Ok(res);
     }
-
     #endregion
 
-    #region Event-Review
-    [HttpPost]
-    [Route("api/events/{id}/reviews")]
-    public async Task<IActionResult> CreateReview([FromRoute] Guid id, [FromBody] CreateReviewReq req)
-    {
-        var res = await eventService.CreateReview(new CreateReviewReq(req.Rating, req.Comment, id, req.UserId));
-
-        return Ok(res);
-    }
-
+    #region Event Reviewing
+    /// <summary>
+    /// GET api/events/{eventId}/reviews
+    /// Get a list of event reviews
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
     [HttpGet]
-    [Route("api/events/{id}/reviews")]
-    public async Task<IActionResult> GetEventReviews([FromRoute] Guid id)
+    [Route("{eventId}/reviews")]
+    public async Task<IActionResult> GetEventReviews([FromRoute] Guid eventId)
     {
-        var res = await eventService.GetEventReviews(new IdReq(id));
-
-        return Ok(res);
-    }
-    #endregion
-
-    #region Event-User
-    [HttpGet]
-    [Route("api/events/{id}/paticipants")]
-    public async Task<IActionResult> GetEventRegisters([FromRoute] Guid id)
-    {
-        var res = await eventService.GetEventRegisters(new IdReq(id));
-
-        return Ok(res);
-    }
-    #endregion
-
-    #region Event-Comment
-
-    [HttpGet("{id}/comments")]
-    public async Task<IActionResult> GetComments(Guid id)
-    {
-        var res = await commentService.GetListComments(id);
+        var res = await reviewService.GetReview(eventId);
 
         return Ok(res);
     }
 
-    [HttpPost("{id}/comments")]
-    public async Task<IActionResult> CreateComment(Guid id, [FromBody] CreateCommentReq req)
+    /// <summary>
+    /// POST api/events/{eventId}/reviews
+    /// Review an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("{eventId}/reviews")]
+    public async Task<IActionResult> CreateReview([FromRoute] Guid eventId, [FromBody] CreateReviewReq req)
     {
-        var res = await commentService.CreateComment(id, req);
+        var res = await reviewService.CreateReview(eventId, req);
 
         return Ok(res);
     }

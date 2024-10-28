@@ -107,6 +107,10 @@ namespace Fvent.Repository.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("LinkEvent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -117,6 +121,10 @@ namespace Fvent.Repository.Migrations
                     b.Property<Guid>("OrganizerId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("PasswordMeeting")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ProcessNote")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -124,7 +132,7 @@ namespace Fvent.Repository.Migrations
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("StatusId")
+                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -135,8 +143,6 @@ namespace Fvent.Repository.Migrations
                     b.HasIndex("EventTypeId");
 
                     b.HasIndex("OrganizerId");
-
-                    b.HasIndex("StatusId");
 
                     b.ToTable("Events");
                 });
@@ -281,23 +287,6 @@ namespace Fvent.Repository.Migrations
                     b.ToTable("EventReviews");
                 });
 
-            modelBuilder.Entity("Fvent.BO.Entities.EventStatus", b =>
-                {
-                    b.Property<int>("EventStatusId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EventStatusId"));
-
-                    b.Property<string>("StatusName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("EventStatusId");
-
-                    b.ToTable("EventStatuses");
-                });
-
             modelBuilder.Entity("Fvent.BO.Entities.EventTag", b =>
                 {
                     b.Property<Guid>("EventTagId")
@@ -423,6 +412,10 @@ namespace Fvent.Repository.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("SvgContent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("TagName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -455,6 +448,9 @@ namespace Fvent.Repository.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EmailVerified")
+                        .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -493,6 +489,24 @@ namespace Fvent.Repository.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("VerificationToken", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("VerificationTokens");
                 });
 
             modelBuilder.Entity("Fvent.BO.Entities.Comment", b =>
@@ -539,17 +553,9 @@ namespace Fvent.Repository.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Fvent.BO.Entities.EventStatus", "Status")
-                        .WithMany()
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("EventType");
 
                     b.Navigation("Organizer");
-
-                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("Fvent.BO.Entities.EventFile", b =>
@@ -585,7 +591,7 @@ namespace Fvent.Repository.Migrations
             modelBuilder.Entity("Fvent.BO.Entities.EventMedia", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.Event", "Event")
-                        .WithMany()
+                        .WithMany("EventMedias")
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -634,7 +640,7 @@ namespace Fvent.Repository.Migrations
             modelBuilder.Entity("Fvent.BO.Entities.EventTag", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.Event", "Event")
-                        .WithMany()
+                        .WithMany("Tags")
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -693,7 +699,11 @@ namespace Fvent.Repository.Migrations
 
             modelBuilder.Entity("Fvent.BO.Entities.Event", b =>
                 {
+                    b.Navigation("EventMedias");
+
                     b.Navigation("Registrations");
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("Fvent.BO.Entities.User", b =>

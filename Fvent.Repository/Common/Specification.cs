@@ -14,6 +14,7 @@ public class Specification<TEntity> : ISpecification<TEntity> where TEntity : cl
     private readonly List<Tuple<Expression<Func<TEntity, object>>, bool>> _thenBys = [];
     private int _pageNumber = 0;
     private int _pageSize = 0;
+    private bool _ignoreQueryFilters = false;
 
     public ISpecification<TEntity> Select(Expression<Func<TEntity, TEntity>> select)
     {
@@ -81,6 +82,13 @@ public class Specification<TEntity> : ISpecification<TEntity> where TEntity : cl
     public IEnumerable<Tuple<Expression<Func<TEntity, object>>, bool>> ThenBys => _thenBys;
     public int PageNumber => _pageNumber;
     public int PageSize => _pageSize;
+    public bool IgnoreQueryFilters => _ignoreQueryFilters;
+
+    public ISpecification<TEntity> SetIgnoreQueryFilters(bool ignore)
+    {
+        _ignoreQueryFilters = ignore;
+        return this;
+    }
 
     private static Expression<Func<TEntity, bool>>? ToExpression(List<Expression<Func<TEntity, bool>>> list)
     {

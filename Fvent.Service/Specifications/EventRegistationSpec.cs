@@ -16,6 +16,14 @@ public static class EventRegistationSpec
         }
     }
 
+    public class GetEventRegistrationSpec : Specification<EventRegistration>
+    {
+        public GetEventRegistrationSpec(Guid eventId, Guid userId)
+        {
+            Filter(p => p.EventId == eventId && p.UserId == userId);
+        }
+    }
+
     public class GetListUserEventsSpec : Specification<EventRegistration>
     {
         public GetListUserEventsSpec(Guid userId)

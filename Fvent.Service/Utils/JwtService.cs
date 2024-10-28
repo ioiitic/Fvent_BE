@@ -10,7 +10,7 @@ namespace Fvent.Service.Utils;
 
 public static class JwtService
 {
-    public static string GenerateToken(string email, Role role, IConfiguration configuration)
+    public static string GenerateToken(Guid userId, string email, Role role, IConfiguration configuration)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(configuration["Jwt:Secret"]!);
@@ -19,6 +19,7 @@ public static class JwtService
         {
             Subject = new ClaimsIdentity(new[]
             {
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.Role, role.RoleName)
             }),

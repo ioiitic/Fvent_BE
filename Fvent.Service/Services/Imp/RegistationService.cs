@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Entities;
+using Fvent.BO.Exceptions;
 using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Result;
@@ -9,10 +10,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static Fvent.Service.Specifications.EventRegistationSpec;
+using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp
 {
-    public class EventRegistationService(IUnitOfWork uOW) : IEventRegistationService
+    public class RegistationService(IUnitOfWork uOW) : IRegistationService
     {
         /// <summary>
         /// Register Free Event
@@ -28,6 +30,17 @@ namespace Fvent.Service.Services.Imp
             await uOW.SaveChangesAsync();
 
             return _eventFollower.EventId.ToResponse();
+        }
+
+        public async Task UnRegisterEvent(Guid eventId, Guid userId)
+        {
+                var spec = new GetEventRegistrationSpec(eventId, userId);
+                var regis = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
+                    ?? throw new NotFoundException(typeof(User));
+
+                uOW.EventRegistration.Delete(regis);
+
+                await uOW.SaveChangesAsync();
         }
 
         public async Task<IList<UserRes>> GetAllParticipantsForEvent(Guid eventId)

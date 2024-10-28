@@ -6,6 +6,8 @@ using Fvent.Repository;
 using Fvent.Service.Services;
 using Fvent.Service.Services.Imp;
 using System.Text;
+using System.Net.Mail;
+using System.Net;
 
 namespace Fvent.Service;
 
@@ -49,13 +51,32 @@ public static class ServiceConfigs
 
         services.AddHostedService<MyBackgroundService>();
 
+        services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<IEventService, EventService>();
+        services.AddScoped<IFollowerService, FollowerService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IRatingService, RatingService>();
+        services.AddScoped<IRegistationService, RegistationService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IUserService, UserService>();
-        services.AddScoped<INotificationService, NotificationService>();
-        services.AddScoped<IEventRegistationService, EventRegistationService>();
-        services.AddScoped<IEventFollowerService, EventFollowerService>();
-        services.AddScoped<ICommentService, CommentService>();
+        services.AddScoped<IEventTypeService, EventTypeService>();
+        services.AddScoped<ITagService, TagService>();  
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<SmtpClient>(provider =>
+        {
+            var configuration = provider.GetRequiredService<IConfiguration>();
+            var smtpClient = new SmtpClient
+            {
+                Host = configuration["Smtp:Host"]!,
+                Port = int.Parse(configuration["Smtp:Port"]!),
+                EnableSsl = bool.Parse(configuration["Smtp:EnableSsl"]!),
+                Credentials = new NetworkCredential(
+                    configuration["Smtp:Username"],
+                    configuration["Smtp:Password"]
+                )
+            };
+            return smtpClient;
+        });
 
         return services;
     }
