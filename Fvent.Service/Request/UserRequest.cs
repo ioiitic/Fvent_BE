@@ -2,14 +2,12 @@
 
 namespace Fvent.Service.Request;
 
-#region User
 public record AuthReq(string Email, string Password);
-#endregion
 
-#region Admin
+public record RefreshTokenReq(string Token);
+
 public record GetListUsersReq(string? Username, string? Email, string? RoleName, bool? Verified, string? OrderBy,
                               bool IsDescending = false, int PageNumber = 1, int PageSize = 9);
-#endregion
 
 public record CreateUserReq(string Username, string Email, string Password, string FirstName, string LastName,
                             string PhoneNumber, string Role);

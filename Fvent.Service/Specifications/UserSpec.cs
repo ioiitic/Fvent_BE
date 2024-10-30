@@ -86,4 +86,20 @@ public static class UserSpec
             Filter(u => u.UserId == userId);
         }
     }
+
+    public class CheckRefreshTokenSpec : Specification<RefreshToken>
+    {
+        public CheckRefreshTokenSpec(string token)
+        {
+            Filter(t => t.Token == token);
+        }
+    }
+
+    public class GetUserByRefreshTokenSpec : Specification<User>
+    {
+        GetUserByRefreshTokenSpec(string token)
+        {
+            Filter(u => u.RefreshToken.Token == token);
+        }
+    }
 }
