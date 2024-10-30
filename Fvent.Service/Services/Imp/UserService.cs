@@ -13,30 +13,48 @@ namespace Fvent.Service.Services.Imp;
 
 public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService) : IUserService
 {
-    #region User
-    /// <summary>
-    /// Implement service for User Login
-    /// </summary>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
+    #region Authen
     public async Task<AuthResponse> Authen(AuthReq req)
     {
         var spec = new AuthenUserSpec(req.Email, req.Password);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
-        var token = JS.GenerateToken(user.Email, user.Role!, configuration);
+        var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
 
-        return new AuthResponse(token);
+        var rfsToken = JS.GenerateRefreshToken();
+        var rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
+
+        while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
+        {
+            rfsToken = JS.GenerateRefreshToken();
+            rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
+        }
+
+        return new AuthResponse(token, rfsToken.Token);
     }
 
-    /// <summary>
-    /// Implement service for User Get own info
-    /// </summary>
-    /// <param name="email"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
+    public async Task<AuthResponse> Refresh(RefreshTokenReq req)
+    {
+        var rfsSpec = new CheckRefreshTokenSpec(req.Token);
+        var rfsToken = await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec) 
+            ?? throw new NotFoundException(typeof(RefreshToken));
+
+        var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
+
+        rfsToken = JS.GenerateRefreshToken();
+
+        while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
+        {
+            rfsToken = JS.GenerateRefreshToken();
+            rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
+        }
+
+        return new AuthResponse(token, rfsToken.Token);
+    }
+
+    #endregion
+
     public async Task<UserRes> GetByEmail(string email)
     {
         var spec = new GetUserSpec(email);
@@ -46,13 +64,6 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         return user.ToResponse<UserRes>();
     }
 
-    /// <summary>
-    /// Implement service for User Update info
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
     public async Task<IdRes> Update(Guid id, UpdateUserReq req)
     {
         var spec = new GetUserSpec(id);
@@ -75,7 +86,6 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         return user.UserId.ToResponse();
     }
-    #endregion
 
     #region Admin
     /// <summary>
@@ -109,15 +119,13 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         await uOW.SaveChangesAsync();
 
         // Send the verification email using Gmail SMTP
- 
         var emailBody = EmailTemplates.EmailVerificationTemplate.Replace("{verificationLink}", verificationLink);
-
         await emailService.SendEmailAsync(user.Email, "Email Verification", emailBody);
 
         return user.UserId.ToResponse();
     }
 
-    public async Task<bool> VerifyEmailAsync(Guid userId, string token)
+    public async Task VerifyEmailAsync(Guid userId, string token)
     {
         // Step 1: Check if the token exists in the database
         var spec = new GetVerificationTokenSpec(userId, token);
@@ -128,7 +136,6 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var userSpec = new GetUserSpec(userId).SetIgnoreQueryFilters(true);
         var user = await uOW.Users.FindFirstOrDefaultAsync(userSpec)
             ?? throw new NotFoundException(typeof(User));
-
         user.EmailVerified = true;
 
         // Save changes to the user
@@ -138,7 +145,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         uOW.VerificationToken.Delete(storedToken);
         await uOW.SaveChangesAsync();
 
-        return true;
+        return;
     }
 
     public async Task RequestPasswordResetAsync(string email)

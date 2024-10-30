@@ -1,8 +1,6 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
-using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -12,24 +10,113 @@ namespace Fvent.API.Controllers;
 [Route("api/users")]
 public class UsersController(IUserService userService, IEventService eventService,
                              INotificationService notificationService, 
-                             IFollowerService eventFollowerService,
-                             IRegistationService registationService) : ControllerBase
+                             IFollowerService eventFollowerService) : ControllerBase
 {
+
+    #region User
+    /// <summary>
+    /// Get list users info
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet()]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> GetList([FromQuery] GetListUsersReq req)
+    {
+        var res = await userService.GetList(req);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Get own info
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetUserInfo()
+    {
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+        var res = await userService.Get(Guid.Parse(userId));
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Update info
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPut]
+    [Authorize]
+    public async Task<IActionResult> UpdateUser([FromBody] UpdateUserReq req)
+    {
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+        var res = await userService.Update(Guid.Parse(userId), req);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Soft delete user
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    [HttpDelete("{userId}")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> DeleteUser([FromRoute] Guid userId)
+    {
+        await userService.Delete(userId);
+
+        return Ok();
+    }
+    #endregion
+
+    #region User Account
+    /// <summary>
+    /// Register an account for user
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("register")]
+    public async Task<IActionResult> RegisterUser([FromBody] CreateUserReq req)
+    {
+        var res = await userService.Register(req);
+
+        return Ok(res);
+    }
+    #endregion
+
+    #region User Registration
+    // TODO: Them field get theo thang, nam
+    /// <summary>
+    /// Get all events that user registered
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Authorize]
+    [Route("participant")]
+    public async Task<IActionResult> GetEventRegisters()
+    {
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+        var res = await eventService.GetRegisteredEvents(Guid.Parse(userId));
+
+        return Ok(res);
+    }
+    #endregion
+
     #region Email
+    /// <summary>
+    /// Verify user via email
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpGet("verify-email")]
     public async Task<IActionResult> VerifyEmail([FromQuery] Guid userId, [FromQuery] string token)
     {
-        var result = await userService.VerifyEmailAsync(userId, token);
-        if (result)
-        {
-            return Ok("Email verified successfully!");
-        }
-        else
-        {
-            return BadRequest("Email verification failed.");
-        }
+        await userService.VerifyEmailAsync(userId, token);
+        return Ok("Email verified successfully!");
     }
-    #endregion
 
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordReq request)
@@ -44,124 +131,33 @@ public class UsersController(IUserService userService, IEventService eventServic
         await userService.ResetPasswordAsync(userId, token, newPassword);
         return Ok("Password has been reset successfully.");
     }
-
-
-    #region User
-    /// <summary>
-    /// Controller for User Register
-    /// </summary>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    [HttpPost("register")]
-    public async Task<IActionResult> RegisterUser([FromBody] CreateUserReq req)
-    {
-        var res = await userService.Register(req);
-
-        return Ok(res);
-    }
-
-    /// <summary>
-    /// Controller for User Get own info
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet("me")]
-    [Authorize]
-    public async Task<IActionResult> GetUserInfo()
-    {
-        var email = HttpContext.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-        var res = await userService.GetByEmail(email!);
-
-        return Ok(res);
-    }
-
-   /// <summary>
-   /// Controller for User Update info
-   /// </summary>
-   /// <param name="id"></param>
-   /// <param name="req"></param>
-   /// <returns></returns>
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser([FromBody] UpdateUserReq req)
-    {
-        var email = HttpContext.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-        var user = await userService.GetByEmail(email!);
-
-        var res = await userService.Update(user.UserId, req);
-
-        return Ok(res);
-    }
     #endregion
 
-    #region Student
-    [HttpGet("recommendation")]
-    public async Task<IActionResult> GetListRecommend()
+    #region User Notification
+    [HttpGet("notifications")]
+    public async Task<IActionResult> GetList()
     {
-        var email = HttpContext.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-        var user = await userService.GetByEmail(email!);
-
-        var res = await eventService.GetListRecommend(new IdReq(user.UserId));
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+        var res = await notificationService.GetListNotifications(Guid.Parse(userId));
 
         return Ok(res);
     }
-    #endregion
 
-    #region Admin
-    /// <summary>
-    /// Controller for Admin Get list users info
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet()]
-    [Authorize(Roles = "admin")]
-    public async Task<IActionResult> GetList([FromQuery] GetListUsersReq req)
+    [HttpDelete("clear-notifications")]
+    public async Task<IActionResult> ClearNoti()
     {
-        var res = await userService.GetList(req);
-
-        return Ok(res);
-    }
-    #endregion
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
-    {
-        await userService.Delete(id);
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+        await notificationService.ClearNotification(Guid.Parse(userId));
 
         return Ok();
     }
 
-    [HttpGet("{id}/notifications")]
-    public async Task<IActionResult> GetList(Guid id)
-    {
-        var res = await notificationService.GetListNotifications(id);
-
-        return Ok(res);
-    }
-
-    [HttpDelete("{id}/clear-notification")]
-    public async Task<IActionResult> ClearNoti(Guid id)
-    {
-        await notificationService.ClearNotification(id);
-
-        return Ok();
-    }
-
-    [HttpGet("{userId}/followed-events")]
+    [HttpGet("followed-events")]
     public async Task<IActionResult> GetFollowedEvents(Guid userId)
     {
         var res = await eventFollowerService.GetFollowedEvents(userId);
-        return Ok(res);
-    }
-
-    /// <summary>
-    /// GET api/events/{eventId}/participants
-    /// Get all user 
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <returns></returns>
-    [HttpGet("{eventId}/participants")]
-    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
-    {
-        var res = await registationService.GetAllParticipantsForEvent(eventId);
 
         return Ok(res);
     }
+    #endregion
 }

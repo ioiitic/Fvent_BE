@@ -1,6 +1,7 @@
 ﻿using Microsoft.OpenApi.Models;
 using Fvent.API.Filters;
 using Fvent.API.Policy;
+using System.Reflection;
 
 namespace Fvent.API;
 
@@ -21,9 +22,14 @@ public static class ServiceConfigs
             options.Filters.Add<GlobalExceptionFilter>();
         });
 
-        services.AddEndpointsApiExplorer(); services.AddSwaggerGen(c =>
+        services.AddEndpointsApiExplorer(); 
+        services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var filePath = Path.Combine(System.AppContext.BaseDirectory, xmlFile);
+            c.IncludeXmlComments(filePath);
 
             c.AddSecurityDefinition("cookieAuth", new OpenApiSecurityScheme
             {

@@ -43,7 +43,6 @@ namespace Fvent.Service.Services.Imp
                 await uOW.SaveChangesAsync();
         }
 
-
         public async Task<IList<UserRes>> GetAllParticipantsForEvent(Guid eventId)
         {
             // Define a specification to get participants for the event

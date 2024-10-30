@@ -10,7 +10,6 @@ public class NotificationController(INotificationService notificationService) : 
 {
     #region Notification
     /// <summary>
-    /// GET api/notifications/{userId}
     /// Get all notifications of user
     /// </summary>
     /// <param name="userId"></param>
@@ -24,7 +23,6 @@ public class NotificationController(INotificationService notificationService) : 
     }
 
     /// <summary>
-    /// POST api/notifications
     /// Post a notification
     /// </summary>
     /// <param name="req"></param>
@@ -38,7 +36,6 @@ public class NotificationController(INotificationService notificationService) : 
     }
 
     /// <summary>
-    /// PUT api/notifications/{notiId}/read
     /// Update a notification status when user read it
     /// </summary>
     /// <param name="notiId"></param>
@@ -52,7 +49,6 @@ public class NotificationController(INotificationService notificationService) : 
     }
 
     /// <summary>
-    /// DELETE api/notifications/{notiId}
     /// Delete a notification
     /// </summary>
     /// <param name="notiId"></param>

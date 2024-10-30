@@ -1,5 +1,6 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -8,17 +9,13 @@ namespace Fvent.API.Controllers;
 
 [Route("api/events")]
 [ApiController]
-public class EventsController(IEventService eventService,
-                              ICommentService commentService,
-                              IFollowerService followerService,
-                              IRatingService ratingService,
-                              IRegistationService resgistationService,
-                              IReviewService reviewService,
+public class EventsController(IEventService eventService, ICommentService commentService,
+                              IFollowerService followerService, IRatingService ratingService,
+                              IRegistationService registationService, IReviewService reviewService,
                               IUserService userService) : ControllerBase
 {
     #region Event
     /// <summary>
-    /// GET api/events
     /// Get list events
     /// </summary>
     /// <param name="request"></param>
@@ -32,10 +29,9 @@ public class EventsController(IEventService eventService,
     }
 
     /// <summary>
-    /// GET api/events/{eventId}
     /// Get an event detail
     /// </summary>
-    /// <param name="id"></param>
+    /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpGet("{eventId}")]
     public async Task<IActionResult> GetEvent(Guid eventId)
@@ -46,7 +42,6 @@ public class EventsController(IEventService eventService,
     }
 
     /// <summary>
-    /// GET api/events/organizer
     /// Get list events belong to organizer
     /// </summary>
     /// <param name="organizerId"></param>
@@ -60,7 +55,22 @@ public class EventsController(IEventService eventService,
     }
 
     /// <summary>
-    /// POST api/events
+    /// Get list events recommended for user
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("recommendation")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> GetListRecommend()
+    {
+        var email = HttpContext.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+        var user = await userService.GetByEmail(email!);
+
+        var res = await eventService.GetListRecommend(new IdReq(user.UserId));
+
+        return Ok(res);
+    }
+
+    /// <summary>
     /// Create an event
     /// </summary>
     /// <param name="req"></param>
@@ -74,10 +84,9 @@ public class EventsController(IEventService eventService,
     }
 
     /// <summary>
-    /// PUT api/events/{id}
     /// Update event info
     /// </summary>
-    /// <param name="id"></param>
+    /// <param name="eventId"></param>
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpPut("{eventId}")]
@@ -89,10 +98,9 @@ public class EventsController(IEventService eventService,
     }
 
     /// <summary>
-    /// DELETE api/events/{id}
     /// Soft delete an event
     /// </summary>
-    /// <param name="id"></param>
+    /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpDelete("{eventId}")]
     public async Task<IActionResult> DeleteEvent([FromRoute] Guid eventId)
@@ -104,6 +112,11 @@ public class EventsController(IEventService eventService,
     #endregion
 
     #region Event Comment
+    /// <summary>
+    /// Get comments of an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
     [HttpGet("{eventId}/comments")]
     public async Task<IActionResult> GetComments(Guid eventId)
     {
@@ -112,6 +125,12 @@ public class EventsController(IEventService eventService,
         return Ok(res);
     }
 
+    /// <summary>
+    /// Comment on an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
     [HttpPost("{eventId}/comments")]
     public async Task<IActionResult> CreateComment(Guid eventId, [FromBody] CreateCommentReq req)
     {
@@ -123,7 +142,6 @@ public class EventsController(IEventService eventService,
 
     #region Event Following
     /// <summary>
-    /// POST api/events/{eventId}/follow
     /// Follow an event
     /// </summary>
     /// <param name="eventId"></param>
@@ -138,7 +156,6 @@ public class EventsController(IEventService eventService,
     }
 
     /// <summary>
-    /// DELETE api/events/{eventId}/unfollow
     /// Unfollow an event
     /// </summary>
     /// <param name="eventId"></param>
@@ -155,7 +172,6 @@ public class EventsController(IEventService eventService,
 
     #region Event Rating
     /// <summary>
-    /// GET api/events/{eventId}/average-rating
     /// Get averate rating of an event
     /// </summary>
     /// <param name="eventId"></param>
@@ -171,7 +187,6 @@ public class EventsController(IEventService eventService,
 
     #region Event Registration
     /// <summary>
-    /// POST api/events/{eventId}/register
     /// Register an event
     /// </summary>
     /// <param name="eventId"></param>
@@ -180,13 +195,12 @@ public class EventsController(IEventService eventService,
     [HttpPost("{eventId}/register")]
     public async Task<IActionResult> RegisterEvent(Guid eventId, [FromBody] IdReq userId)
     {
-        var res = await resgistationService.RegisterFreeEvent(eventId, userId.Id);
+        var res = await registationService.RegisterFreeEvent(eventId, userId.Id);
 
         return Ok(res);
     }
 
     /// <summary>
-    /// DELETE api/events/{eventId}/unregister
     /// Unregister an event
     /// </summary>
     /// <param name="eventId"></param>
@@ -195,26 +209,20 @@ public class EventsController(IEventService eventService,
     [HttpDelete("{eventId}/unregister")]
     public async Task<IActionResult> UnRegisterEvent(Guid eventId, [FromBody] IdReq userId)
     {
-        await resgistationService.UnRegisterEvent(eventId, userId.Id);
+        await registationService.UnRegisterEvent(eventId, userId.Id);
 
         return Ok();
     }
 
-    // TODO: Them field get theo thang, nam
     /// <summary>
-    /// GET api/events/participant
-    /// Get all events that register
+    /// Get all users registered an event
     /// </summary>
+    /// <param name="eventId"></param>
     /// <returns></returns>
-    [HttpGet]
-    [Authorize]
-    [Route("participant")]
-    public async Task<IActionResult> GetEventRegisters()
+    [HttpGet("{eventId}/participants")]
+    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
     {
-        var email = HttpContext.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-        var user = await userService.GetByEmail(email!);
-
-        var res = await eventService.GetEventRegisters(user.UserId);
+        var res = await eventService.GetRegisteredUsers(eventId);
 
         return Ok(res);
     }
@@ -225,7 +233,7 @@ public class EventsController(IEventService eventService,
     /// GET api/events/{eventId}/reviews
     /// Get a list of event reviews
     /// </summary>
-    /// <param name="id"></param>
+    /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpGet]
     [Route("{eventId}/reviews")]
@@ -240,7 +248,7 @@ public class EventsController(IEventService eventService,
     /// POST api/events/{eventId}/reviews
     /// Review an event
     /// </summary>
-    /// <param name="id"></param>
+    /// <param name="eventId"></param>
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpPost("{eventId}/reviews")]

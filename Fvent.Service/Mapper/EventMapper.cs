@@ -16,9 +16,9 @@ public static class EventMapper
             src.Location,
             src.MaxAttendees,
             src.ProcessNote,
+            src.Status,
             src.OrganizerId,
             src.EventTypeId,
-            src.StatusId,
             DateTime.UtcNow);
 
     public static EventRes ToResponse(
@@ -30,13 +30,15 @@ public static class EventMapper
             src.StartTime,
             src.EndTime,
             src.Location,
+            src.LinkEvent,
+            src.PasswordMeeting,
             src.MaxAttendees,
             src.ProcessNote,
             src.Organizer!.FirstName + " " + src.Organizer.LastName,
             src.EventType!.EventTypeName,
-            src.EventMedia.Where( j=> j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
-            src.EventMedia.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
-            src.StatusId,
+            src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
+            src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
+            src.Status,
             src.Tags.Select(t => t.Tag).ToList());
 
     public static EventRes ToResponse(
@@ -51,13 +53,15 @@ public static class EventMapper
             src.StartTime,
             src.EndTime,
             src.Location,
+            src.LinkEvent,
+            src.PasswordMeeting,
             src.MaxAttendees,
             src.ProcessNote,
             organizerName,
             eventTypeName,
-            src.EventMedia.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
-            src.EventMedia.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
-            src.StatusId,
+            src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
+            src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
+            src.Status,
             eventTags);
 
     public static EventRateRes ToResponse(this double src)

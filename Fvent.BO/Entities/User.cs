@@ -24,22 +24,15 @@ public class User : ISoftDelete
     public IList<EventReview>? Reviews { get; set; }
     public IList<Notification>? Notifications { get; set; }
     public IList<Message>? Messages { get; set; }
+    public RefreshToken RefreshToken { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime? DeletedAt { get; set; }
 
-    public User(string username,
-                string avatarUrl,
-                string email,
-                string password,
-                string firstName,
-                string lastName,
-                string phoneNumber,
-                string cardUrl,
-                int roleId,
-                DateTime createdAt)
+    public User(string username, string avatarUrl, string email, string password, string firstName, string lastName,
+                string phoneNumber, string cardUrl, int roleId, DateTime createdAt)
     {
         Username = username;
         AvatarUrl = avatarUrl;
@@ -53,14 +46,8 @@ public class User : ISoftDelete
         CreatedAt = createdAt;
     }
 
-    public void Update(string username,
-                       string avatarUrl,
-                       string email,
-                       string password,
-                       string firstName,
-                       string lastName,
-                       string phoneNumber,
-                       string cardUrl)
+    public void Update(string username, string avatarUrl, string email, string password, string firstName,
+                       string lastName, string phoneNumber, string cardUrl)
     {
         Username = username;
         AvatarUrl = avatarUrl;
