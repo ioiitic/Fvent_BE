@@ -17,10 +17,6 @@ namespace Fvent.Service.Services.Imp;
 
 public class EventService(IUnitOfWork uOW) : IEventService
 {
-
-    #region Event
-    #endregion
-
     #region Student
     public async Task<PageResult<EventRes>> GetListRecommend(IdReq req)
     {
@@ -78,7 +74,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
     public async Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req)
     {
-        var spec = new GetEventSpec(req.SearchKeyword, req.InMonth, req.InYear, req.EventType, req.EventTag, req.OrderBy, req.IsDescending, req.PageNumber, req.PageSize);
+        var spec = new GetEventSpec(req.SearchKeyword, req.InMonth, req.InYear, req.EventTypes, req.EventTag, req.OrderBy, req.IsDescending, req.PageNumber, req.PageSize);
 
         // Get paginated list of events
         var _events = await uOW.Events.GetPageAsync(spec);

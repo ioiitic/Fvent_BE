@@ -6,6 +6,7 @@ using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 using Microsoft.Extensions.Configuration;
+using System.Security.Claims;
 using static Fvent.Service.Specifications.UserSpec;
 using JS = Fvent.Service.Utils.JwtService;
 
@@ -34,24 +35,24 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         return new AuthResponse(token, rfsToken.Token);
     }
 
-    public async Task<AuthResponse> Refresh(RefreshTokenReq req)
-    {
-        var rfsSpec = new CheckRefreshTokenSpec(req.Token);
-        var rfsToken = await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec) 
-            ?? throw new NotFoundException(typeof(RefreshToken));
+    //public async Task<AuthResponse> Refresh(RefreshTokenReq req)
+    //{
+    //    var rfsSpec = new CheckRefreshTokenSpec(req.Token);
+    //    var rfsToken = await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec) 
+    //        ?? throw new NotFoundException(typeof(RefreshToken));
 
-        var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
+    //    var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
 
-        rfsToken = JS.GenerateRefreshToken();
+    //    rfsToken = JS.GenerateRefreshToken();
 
-        while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
-        {
-            rfsToken = JS.GenerateRefreshToken();
-            rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
-        }
+    //    while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
+    //    {
+    //        rfsToken = JS.GenerateRefreshToken();
+    //        rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
+    //    }
 
-        return new AuthResponse(token, rfsToken.Token);
-    }
+    //    return new AuthResponse(token, rfsToken.Token);
+    //}
 
     #endregion
 

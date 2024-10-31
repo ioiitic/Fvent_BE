@@ -8,7 +8,7 @@ public static class EventSpec
 {
     public class GetEventSpec : Specification<Event>
     {
-        public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, string? eventType, string? eventTag,
+        public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag,
                             string orderBy, bool isDescending, int pageNumber, int pageSize)
         {
             // Filter by search keyword (for event name or description)
@@ -21,19 +21,20 @@ public static class EventSpec
             if (inMonth.HasValue)
             {
                 var month = inMonth.Value;
-                var year = DateTime.UtcNow.Year;
-                if (inYear.HasValue)
-                {
-                    year = inYear.Value;
-                }
-                
+                var year = inYear ?? DateTime.UtcNow.Year;
+
                 Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
-
-            // Filter by event type
-            if (!string.IsNullOrEmpty(eventType))
+            else if (!inMonth.HasValue && inYear.HasValue)
             {
-                Filter(e => e.EventType!.EventTypeName == eventType);
+                var year = inYear.Value;
+                Filter(e => (e.StartTime.Year == year ||  e.EndTime.Year == year));
+            }
+
+            // Filter by multiple event types if provided
+            if (eventTypes != null && eventTypes.Any())
+            {
+                Filter(e => eventTypes.Contains(e.EventType!.EventTypeName));
             }
 
             // Filter by event tag (assuming each event has an IList<EventTag> called Tags)
@@ -58,11 +59,6 @@ public static class EventSpec
                 }
             }
 
-            // Filter by event type
-            if (!string.IsNullOrEmpty(eventType))
-            {
-                Filter(e => e.EventType!.EventTypeName == eventType);
-            }
 
             AddPagination(pageNumber, pageSize);
 

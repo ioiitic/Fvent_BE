@@ -232,6 +232,9 @@ namespace Fvent.Repository.Migrations
                     b.Property<Guid>("EventId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsCheckIn")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("RegistrationTime")
                         .HasColumnType("datetime2");
 
@@ -386,6 +389,32 @@ namespace Fvent.Repository.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("Fvent.BO.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("RefreshTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RefreshTokenId"));
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Expires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Revoked")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("RefreshTokenId");
+
+                    b.ToTable("RefreshToken");
+                });
+
             modelBuilder.Entity("Fvent.BO.Entities.Role", b =>
                 {
                     b.Property<int>("RoleId")
@@ -471,6 +500,9 @@ namespace Fvent.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("RefreshTokenId")
+                        .HasColumnType("int");
+
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
@@ -485,6 +517,8 @@ namespace Fvent.Repository.Migrations
                         .HasColumnType("bit");
 
                     b.HasKey("UserId");
+
+                    b.HasIndex("RefreshTokenId");
 
                     b.HasIndex("RoleId");
 
@@ -688,11 +722,17 @@ namespace Fvent.Repository.Migrations
 
             modelBuilder.Entity("Fvent.BO.Entities.User", b =>
                 {
+                    b.HasOne("Fvent.BO.Entities.RefreshToken", "RefreshToken")
+                        .WithMany()
+                        .HasForeignKey("RefreshTokenId");
+
                     b.HasOne("Fvent.BO.Entities.Role", "Role")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("RefreshToken");
 
                     b.Navigation("Role");
                 });

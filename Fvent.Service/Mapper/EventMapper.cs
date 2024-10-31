@@ -16,7 +16,7 @@ public static class EventMapper
             src.Location,
             src.MaxAttendees,
             src.ProcessNote,
-            src.Status,
+            EventStatus.Draft,
             src.OrganizerId,
             src.EventTypeId,
             DateTime.UtcNow);
@@ -38,7 +38,7 @@ public static class EventMapper
             src.EventType!.EventTypeName,
             src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
-            src.Status,
+            src.Status.ToString(),
             src.Tags.Select(t => t.Tag).ToList());
 
     public static EventRes ToResponse(
@@ -61,7 +61,7 @@ public static class EventMapper
             eventTypeName,
             src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
-            src.Status,
+            src.Status.ToString(),
             eventTags);
 
     public static EventRateRes ToResponse(this double src)

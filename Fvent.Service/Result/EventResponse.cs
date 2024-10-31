@@ -14,6 +14,6 @@ public record EventRes(Guid EventId,
                        string EventTypeName,
                        string PosterImg,
                        string ThumbnailImg,
-                       EventStatus Status,
+                       string Status,
                        List<string> EventTags); 
 public record EventRateRes(double AvgRate);
