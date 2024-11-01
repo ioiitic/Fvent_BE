@@ -13,6 +13,8 @@ public static class EventMapper
             src.Description,
             src.StartTime,
             src.EndTime,
+            src.LinkEvent,
+            src.PasswordMeeting,
             src.Location,
             src.MaxAttendees,
             src.ProcessNote,

@@ -5,6 +5,7 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using static Fvent.Service.Specifications.UserSpec;
@@ -74,11 +75,9 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         user.Update(req.Username,
             req.AvatarUrl,
             req.Email,
-            req.Password,
             req.FirstName,
             req.LastName,
-            req.PhoneNumber,
-            req.CardUrl);
+            req.PhoneNumber);
 
         if (uOW.IsUpdate(user))
             user.UpdatedAt = DateTime.UtcNow;
@@ -205,6 +204,22 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         uOW.VerificationToken.Delete(resetToken);
         await uOW.SaveChangesAsync();
     }
+
+    public async Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword)
+    {
+        var user = await uOW.Users.FindFirstOrDefaultAsync(new GetUserSpec(userId))
+            ?? throw new NotFoundException(typeof(User));
+
+        // Verify the old password
+        if (user.Password.CompareTo(oldPassword)!=0)
+        {
+            throw new UnauthorizedAccessException("Old password is incorrect.");
+        }
+
+        user.Password = newPassword;
+        await uOW.SaveChangesAsync();
+    }
+
 
 
 

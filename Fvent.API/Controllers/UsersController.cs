@@ -1,4 +1,5 @@
-﻿using Fvent.Service.Request;
+﻿using Fvent.BO.Exceptions;
+using Fvent.Service.Request;
 using Fvent.Service.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -131,6 +132,32 @@ public class UsersController(IUserService userService, IEventService eventServic
         await userService.ResetPasswordAsync(userId, token, newPassword);
         return Ok("Password has been reset successfully.");
     }
+
+    [HttpPut("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        try
+        {
+            await userService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword);
+            return Ok("Password changed successfully.");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound("User not found.");
+        }
+    }
+
     #endregion
 
     #region User Notification

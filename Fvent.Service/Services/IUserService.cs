@@ -30,5 +30,6 @@ public interface IUserService
     Task VerifyEmailAsync(Guid userId, string token);
     Task RequestPasswordResetAsync(string email);
     Task ResetPasswordAsync(Guid userId, string token, string newPassword);
+    Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword);
     Task Delete(Guid id);
 }

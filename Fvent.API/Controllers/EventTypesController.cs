@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers
 {
-    [Route("api/eventtypes")]
+    [Route("api/event-types")]
     [ApiController]
     public class EventTypesController(IEventTypeService eventTypeService) : ControllerBase
     {

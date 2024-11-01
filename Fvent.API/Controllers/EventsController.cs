@@ -1,4 +1,5 @@
-﻿using Fvent.Service.Request;
+﻿using Fvent.BO.Exceptions;
+using Fvent.Service.Request;
 using Fvent.Service.Services;
 using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
@@ -95,6 +96,41 @@ public class EventsController(IEventService eventService, ICommentService commen
         var res = await eventService.UpdateEvent(eventId, req);
 
         return Ok(res);
+    }
+    [HttpPut("{eventId}/submit")]
+    public async Task<IActionResult> SubmitEvent([FromRoute] Guid eventId)
+    {
+        var res = await eventService.SubmitEvent(eventId);
+
+        return Ok(res);
+    }
+    [HttpPut("{eventId}/approve")]
+    public async Task<IActionResult> ApproveEvent([FromRoute] Guid eventId, [FromQuery] bool isApproved, [FromBody] ApproveEventRequest processNote)
+    {
+        var res = await eventService.ApproveEvent(eventId, isApproved, processNote.ProcessNote);
+
+        return Ok(res);
+    }
+
+    [HttpPut("{eventId}/checkin")]
+    public async Task<IActionResult> CheckinEvent([FromRoute] Guid eventId)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        try
+        {
+            await eventService.CheckinEvent(eventId, userId);
+            return Ok("Check-in successful");
+        }
+        catch (NotFoundException)
+        {
+            return NotFound("Please register for the event first.");
+        }
     }
 
     /// <summary>
@@ -193,9 +229,15 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpPost("{eventId}/register")]
-    public async Task<IActionResult> RegisterEvent(Guid eventId, [FromBody] IdReq userId)
+    public async Task<IActionResult> RegisterEvent(Guid eventId)
     {
-        var res = await registationService.RegisterFreeEvent(eventId, userId.Id);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+        var res = await registationService.RegisterFreeEvent(eventId, userId);
 
         return Ok(res);
     }
@@ -207,9 +249,16 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpDelete("{eventId}/unregister")]
-    public async Task<IActionResult> UnRegisterEvent(Guid eventId, [FromBody] IdReq userId)
+    public async Task<IActionResult> UnRegisterEvent(Guid eventId)
     {
-        await registationService.UnRegisterEvent(eventId, userId.Id);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        await registationService.UnRegisterEvent(eventId, userId);
 
         return Ok();
     }

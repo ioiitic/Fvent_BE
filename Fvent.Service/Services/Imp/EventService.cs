@@ -192,6 +192,48 @@ public class EventService(IUnitOfWork uOW) : IEventService
         return _event.EventId.ToResponse();
     }
 
+    public async Task<IdRes> SubmitEvent(Guid id)
+    {
+        var spec = new GetEventSpec(id);
+        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(Event));
+        _event.Status = EventStatus.UnderReview;
+        
+        await uOW.SaveChangesAsync();
+
+        return _event.EventId.ToResponse();
+    }
+
+    public async Task<IdRes> ApproveEvent(Guid id, bool isApproved, string processNote)
+    {
+        var spec = new GetEventSpec(id);
+        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(Event));
+        if (isApproved)
+        {
+            _event.Status = EventStatus.Upcoming;
+        }
+        else
+        {
+            _event.Status = EventStatus.Rejected;
+        }
+
+        _event.ProcessNote = processNote;   
+
+        await uOW.SaveChangesAsync();
+
+        return _event.EventId.ToResponse();
+    }
+
+    public async Task CheckinEvent(Guid eventId, Guid userId)
+    {
+        var spec = new GetEventRegistrationSpec(eventId, userId);
+        var _event = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(EventRegistration));
+        _event.IsCheckIn = true;
+
+        await uOW.SaveChangesAsync();
+    }
 
 
     public async Task<IList<EventRes>> GetListEventsByOrganizer(Guid organizerId)

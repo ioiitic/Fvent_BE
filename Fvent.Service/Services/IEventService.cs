@@ -12,6 +12,9 @@ public interface IEventService
     Task<PageResult<EventRes>> GetListRecommend(IdReq req);
     Task<IdRes> CreateEvent(CreateEventReq req);
     Task<IdRes> UpdateEvent(Guid id, UpdateEventReq req);
+    Task<IdRes> SubmitEvent(Guid id);
+    Task<IdRes> ApproveEvent(Guid id, bool isApproved, string processNote);
+    Task CheckinEvent(Guid eventId, Guid userId);
     Task DeleteEvent(Guid id);
     Task<IList<UserRes>> GetRegisteredUsers(Guid eventId);
     Task<IList<EventRes>> GetRegisteredEvents(Guid userId);
