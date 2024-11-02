@@ -5,9 +5,8 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
-using System.Security.Claims;
+using System.Net;
 using static Fvent.Service.Specifications.UserSpec;
 using JS = Fvent.Service.Utils.JwtService;
 
@@ -16,44 +15,62 @@ namespace Fvent.Service.Services.Imp;
 public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService) : IUserService
 {
     #region Authen
-    public async Task<AuthResponse> Authen(AuthReq req)
-    {
+    public async Task<AuthResponse> Authen(AuthReq req, string ipAddress)
+    { 
+        // Check user authen
         var spec = new AuthenUserSpec(req.Email, req.Password);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
+        // Generate jwt token
         var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
 
-        var rfsToken = JS.GenerateRefreshToken();
-        var rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
-
-        while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
-        {
-            rfsToken = JS.GenerateRefreshToken();
-            rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
-        }
+        var rfsToken = await CreateRefreshToken(user, ipAddress);
 
         return new AuthResponse(token, rfsToken.Token);
     }
 
-    //public async Task<AuthResponse> Refresh(RefreshTokenReq req)
-    //{
-    //    var rfsSpec = new CheckRefreshTokenSpec(req.Token);
-    //    var rfsToken = await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec) 
-    //        ?? throw new NotFoundException(typeof(RefreshToken));
+    public async Task<AuthResponse> Refresh(RefreshTokenReq req, string ipAddress)
+    {
+        // Check refresh token exist
+        var rfsSpec = new CheckRefreshTokenSpec(req.Token);
+        var rfsToken = await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec) 
+            ?? throw new NotFoundException(typeof(RefreshToken));
 
-    //    var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
+        if (rfsToken.IsRevoked)
+        {
+            throw new AuthenticationException("Refresh token is revoked!");
+        }
 
-    //    rfsToken = JS.GenerateRefreshToken();
+        if (rfsToken.IsExpired)
+        {
+            throw new AuthenticationException("Refresh token is expired!");
+        }
 
-    //    while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
-    //    {
-    //        rfsToken = JS.GenerateRefreshToken();
-    //        rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
-    //    }
+        var user = rfsToken.User!;
 
-    //    return new AuthResponse(token, rfsToken.Token);
-    //}
+        var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
+
+        rfsToken = await CreateRefreshToken(user, ipAddress);
+
+        return new AuthResponse(token, rfsToken.Token);
+    }
+
+    private async Task<RefreshToken> CreateRefreshToken(User user, string ipAddress)
+    {
+        var rfsToken = JS.GenerateRefreshToken(ipAddress);
+        var rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
+        while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
+        {
+            rfsToken = JS.GenerateRefreshToken(ipAddress);
+        }
+
+        // Replace refresh token
+        user.RefreshTokens!.Add(rfsToken);
+        uOW.SaveChanges();
+
+        return rfsToken;
+    }
 
     #endregion
 

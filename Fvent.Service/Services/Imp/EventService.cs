@@ -6,6 +6,7 @@ using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 using Fvent.Service.Specifications;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
@@ -40,6 +41,14 @@ public class EventService(IUnitOfWork uOW) : IEventService
     public async Task<IdRes> CreateEvent(CreateEventReq req)
     {
         var _event = req.ToEvent();
+
+        var formDetails = req.CreateFormDetailsReq.Select(f => new FormDetail(f.name, f.type, f.options));
+        var form = new Form
+        {
+            FormDetails = formDetails.ToList(),
+        };
+
+        _event.Form = form;
 
         await uOW.Events.AddAsync(_event);
         await uOW.SaveChangesAsync();

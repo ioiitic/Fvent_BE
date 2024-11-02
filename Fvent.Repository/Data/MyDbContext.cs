@@ -24,12 +24,15 @@ public class MyDbContext : DbContext
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<Message> Messages { get; set; }
     public DbSet<VerificationToken> VerificationTokens { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Form> Forms { get; set; }
+    public DbSet<FormDetail> FormDetails { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         IConfigurationRoot configuration = new ConfigurationBuilder()
             //Note: Remove this to migrationdotnet
-            //.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Fvent.API/"))
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Fvent.API/"))
             .AddJsonFile("appsettings.json")
             .Build();
 

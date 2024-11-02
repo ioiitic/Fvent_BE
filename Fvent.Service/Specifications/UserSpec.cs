@@ -72,6 +72,7 @@ public static class UserSpec
             Filter(u => u.Email.Equals(Email) && u.Password.Equals(Password));
 
             Include(u => u.Role!);
+            Include(u => u.RefreshTokens!);
         }
     }
     public class GetVerificationTokenSpec : Specification<VerificationToken>
@@ -94,12 +95,14 @@ public static class UserSpec
             Filter(t => t.Token == token);
         }
     }
-
-    public class GetUserByRefreshTokenSpec : Specification<User>
+  
+    public class GetRefreshTokenSpec : Specification<RefreshToken>
     {
-        GetUserByRefreshTokenSpec(string token)
+        GetRefreshTokenSpec(string token)
         {
-            Filter(u => u.RefreshToken.Token == token);
+            Filter(t => t.Token == token);
+
+            Include("User.Role");
         }
     }
 }

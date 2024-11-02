@@ -4,6 +4,7 @@ using Fvent.Repository.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Fvent.Repository.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241102042507_Update_Refresh_Token")]
+    partial class Update_Refresh_Token
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,9 +107,6 @@ namespace Fvent.Repository.Migrations
                     b.Property<Guid>("EventTypeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("FormId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -142,8 +142,6 @@ namespace Fvent.Repository.Migrations
                     b.HasKey("EventId");
 
                     b.HasIndex("EventTypeId");
-
-                    b.HasIndex("FormId");
 
                     b.HasIndex("OrganizerId");
 
@@ -328,45 +326,6 @@ namespace Fvent.Repository.Migrations
                     b.ToTable("EventTypes");
                 });
 
-            modelBuilder.Entity("Fvent.BO.Entities.Form", b =>
-                {
-                    b.Property<Guid>("FormId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("FormId");
-
-                    b.ToTable("Forms");
-                });
-
-            modelBuilder.Entity("Fvent.BO.Entities.FormDetail", b =>
-                {
-                    b.Property<Guid>("FormDetailId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("FormId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Options")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("FormDetailId");
-
-                    b.HasIndex("FormId");
-
-                    b.ToTable("FormDetails");
-                });
-
             modelBuilder.Entity("Fvent.BO.Entities.Message", b =>
                 {
                     b.Property<int>("MessageId")
@@ -463,7 +422,7 @@ namespace Fvent.Repository.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshToken");
                 });
 
             modelBuilder.Entity("Fvent.BO.Entities.Role", b =>
@@ -627,10 +586,6 @@ namespace Fvent.Repository.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Fvent.BO.Entities.Form", "Form")
-                        .WithMany()
-                        .HasForeignKey("FormId");
-
                     b.HasOne("Fvent.BO.Entities.User", "Organizer")
                         .WithMany()
                         .HasForeignKey("OrganizerId")
@@ -638,8 +593,6 @@ namespace Fvent.Repository.Migrations
                         .IsRequired();
 
                     b.Navigation("EventType");
-
-                    b.Navigation("Form");
 
                     b.Navigation("Organizer");
                 });
@@ -734,17 +687,6 @@ namespace Fvent.Repository.Migrations
                     b.Navigation("Event");
                 });
 
-            modelBuilder.Entity("Fvent.BO.Entities.FormDetail", b =>
-                {
-                    b.HasOne("Fvent.BO.Entities.Form", "Form")
-                        .WithMany("FormDetails")
-                        .HasForeignKey("FormId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Form");
-                });
-
             modelBuilder.Entity("Fvent.BO.Entities.Message", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.Conversation", "Conversation")
@@ -812,11 +754,6 @@ namespace Fvent.Repository.Migrations
                     b.Navigation("Registrations");
 
                     b.Navigation("Tags");
-                });
-
-            modelBuilder.Entity("Fvent.BO.Entities.Form", b =>
-                {
-                    b.Navigation("FormDetails");
                 });
 
             modelBuilder.Entity("Fvent.BO.Entities.User", b =>

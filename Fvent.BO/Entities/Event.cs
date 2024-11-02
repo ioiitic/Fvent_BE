@@ -15,11 +15,13 @@ public class Event : ISoftDelete
     public int? MaxAttendees { get; set; }
     public string ProcessNote { get; set; }
     public EventStatus Status { get; set; }
-
     public Guid OrganizerId { get; set; }
     public Guid EventTypeId { get; set; }
+    //public Guid FormId { get; set; }
+
     public User? Organizer { get; set; }
     public EventType? EventType { get; set; }
+    public Form? Form { get; set; }
     public IList<EventRegistration>? Registrations { get; set; }
     public IList<EventTag>? Tags { get; set; }
     public IList<EventMedia>? EventMedias { get; set; }

@@ -13,8 +13,8 @@ public class User : ISoftDelete
     public string LastName { get; set; }
     public string PhoneNumber { get; set; }
     public string CardUrl { get; set; }
-    public bool Verified { get; set; } = false;
     public bool EmailVerified { get; set; } = false;
+    public bool Verified { get; set; } = false;
 
     public int RoleId { get; set; }
     public Role? Role { get; set; }
@@ -24,7 +24,7 @@ public class User : ISoftDelete
     public IList<EventReview>? Reviews { get; set; }
     public IList<Notification>? Notifications { get; set; }
     public IList<Message>? Messages { get; set; }
-    public RefreshToken? RefreshToken { get; set; }
+    public IList<RefreshToken>? RefreshTokens { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

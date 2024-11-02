@@ -11,7 +11,8 @@ public interface IUserService
     Task<UserRes> Get(Guid id);
     Task<UserRes> GetByEmail(string email);
     Task<IdRes> Register(CreateUserReq req);
-    Task<AuthResponse> Authen(AuthReq req);
+    Task<AuthResponse> Authen(AuthReq req, string ipAddress);
+    Task<AuthResponse> Refresh(RefreshTokenReq req, string ipAddress);
     Task<IdRes> Update(Guid id, UpdateUserReq req);
     #endregion
 

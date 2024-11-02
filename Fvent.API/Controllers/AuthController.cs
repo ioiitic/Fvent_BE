@@ -18,7 +18,14 @@ public class AuthController(IUserService userService) : ControllerBase
     [Route("login")]
     public async Task<IActionResult> Authen([FromBody] AuthReq req)
     {
-        var res = await userService.Authen(req);
+        // get source ip address for the current request
+        string ipAddress;
+        if (Request.Headers.ContainsKey("X-Forwarded-For"))
+            ipAddress = Request.Headers["X-Forwarded-For"]!;
+        else
+            ipAddress = HttpContext.Connection.RemoteIpAddress!.MapToIPv4().ToString();
+
+        var res = await userService.Authen(req, ipAddress);
 
         var cookieOptions = new CookieOptions
         {
@@ -28,8 +35,36 @@ public class AuthController(IUserService userService) : ControllerBase
             Expires = DateTime.UtcNow.AddMinutes(60)
         };
         Response.Cookies.Append("authToken", res.Token, cookieOptions);
+        Response.Cookies.Append("refreshToken", res.RefreshToken, cookieOptions);
 
         return Ok(res);
+    }
+
+    [HttpPost]
+    [Route("refresh")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenReq req)
+    {
+        // get source ip address for the current request
+        string ipAddress;
+        if (Request.Headers.ContainsKey("X-Forwarded-For"))
+            ipAddress = Request.Headers["X-Forwarded-For"]!;
+        else
+            ipAddress = HttpContext.Connection.RemoteIpAddress!.MapToIPv4().ToString();
+
+        var res = await userService.Refresh(req, ipAddress);
+
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Expires = DateTime.UtcNow.AddMinutes(60)
+        };
+        Response.Cookies.Append("authToken", res.Token, cookieOptions);
+        Response.Cookies.Append("refreshToken", res.RefreshToken, cookieOptions);
+
+        return Ok(res);
+
     }
     #endregion
 }
