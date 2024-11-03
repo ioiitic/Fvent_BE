@@ -83,7 +83,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
     public async Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req)
     {
-        var spec = new GetEventSpec(req.SearchKeyword, req.InMonth, req.InYear, req.EventTypes, req.EventTag, req.OrderBy, req.IsDescending, req.PageNumber, req.PageSize);
+        var spec = new GetEventSpec(req.SearchKeyword, req.InMonth, req.InYear, req.EventTypes, req.EventTag,req.Status, req.OrderBy, req.IsDescending, req.PageNumber, req.PageSize);
 
         // Get paginated list of events
         var _events = await uOW.Events.GetPageAsync(spec);
@@ -109,20 +109,23 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <param name="id"></param>
     /// <returns></returns>
     /// <exception cref="NotFoundException"></exception>
-    public async Task<EventRes> GetEvent(Guid id)
+    public async Task<EventRes> GetEvent(Guid eventId, Guid userId)
     {
-        var spec = new GetEventSpec(id);
-        var subSpec = new GetEventTagSpec(id);
+        bool isRegisterded = false;
+        var spec = new GetEventSpec(eventId);
+        var subSpec = new GetEventRegistrationSpec(eventId, userId);
         
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
 
-        var _eventTag = await uOW.EventTag.GetListAsync(subSpec)
-            ?? throw new NotFoundException(typeof(Event));
+        var _eventTag = await uOW.EventRegistration.GetListAsync(subSpec)
+            ?? throw new NotFoundException(typeof(EventRegistration));
+        if (!_eventTag.IsNullOrEmpty())
+        {
+             isRegisterded = true;
+        }
 
-        var eventTags = _eventTag.Select(e => e.Tag).ToList();
-
-        return _event.ToResponse(_event.Organizer!.FirstName + " " + _event.Organizer!.LastName, _event.EventType!.EventTypeName, eventTags);
+        return _event.ToResponse(isRegisterded);
     }
 
     /// <summary>
@@ -251,8 +254,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         var _events = await uOW.Events.GetListAsync(spec);
 
-        return _events.Select(e => e.ToResponse(e.Organizer!.FirstName + " " + e.Organizer!.LastName,
-                                                e.EventType!.EventTypeName, null)).ToList();
+        return _events.Select(e => e.ToResponse()).ToList();
     }
     #endregion
 

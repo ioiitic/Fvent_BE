@@ -59,10 +59,7 @@ namespace Fvent.Service.Services.Imp
 
             // Map followed events to EventRes
             var followedEventResponses = followedEvents
-                .Select(f => f.Event!.ToResponse(
-                    f.Event.Organizer!.FirstName + " " + f.Event.Organizer.LastName,
-                    f.Event.EventType!.EventTypeName,
-                    null))
+                .Select(f => f.Event!.ToResponse())
                 .ToList();
 
             return followedEventResponses;

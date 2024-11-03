@@ -41,13 +41,12 @@ public static class EventMapper
             src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.Status.ToString(),
+            null,
             src.Tags.Select(t => t.Tag).ToList());
 
     public static EventRes ToResponse(
         this Event src,
-        string organizerName,
-        string eventTypeName,
-        List<string> eventTags)
+        bool isRegistered)
         => new(
             src.EventId,
             src.EventName,
@@ -59,12 +58,13 @@ public static class EventMapper
             src.PasswordMeeting,
             src.MaxAttendees,
             src.ProcessNote,
-            organizerName,
-            eventTypeName,
+            src.Organizer!.FirstName + " " + src.Organizer.LastName,
+            src.EventType!.EventTypeName,
             src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.Status.ToString(),
-            eventTags);
+            isRegistered,
+            src.Tags.Select(t => t.Tag).ToList());
 
     public static EventRateRes ToResponse(this double src)
         => new(src);

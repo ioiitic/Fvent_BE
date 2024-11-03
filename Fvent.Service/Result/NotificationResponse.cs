@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Fvent.Service.Result
 {
-    public record NotificationRes(Guid userId,
+    public record NotificationRes(Guid notiId,
+                                  Guid userId,
                                   Guid eventId,
                                   string message,
                                   string readStatus,

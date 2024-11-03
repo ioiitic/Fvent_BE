@@ -1,5 +1,6 @@
 ﻿using Fvent.BO.Entities;
 using Fvent.Repository.Common;
+using Microsoft.Extensions.DependencyInjection;
 using System.Drawing.Printing;
 
 namespace Fvent.Service.Specifications;
@@ -8,7 +9,7 @@ public static class EventSpec
 {
     public class GetEventSpec : Specification<Event>
     {
-        public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag,
+        public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag, string? status,
                             string orderBy, bool isDescending, int pageNumber, int pageSize)
         {
             // Filter by search keyword (for event name or description)
@@ -43,6 +44,12 @@ public static class EventSpec
                 Filter(e => e.Tags!.Any(tag => tag.Tag == eventTag));
             }
 
+            // Filter by event status if provided
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
+            {
+                Filter(e => e.Status == eventStatus);
+            }
+
             if (orderBy is not null)
             {
                 switch (orderBy)
@@ -58,7 +65,6 @@ public static class EventSpec
                         break;
                 }
             }
-
 
             AddPagination(pageNumber, pageSize);
 
@@ -76,6 +82,7 @@ public static class EventSpec
             Include(u => u.Organizer!);
             Include(u => u.EventType!);
             Include(u => u.EventMedias!);
+            Include(e => e.Tags!);
         }
     }
 

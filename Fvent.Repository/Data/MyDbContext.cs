@@ -32,7 +32,7 @@ public class MyDbContext : DbContext
     {
         IConfigurationRoot configuration = new ConfigurationBuilder()
             //Note: Remove this to migrationdotnet
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Fvent.API/"))
+            //.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Fvent.API/"))
             .AddJsonFile("appsettings.json")
             .Build();
 

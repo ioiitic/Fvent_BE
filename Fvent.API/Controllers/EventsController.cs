@@ -35,9 +35,16 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpGet("{eventId}")]
-    public async Task<IActionResult> GetEvent(Guid eventId)
+    public async Task<IActionResult> GetEvent([FromRoute] Guid eventId)
     {
-        var res = await eventService.GetEvent(eventId);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.GetEvent(eventId, userId);
 
         return Ok(res);
     }
