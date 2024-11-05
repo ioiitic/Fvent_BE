@@ -7,6 +7,7 @@ using Fvent.Service.Request;
 using Fvent.Service.Result;
 using Microsoft.Extensions.Configuration;
 using System.Net;
+using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.UserSpec;
 using JS = Fvent.Service.Utils.JwtService;
 
@@ -91,9 +92,6 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         user.Update(req.Username,
             req.AvatarUrl,
-            req.Email,
-            req.FirstName,
-            req.LastName,
             req.PhoneNumber);
 
         if (uOW.IsUpdate(user))
@@ -124,6 +122,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     {
         var user = req.ToUser();
         user.EmailVerified = false;
+        user.Verified = VerifiedStatus.Unverified;
 
         await uOW.Users.AddAsync(user);
         await uOW.SaveChangesAsync();
@@ -140,6 +139,41 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         await emailService.SendEmailAsync(user.Email, "Email Verification", emailBody);
 
         return user.UserId.ToResponse();
+    }
+
+    public async Task<IdRes> AddCardId(Guid id, string cardUrl)
+    {
+        var spec = new GetUserSpec(id);
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+
+        user.CardUrl = cardUrl;
+        user.Verified = VerifiedStatus.UnderVerify;
+
+        await uOW.SaveChangesAsync();
+
+        return user.UserId.ToResponse();
+    }
+
+    public async Task<IdRes> ApproveUser(Guid id, bool isApproved, string processNote)
+    {
+        var spec = new GetUserSpec(id);
+        var _user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+        if (isApproved)
+        {
+            _user.Verified = VerifiedStatus.Verified;
+        }
+        else
+        {
+            _user.Verified = VerifiedStatus.Rejected;
+        }
+
+        _user.ProcessNote = processNote;
+
+        await uOW.SaveChangesAsync();
+
+        return _user.UserId.ToResponse();
     }
 
     public async Task VerifyEmailAsync(Guid userId, string token)

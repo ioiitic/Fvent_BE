@@ -9,12 +9,11 @@ public class User : ISoftDelete
     public string AvatarUrl { get; set; }
     public string Email { get; set; }
     public string Password { get; set; }
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
     public string PhoneNumber { get; set; }
     public string CardUrl { get; set; }
     public bool EmailVerified { get; set; } = false;
-    public bool Verified { get; set; } = false;
+    public VerifiedStatus Verified { get; set; }
+    public string ProcessNote { get; set; }
 
     public int RoleId { get; set; }
     public Role? Role { get; set; }
@@ -31,29 +30,23 @@ public class User : ISoftDelete
     public bool IsDeleted { get; set; } = false;
     public DateTime? DeletedAt { get; set; }
 
-    public User(string username, string avatarUrl, string email, string password, string firstName, string lastName,
+    public User(string username, string avatarUrl, string email, string password, 
                 string phoneNumber, string cardUrl, int roleId, DateTime createdAt)
     {
         Username = username;
         AvatarUrl = avatarUrl;
         Email = email;
         Password = password;
-        FirstName = firstName;
-        LastName = lastName;
         PhoneNumber = phoneNumber;
         CardUrl = cardUrl;
         RoleId = roleId;
         CreatedAt = createdAt;
     }
 
-    public void Update(string username, string avatarUrl, string email, string firstName,
-                       string lastName, string phoneNumber)
+    public void Update(string username, string avatarUrl, string phoneNumber)
     {
         Username = username;
         AvatarUrl = avatarUrl;
-        Email = email;
-        FirstName = firstName;
-        LastName = lastName;
         PhoneNumber = phoneNumber;
     }
 }

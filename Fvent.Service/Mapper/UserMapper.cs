@@ -20,8 +20,6 @@ public static class UserMapper
             "",
             src.Email,
             src.Password,
-            src.FirstName,
-            src.LastName,
             src.PhoneNumber,
             "", 
             (int)userRole,
@@ -34,11 +32,11 @@ public static class UserMapper
         var result = typeof(TEntity) switch
         {
             Type t when t == typeof(UserRes) =>
-                new UserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.Password, src.FirstName,
-                            src.LastName, src.PhoneNumber, src.CardUrl, src.Role!.RoleName) as TEntity,
+                new UserRes(src.UserId, src.Username, src.AvatarUrl, src.Email,
+                            src.PhoneNumber, src.CardUrl, src.Role!.RoleName) as TEntity,
 
             Type t when t == typeof(GetListUserRes) =>
-                new GetListUserRes(src.Username, src.AvatarUrl, src.Email, src.FirstName, src.LastName,
+                new GetListUserRes(src.Username, src.AvatarUrl, src.Email,
                                         src.PhoneNumber, src.CardUrl, src.Verified, src.Role!.RoleName, src.CreatedAt,
                                         src.UpdatedAt, src.IsDeleted, src.DeletedAt) as TEntity,
 

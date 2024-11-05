@@ -85,6 +85,40 @@ public class UsersController(IUserService userService, IEventService eventServic
 
         return Ok(res);
     }
+
+    /// <summary>
+    /// Add FPT CardId to User profile
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPut("addCard")]
+    public async Task<IActionResult> AddCard([FromBody]AddCardIdRequest req)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await userService.AddCardId(userId, req.CardUrl);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// For Moderator approve User
+    /// </summary>
+    /// <param name="isApproved"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPut("{userId}/approve")]
+    public async Task<IActionResult> ApproveUser([FromRoute] Guid userId, [FromQuery] bool isApproved, [FromBody] ApproveUserRequest req)
+    {
+        var res = await userService.ApproveUser(userId, isApproved, req.ProcessNote);
+
+        return Ok(res);
+    }
     #endregion
 
     #region User Registration

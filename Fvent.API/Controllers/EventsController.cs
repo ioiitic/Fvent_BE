@@ -104,6 +104,12 @@ public class EventsController(IEventService eventService, ICommentService commen
 
         return Ok(res);
     }
+
+    /// <summary>
+    /// Organizer publish event for review
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
     [HttpPut("{eventId}/submit")]
     public async Task<IActionResult> SubmitEvent([FromRoute] Guid eventId)
     {
@@ -111,6 +117,14 @@ public class EventsController(IEventService eventService, ICommentService commen
 
         return Ok(res);
     }
+
+    /// <summary>
+    /// Moderator approve Event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="isApproved"></param>
+    /// <param name="processNote"></param>
+    /// <returns></returns>
     [HttpPut("{eventId}/approve")]
     public async Task<IActionResult> ApproveEvent([FromRoute] Guid eventId, [FromQuery] bool isApproved, [FromBody] ApproveEventRequest processNote)
     {
@@ -119,6 +133,11 @@ public class EventsController(IEventService eventService, ICommentService commen
         return Ok(res);
     }
 
+    /// <summary>
+    /// Use for registerd user check-in an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
     [HttpPut("{eventId}/checkin")]
     public async Task<IActionResult> CheckinEvent([FromRoute] Guid eventId)
     {
