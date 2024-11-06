@@ -288,4 +288,20 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         return user.UserId.ToResponse();
     }
+
+    public async Task<IdRes> VerifyUser(Guid id, string option)
+    {
+        var spec = new GetUserSpec(id);
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+
+        user.Verify(option);
+
+        if (uOW.IsUpdate(user))
+            user.UpdatedAt = DateTime.UtcNow;
+
+        await uOW.SaveChangesAsync();
+
+        return user.UserId.ToResponse();
+    }
 }

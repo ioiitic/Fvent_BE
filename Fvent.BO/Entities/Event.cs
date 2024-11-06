@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Common;
+using Fvent.BO.Enums;
 
 namespace Fvent.BO.Entities;
 

@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Common;
+using Fvent.BO.Enums;
 
 namespace Fvent.BO.Entities;
 
@@ -14,7 +15,7 @@ public class User : ISoftDelete
     public string PhoneNumber { get; set; }
     public string CardUrl { get; set; }
     public bool EmailVerified { get; set; } = false;
-    public bool Verified { get; set; } = false;
+    public UserStatus Verified { get; set; } = UserStatus.Pending;
 
     public int RoleId { get; set; }
     public Role? Role { get; set; }
@@ -60,5 +61,20 @@ public class User : ISoftDelete
     public void UpdateCard(string cardUrl)
     {
         CardUrl = cardUrl;
+    }
+
+    public void Verify(string option)
+    {
+        switch (option)
+        {
+            case "accept":
+                Verified = UserStatus.Accepted;
+                break;
+            case "reject":
+                Verified = UserStatus.Rejected;
+                break;
+            default:
+                throw new Exception($"{option} is not supported.");
+        }
     }
 }

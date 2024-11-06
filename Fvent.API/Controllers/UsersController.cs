@@ -19,7 +19,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     /// Get list users info
     /// </summary>
     /// <returns></returns>
-    [HttpGet()]
+    [HttpGet]
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetList([FromQuery] GetListUsersReq req)
     {
@@ -57,6 +57,11 @@ public class UsersController(IUserService userService, IEventService eventServic
         return Ok(res);
     }
 
+    /// <summary>
+    /// Upload user card
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     [HttpPut("upload-card")]
     [Authorize]
     public async Task<IActionResult> UpdateUserCard([FromBody] UpdateUserCardReq req)
@@ -92,6 +97,20 @@ public class UsersController(IUserService userService, IEventService eventServic
     public async Task<IActionResult> RegisterUser([FromBody] CreateUserReq req)
     {
         var res = await userService.Register(req);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Verify a user account
+    /// </summary>
+    /// <param name="option"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("verify/{option}")]
+    public async Task<IActionResult> VerifyUser([FromRoute] string option, [FromBody] IdReq req)
+    { 
+        var res = await userService.VerifyUser(req.Id, option);
 
         return Ok(res);
     }

@@ -1,4 +1,6 @@
-﻿public enum EventStatus
+﻿namespace Fvent.BO.Enums;
+
+public enum EventStatus
 {
     Draft = 0,           // Event details are being drafted
     UnderReview = 1,     // Submitted for review and approval
