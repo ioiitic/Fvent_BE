@@ -14,6 +14,7 @@ public interface IUserService
     Task<AuthResponse> Authen(AuthReq req, string ipAddress);
     Task<AuthResponse> Refresh(RefreshTokenReq req, string ipAddress);
     Task<IdRes> Update(Guid id, UpdateUserReq req);
+    Task<IdRes> UpdateUserCard(Guid id, UpdateUserCardReq req);
     #endregion
 
     #region Student

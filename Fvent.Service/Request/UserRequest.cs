@@ -12,10 +12,12 @@ public record GetListUsersReq(string? Username, string? Email, string? RoleName,
 public record CreateUserReq(string Username, string Email, string Password, string FirstName, string LastName,
                             string PhoneNumber, string Role);
 
-public record UpdateUserReq(string Username, string AvatarUrl, string Email, string FirstName,
-                            string LastName, string PhoneNumber);
+public record UpdateUserReq(string? Username, string? AvatarUrl, string? Email, string? FirstName,
+                            string? LastName, string? PhoneNumber);
 
-public record ForgotPasswordReq(string email);
+public record UpdateUserCardReq(string CardUrl);
+
+public record ForgotPasswordReq(string Email);
 public record ChangePasswordRequest(string OldPassword, string NewPassword);
 
 

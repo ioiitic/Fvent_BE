@@ -46,14 +46,19 @@ public class User : ISoftDelete
         CreatedAt = createdAt;
     }
 
-    public void Update(string username, string avatarUrl, string email, string firstName,
-                       string lastName, string phoneNumber)
+    public void Update(string? username, string? avatarUrl, string? email, string? firstName,
+                       string? lastName, string? phoneNumber)
     {
-        Username = username;
-        AvatarUrl = avatarUrl;
-        Email = email;
-        FirstName = firstName;
-        LastName = lastName;
-        PhoneNumber = phoneNumber;
+        Username = username??Username;
+        AvatarUrl = avatarUrl??AvatarUrl;
+        Email = email??Email;
+        FirstName = firstName??FirstName;
+        LastName = lastName??LastName;
+        PhoneNumber = phoneNumber??PhoneNumber;
+    }
+
+    public void UpdateCard(string cardUrl)
+    {
+        CardUrl = cardUrl;
     }
 }

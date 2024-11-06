@@ -10,7 +10,7 @@ namespace Fvent.API.Controllers;
 [ApiController]
 [Route("api/users")]
 public class UsersController(IUserService userService, IEventService eventService,
-                             INotificationService notificationService, 
+                             INotificationService notificationService,
                              IFollowerService eventFollowerService) : ControllerBase
 {
 
@@ -53,6 +53,16 @@ public class UsersController(IUserService userService, IEventService eventServic
     {
         var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
         var res = await userService.Update(Guid.Parse(userId), req);
+
+        return Ok(res);
+    }
+
+    [HttpPut("upload-card")]
+    [Authorize]
+    public async Task<IActionResult> UpdateUserCard([FromBody] UpdateUserCardReq req)
+    {
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+        var res = await userService.UpdateUserCard(Guid.Parse(userId), req);
 
         return Ok(res);
     }

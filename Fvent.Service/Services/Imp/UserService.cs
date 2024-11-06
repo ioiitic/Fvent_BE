@@ -273,4 +273,19 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
     }
 
+    public async Task<IdRes> UpdateUserCard(Guid id, UpdateUserCardReq req)
+    {
+        var spec = new GetUserSpec(id);
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+
+        user.UpdateCard(req.CardUrl);
+
+        if (uOW.IsUpdate(user))
+            user.UpdatedAt = DateTime.UtcNow;
+
+        await uOW.SaveChangesAsync();
+
+        return user.UserId.ToResponse();
+    }
 }
