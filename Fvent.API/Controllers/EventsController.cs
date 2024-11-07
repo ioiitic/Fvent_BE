@@ -67,13 +67,17 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// </summary>
     /// <returns></returns>
     [HttpGet("recommendation")]
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "student")]
     public async Task<IActionResult> GetListRecommend()
     {
-        var email = HttpContext.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-        var user = await userService.GetByEmail(email!);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        var res = await eventService.GetListRecommend(new IdReq(user.UserId));
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.GetListRecommend(userId);
 
         return Ok(res);
     }

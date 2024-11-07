@@ -19,16 +19,16 @@ namespace Fvent.Service.Services.Imp;
 public class EventService(IUnitOfWork uOW) : IEventService
 {
     #region Student
-    public async Task<PageResult<EventRes>> GetListRecommend(IdReq req)
+    public async Task<PageResult<EventRes>> GetListRecommend(Guid userId)
     {
-        var registerSpec = new GetListUserEventsSpec(req.Id);
+        var registerSpec = new GetListUserEventsSpec(userId);
         var userEventRegister = await uOW.EventRegistration.GetListAsync(registerSpec);
         var userEvents = userEventRegister.Select(r => r.Event);
         var eventTypes = userEvents.Select(e => e.EventTypeId).Distinct();
         var eventTags = userEvents.SelectMany(e => e.Tags!.Select(t => t.Tag)).Distinct();
 
         var eventSpec = new GetListRecommend(eventTypes, eventTags);
-        Console.WriteLine("Hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+
         var events = await uOW.Events.GetListAsync(eventSpec);
 
         var res = events.Select(e => e.ToResponse()).ToList();
@@ -41,18 +41,21 @@ public class EventService(IUnitOfWork uOW) : IEventService
     public async Task<IdRes> CreateEvent(CreateEventReq req)
     {
         var _event = req.ToEvent();
-
-        var formDetails = req.CreateFormDetailsReq.Select(f => new FormDetail(f.name, f.type, f.options));
-        var form = new Form
+        
+        if(req.CreateFormDetailsReq is not null)
         {
-            FormDetails = formDetails.ToList(),
-        };
+            var formDetails = req.CreateFormDetailsReq.Select(f => new FormDetail(f.name, f.type, f.options));
+            var form = new Form
+            {
+                FormDetails = formDetails.ToList(),
+            };
 
-        _event.Form = form;
-
+            _event.Form = form;
+           
+            
+        }
         await uOW.Events.AddAsync(_event);
         await uOW.SaveChangesAsync();
-        
         foreach (var item in req.EventTags)
         {
             EventTag tag = new EventTag(_event.EventId, (string)item);

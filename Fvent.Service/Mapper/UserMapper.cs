@@ -1,4 +1,5 @@
-﻿using Fvent.BO.Entities;
+﻿using Fvent.BO.Common.Fvent.BO.Common;
+using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
@@ -17,7 +18,7 @@ public static class UserMapper
 
         return new User(
             src.Username,
-            "",
+            DefaultImage.DefaultAvatar,
             src.Email,
             src.Password,
             src.PhoneNumber,
