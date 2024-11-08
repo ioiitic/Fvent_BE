@@ -149,6 +149,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         user.CardUrl = cardUrl;
         user.Verified = VerifiedStatus.UnderVerify;
+        user.UpdatedAt = DateTime.UtcNow;
 
         await uOW.SaveChangesAsync();
 

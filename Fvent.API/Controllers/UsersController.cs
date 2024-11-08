@@ -43,6 +43,18 @@ public class UsersController(IUserService userService, IEventService eventServic
     }
 
     /// <summary>
+    /// Get user info
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("{userId}")]
+    public async Task<IActionResult> GetUserById([FromRoute] Guid userId)
+    {
+        var res = await userService.Get(userId);
+
+        return Ok(res);
+    }
+
+    /// <summary>
     /// Update info
     /// </summary>
     /// <param name="req"></param>
