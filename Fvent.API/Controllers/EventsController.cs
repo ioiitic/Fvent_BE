@@ -37,17 +37,19 @@ public class EventsController(IEventService eventService, ICommentService commen
     [HttpGet("{eventId}")]
     public async Task<IActionResult> GetEvent([FromRoute] Guid eventId)
     {
+        Guid? userId = null;
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var parsedUserId))
         {
-            return Unauthorized("Invalid or missing user ID.");
+            userId = parsedUserId;
         }
 
         var res = await eventService.GetEvent(eventId, userId);
 
         return Ok(res);
     }
+
 
     /// <summary>
     /// Get list events belong to organizer

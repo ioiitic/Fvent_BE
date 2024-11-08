@@ -112,24 +112,28 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <param name="id"></param>
     /// <returns></returns>
     /// <exception cref="NotFoundException"></exception>
-    public async Task<EventRes> GetEvent(Guid eventId, Guid userId)
+    public async Task<EventRes> GetEvent(Guid eventId, Guid? userId)
     {
-        bool isRegisterded = false;
+        bool isRegistered = false;
         var spec = new GetEventSpec(eventId);
-        var subSpec = new GetEventRegistrationSpec(eventId, userId);
-        
+
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
 
-        var _eventTag = await uOW.EventRegistration.GetListAsync(subSpec)
-            ?? throw new NotFoundException(typeof(EventRegistration));
-        if (!_eventTag.IsNullOrEmpty())
+        if (userId.HasValue)
         {
-             isRegisterded = true;
+            var subSpec = new GetEventRegistrationSpec(eventId, userId.Value);
+            var _eventTag = await uOW.EventRegistration.GetListAsync(subSpec);
+
+            if (!_eventTag.IsNullOrEmpty())
+            {
+                isRegistered = true;
+            }
         }
 
-        return _event.ToResponse(isRegisterded);
+        return _event.ToResponse(isRegistered);
     }
+
 
     /// <summary>
     /// Update an Available Event
