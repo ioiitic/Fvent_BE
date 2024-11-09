@@ -19,6 +19,8 @@ public interface IUserService
     #endregion
 
     #region Student
+    Task<IdRes> AddCardId(Guid id, string cardUrl);
+    Task<IdRes> ApproveUser(Guid id, bool isApproved, string processNote);
     #endregion
 
     #region Organizer

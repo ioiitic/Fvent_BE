@@ -36,7 +36,7 @@ public class ReviewService(IUnitOfWork uOW) : IReviewService
         var spec = new GetReviewSpec();
         var reviews = await uOW.Reviews.GetListAsync(spec);
 
-        return reviews.Select(r => r.ToReponse(r.User!.FirstName + " " + r.User.LastName)).ToList();
+        return reviews.Select(r => r.ToReponse(r.User!.Username)).ToList();
     }
 
     public async Task<ReviewRes> GetReview(Guid id)
@@ -45,7 +45,7 @@ public class ReviewService(IUnitOfWork uOW) : IReviewService
         var review = await uOW.Reviews.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(EventReview));
 
-        return review.ToReponse(review.User!.FirstName + " " + review.User.LastName);
+        return review.ToReponse(review.User!.Username);
     }
 
     public async Task<IdRes> UpdateReview(Guid id, UpdateReviewReq req)

@@ -10,7 +10,7 @@ namespace Fvent.API.Controllers;
 [ApiController]
 [Route("api/users")]
 public class UsersController(IUserService userService, IEventService eventService,
-                             INotificationService notificationService,
+                             INotificationService notificationService, 
                              IFollowerService eventFollowerService) : ControllerBase
 {
 
@@ -19,7 +19,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     /// Get list users info
     /// </summary>
     /// <returns></returns>
-    [HttpGet]
+    [HttpGet()]
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetList([FromQuery] GetListUsersReq req)
     {
@@ -43,6 +43,18 @@ public class UsersController(IUserService userService, IEventService eventServic
     }
 
     /// <summary>
+    /// Get user info
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("{userId}")]
+    public async Task<IActionResult> GetUserById([FromRoute] Guid userId)
+    {
+        var res = await userService.Get(userId);
+
+        return Ok(res);
+    }
+
+    /// <summary>
     /// Update info
     /// </summary>
     /// <param name="req"></param>
@@ -53,21 +65,6 @@ public class UsersController(IUserService userService, IEventService eventServic
     {
         var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
         var res = await userService.Update(Guid.Parse(userId), req);
-
-        return Ok(res);
-    }
-
-    /// <summary>
-    /// Upload user card
-    /// </summary>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    [HttpPut("upload-card")]
-    [Authorize]
-    public async Task<IActionResult> UpdateUserCard([FromBody] UpdateUserCardReq req)
-    {
-        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
-        var res = await userService.UpdateUserCard(Guid.Parse(userId), req);
 
         return Ok(res);
     }
@@ -102,15 +99,35 @@ public class UsersController(IUserService userService, IEventService eventServic
     }
 
     /// <summary>
-    /// Verify a user account
+    /// Add FPT CardId to User profile
     /// </summary>
-    /// <param name="option"></param>
     /// <param name="req"></param>
     /// <returns></returns>
-    [HttpPost("verify/{option}")]
-    public async Task<IActionResult> VerifyUser([FromRoute] string option, [FromBody] IdReq req)
-    { 
-        var res = await userService.VerifyUser(req.Id, option);
+    [HttpPut("addCard")]
+    public async Task<IActionResult> AddCard([FromBody]AddCardIdRequest req)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await userService.AddCardId(userId, req.CardUrl);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// For Moderator approve User
+    /// </summary>
+    /// <param name="isApproved"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPut("{userId}/approve")]
+    public async Task<IActionResult> ApproveUser([FromRoute] Guid userId, [FromQuery] bool isApproved, [FromBody] ApproveUserRequest req)
+    {
+        var res = await userService.ApproveUser(userId, isApproved, req.ProcessNote);
 
         return Ok(res);
     }

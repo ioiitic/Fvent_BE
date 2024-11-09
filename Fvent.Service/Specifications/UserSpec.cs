@@ -9,7 +9,7 @@ public static class UserSpec
 {
     public class GetListUsersSpec : Specification<User>
     {
-        public GetListUsersSpec(string? username, string? email, string? roleName, bool? verified, string? orderBy,
+        public GetListUsersSpec(string? username, string? email, string? roleName, string? verified, string? orderBy,
                                 bool isDescending, int pageNumber, int pageSize)
         {
             if (!string.IsNullOrEmpty(username))
@@ -24,10 +24,13 @@ public static class UserSpec
             {
                 Filter(u => u.Role!.RoleName.Contains(roleName));
             }
-            if (verified is not null)
+
+            // Filter by verified status if provided
+            if (!string.IsNullOrEmpty(verified) && Enum.TryParse<VerifiedStatus>(verified, true, out var verifiedStatus))
             {
-                Filter(u => u.Verified == verified);
+                Filter(e => e.Verified == verifiedStatus);
             }
+
             if (orderBy is not null)
             {
                 switch (orderBy)

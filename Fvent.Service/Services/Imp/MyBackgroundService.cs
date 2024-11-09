@@ -16,17 +16,18 @@ public class MyBackgroundService : BackgroundService
             var events = await uOW.Events.GetAllAsync();
             foreach (Event _event in events)
             {
-                if (_event.EndTime >= DateTime.Now && _event.StartTime <= DateTime.Now)
-                    _event.Update(EventStatus.InProgress);
-                else if (_event.EndTime < DateTime.Now)
+                if(_event.Status == EventStatus.Upcoming || _event.Status == EventStatus.InProgress)
                 {
-                    _event.Update(EventStatus.Completed);
+                    if (_event.EndTime >= DateTime.Now && _event.StartTime <= DateTime.Now)
+                        _event.Update(EventStatus.InProgress);
+
+                    else if (_event.EndTime < DateTime.Now)
+                    {
+                        _event.Update(EventStatus.Completed);
+                    }
                 }
-                //else if (_event.StartTime > DateTime.Now)
-                //{
-                //    _event.Update(EventStatus.Upcoming);
-                //}
             }
+            await uOW.SaveChangesAsync();
             await Task.Delay(30000);
         }
     }
