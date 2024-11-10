@@ -7,7 +7,8 @@ namespace Fvent.Service.Mapper;
 public static class EventMapper
 {
     public static Event ToEvent(
-        this CreateEventReq src)
+        this CreateEventReq src,
+        Guid organizerId)
         => new(
             src.EventName,
             src.Description,
@@ -17,9 +18,9 @@ public static class EventMapper
             src.PasswordMeeting,
             src.Location,
             src.MaxAttendees,
-            src.ProcessNote,
+            "",
             EventStatus.Draft,
-            src.OrganizerId,
+            organizerId,
             src.EventTypeId,
             DateTime.UtcNow);
 

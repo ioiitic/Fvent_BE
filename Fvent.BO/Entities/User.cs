@@ -30,13 +30,14 @@ public class User : ISoftDelete
     public bool IsDeleted { get; set; } = false;
     public DateTime? DeletedAt { get; set; }
 
-    public User(string username, string avatarUrl, string email, string password, 
+    public User(string username, string avatarUrl, string email, string password, string processNote,
                 string phoneNumber, string cardUrl, int roleId, DateTime createdAt)
     {
         Username = username;
         AvatarUrl = avatarUrl;
         Email = email;
         Password = password;
+        ProcessNote = processNote;
         PhoneNumber = phoneNumber;
         CardUrl = cardUrl;
         RoleId = roleId;

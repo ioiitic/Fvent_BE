@@ -57,9 +57,9 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="organizerId"></param>
     /// <returns></returns>
     [HttpGet("organizer")]
-    public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] IdReq organizerId)
+    public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] GetEventByOrganizerReq req)
     {
-        var res = await eventService.GetListEventsByOrganizer(organizerId.Id);
+        var res = await eventService.GetListEventsByOrganizer(req);
 
         return Ok(res);
     }
@@ -92,7 +92,14 @@ public class EventsController(IEventService eventService, ICommentService commen
     [HttpPost]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventReq req)
     {
-        var res = await eventService.CreateEvent(req);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.CreateEvent(req, organizerId);
 
         return Ok(res);
     }
@@ -106,7 +113,14 @@ public class EventsController(IEventService eventService, ICommentService commen
     [HttpPut("{eventId}")]
     public async Task<IActionResult> UpdateEvent([FromRoute] Guid eventId, [FromBody] UpdateEventReq req)
     {
-        var res = await eventService.UpdateEvent(eventId, req);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.UpdateEvent(eventId, organizerId, req);
 
         return Ok(res);
     }
@@ -320,7 +334,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     [Route("{eventId}/reviews")]
     public async Task<IActionResult> GetEventReviews([FromRoute] Guid eventId)
     {
-        var res = await reviewService.GetReview(eventId);
+        var res = await reviewService.GetListReviews(eventId);
 
         return Ok(res);
     }
@@ -335,7 +349,13 @@ public class EventsController(IEventService eventService, ICommentService commen
     [HttpPost("{eventId}/reviews")]
     public async Task<IActionResult> CreateReview([FromRoute] Guid eventId, [FromBody] CreateReviewReq req)
     {
-        var res = await reviewService.CreateReview(eventId, req);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+        var res = await reviewService.CreateReview(eventId, userId, req);
 
         return Ok(res);
     }

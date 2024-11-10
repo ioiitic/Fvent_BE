@@ -148,9 +148,15 @@ public static class EventSpec
 
     public class GetEventByOrganizerSpec : Specification<Event>
     {
-        public GetEventByOrganizerSpec(Guid Id)
+        public GetEventByOrganizerSpec(Guid Id, string? status)
         {
             Filter(e => e.OrganizerId == Id);
+
+            // Filter by event status if provided
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
+            {
+                Filter(e => e.Status == eventStatus);
+            }
 
             Include(e => e.Tags!);
             Include(u => u.Organizer!);

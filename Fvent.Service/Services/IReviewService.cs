@@ -5,9 +5,9 @@ namespace Fvent.Service.Services;
 
 public interface IReviewService
 {
-    Task<IList<ReviewRes>> GetListReviews();
+    Task<IList<ReviewRes>> GetListReviews(Guid eventId);
     Task<ReviewRes> GetReview(Guid id);
-    Task<IdRes> CreateReview(Guid eventId, CreateReviewReq req);
-    Task<IdRes> UpdateReview(Guid id, UpdateReviewReq req);
+    Task<IdRes> CreateReview(Guid eventId, Guid userId, CreateReviewReq req);
+    Task<IdRes> UpdateReview(Guid id, Guid userId, UpdateReviewReq req);
     Task DeleteReview(Guid id);
 }

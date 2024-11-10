@@ -1,3 +1,3 @@
 ﻿namespace Fvent.Service.Result;
 
-public record ReviewRes(int Rating, string Comment, string Fulllname);
+public record ReviewRes(int Rating, string Comment, string Fulllname, string avatar);

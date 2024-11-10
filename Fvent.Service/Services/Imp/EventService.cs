@@ -38,9 +38,9 @@ public class EventService(IUnitOfWork uOW) : IEventService
     #endregion
 
     #region CRUD Event
-    public async Task<IdRes> CreateEvent(CreateEventReq req)
+    public async Task<IdRes> CreateEvent(CreateEventReq req, Guid organizerId)
     {
-        var _event = req.ToEvent();
+        var _event = req.ToEvent(organizerId);
         
         if(req.CreateFormDetailsReq is not null)
         {
@@ -142,7 +142,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <param name="req"></param>
     /// <returns></returns>
     /// <exception cref="NotFoundException"></exception>
-    public async Task<IdRes> UpdateEvent(Guid id, UpdateEventReq req)
+    public async Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req)
     {
         // Step 1: Find the event
         var spec = new GetEventSpec(id);
@@ -158,7 +158,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
             req.MaxAttendees,
             req.ProcessNote,
             req.Status,
-            req.OrganizerId,
+            organizerId,
             req.EventTypeId);
 
         if (uOW.IsUpdate(_event))
@@ -255,9 +255,9 @@ public class EventService(IUnitOfWork uOW) : IEventService
     }
 
 
-    public async Task<IList<EventRes>> GetListEventsByOrganizer(Guid organizerId)
+    public async Task<IList<EventRes>> GetListEventsByOrganizer(GetEventByOrganizerReq req)
     {
-        var spec = new GetEventByOrganizerSpec(organizerId);
+        var spec = new GetEventByOrganizerSpec(req.OrganizerId, req.Status);
 
         var _events = await uOW.Events.GetListAsync(spec);
 
