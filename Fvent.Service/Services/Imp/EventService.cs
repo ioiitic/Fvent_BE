@@ -66,8 +66,15 @@ public class EventService(IUnitOfWork uOW) : IEventService
         EventMedia poster = new(_event.EventId, (int)MediaType.Poster, req.PosterImg);
         EventMedia thumbnail = new(_event.EventId, (int)MediaType.Thumbnail, req.ThumbnailImg);
 
+        if(req.proposal is not null)
+        {
+            EventFile eventFile = new(req.proposal, _event.EventId);
+            await uOW.EventFile.AddAsync(eventFile);
+        }
+       
         await uOW.EventMedia.AddAsync(poster);
-        await uOW.EventMedia.AddAsync(thumbnail);
+        await uOW.EventMedia.AddAsync(thumbnail); 
+
         await uOW.SaveChangesAsync();
 
         return _event.EventId.ToResponse();

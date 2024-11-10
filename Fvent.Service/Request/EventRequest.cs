@@ -3,7 +3,7 @@
 public record CreateEventReq(string EventName, string Description, DateTime StartTime, DateTime EndTime, string Location,
                              string? LinkEvent, string? PasswordMeeting, int? MaxAttendees,
                              IList<CreateFormDetailReq>? CreateFormDetailsReq, Guid EventTypeId,
-                             string PosterImg, string ThumbnailImg, List<string> EventTags);
+                             string PosterImg, string ThumbnailImg, List<string> EventTags, string proposal);
 
 public record CreateFormDetailReq(string name, string type, IList<string> options);
 

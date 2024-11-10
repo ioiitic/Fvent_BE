@@ -20,8 +20,10 @@ public static class ReviewMapper
         this EventReview src,
         User user)
         => new(
+            src.EventReviewId,
             src.Rating,
             src.Comment,
             user.Username,
-            user.AvatarUrl);
+            user.AvatarUrl,
+            src.CreatedAt);
 }
