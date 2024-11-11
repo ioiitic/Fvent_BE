@@ -22,7 +22,6 @@ public class User : ISoftDelete
     public IList<EventRegistration>? Registrations { get; set; }
     public IList<EventReview>? Reviews { get; set; }
     public IList<Notification>? Notifications { get; set; }
-    public IList<Message>? Messages { get; set; }
     public IList<RefreshToken>? RefreshTokens { get; set; }
 
     public DateTime CreatedAt { get; set; }

@@ -21,8 +21,6 @@ public class MyDbContext : DbContext
     public DbSet<EventMedia> EventMedia { get; set; }
     public DbSet<EventFollower> EventFollowers { get; set; }
     public DbSet<Notification> Notifications { get; set; }
-    public DbSet<Conversation> Conversations { get; set; }
-    public DbSet<Message> Messages { get; set; }
     public DbSet<VerificationToken> VerificationTokens { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Form> Forms { get; set; }
@@ -80,12 +78,6 @@ public class MyDbContext : DbContext
             .HasOne(c => c.User)
             .WithMany(u => u.Notifications)
             .HasForeignKey(c => c.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Message>()
-            .HasOne(c => c.Sender)
-            .WithMany(u => u.Messages)
-            .HasForeignKey(c => c.SenderId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<VerificationToken>()
