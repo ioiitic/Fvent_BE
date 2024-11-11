@@ -18,7 +18,6 @@ public class Event : ISoftDelete
     public EventStatus Status { get; set; }
     public Guid OrganizerId { get; set; }
     public Guid EventTypeId { get; set; }
-    //public Guid FormId { get; set; }
 
     public User? Organizer { get; set; }
     public EventType? EventType { get; set; }

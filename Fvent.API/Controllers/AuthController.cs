@@ -10,7 +10,7 @@ public class AuthController(IUserService userService) : ControllerBase
 {
     #region Auth
     /// <summary>
-    /// POST api/auth/login
+    /// Login
     /// </summary>
     /// <param name="req"></param>
     /// <returns></returns>
@@ -40,6 +40,11 @@ public class AuthController(IUserService userService) : ControllerBase
         return Ok(res);
     }
 
+    /// <summary>
+    /// Refresh token
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     [HttpPost]
     [Route("refresh")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenReq req)

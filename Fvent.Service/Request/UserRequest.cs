@@ -1,6 +1,4 @@
-﻿using Fvent.BO.Enums;
-
-namespace Fvent.Service.Request;
+﻿namespace Fvent.Service.Request;
 
 public record AuthReq(string Email, string Password);
 
@@ -18,6 +16,3 @@ public record ForgotPasswordReq(string email);
 public record ChangePasswordRequest(string OldPassword, string NewPassword);
 public record ApproveUserRequest(string ProcessNote);
 public record AddCardIdRequest(string CardUrl);
-
-
-//public record ResetPasswordReq(Guid userId, string token, string newPassword);

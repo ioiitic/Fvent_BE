@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Entities;
+using Fvent.BO.Enums;
 using Fvent.Repository.Common;
 using Microsoft.Extensions.DependencyInjection;
 using System.Drawing.Printing;

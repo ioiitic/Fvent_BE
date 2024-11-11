@@ -1,5 +1,6 @@
 ﻿using Fvent.BO.Common;
 using Fvent.BO.Entities;
+using Fvent.BO.Enums;
 using Fvent.BO.Exceptions;
 using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;

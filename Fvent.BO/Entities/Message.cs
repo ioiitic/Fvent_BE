@@ -8,6 +8,14 @@ public class Message
     public string MessageText { get; set; }
     public DateTime SentTime { get; set; }
 
-    public Conversation Conversation { get; set; }
-    public User Sender { get; set; }
+    public Conversation? Conversation { get; set; }
+    public User? Sender { get; set; }
+
+    public Message(int conversationId, Guid senderId, string messageText, DateTime sentTime)
+    {
+        ConversationId = conversationId;
+        SenderId = senderId;
+        MessageText = messageText;
+        SentTime = sentTime;
+    }
 }

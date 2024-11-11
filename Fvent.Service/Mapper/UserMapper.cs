@@ -1,4 +1,4 @@
-﻿using Fvent.BO.Common.Fvent.BO.Common;
+﻿using Fvent.BO.Common;
 using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.Service.Request;

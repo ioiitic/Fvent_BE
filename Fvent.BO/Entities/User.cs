@@ -13,7 +13,7 @@ public class User : ISoftDelete
     public string CardUrl { get; set; }
     public bool EmailVerified { get; set; } = false;
     public VerifiedStatus Verified { get; set; }
-    public string ProcessNote { get; set; }
+    public string ProcessNote { get; set; } = "";
 
     public int RoleId { get; set; }
     public Role? Role { get; set; }

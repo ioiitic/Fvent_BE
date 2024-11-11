@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Entities;
+using Fvent.BO.Enums;
 using Fvent.Repository.Data;
 using Fvent.Repository.UOW;
 using Microsoft.Extensions.Hosting;

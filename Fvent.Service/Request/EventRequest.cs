@@ -1,4 +1,6 @@
-﻿namespace Fvent.Service.Request;
+﻿using Fvent.BO.Enums;
+
+namespace Fvent.Service.Request;
 
 public record CreateEventReq(string EventName, string Description, DateTime StartTime, DateTime EndTime, string Location,
                              string? LinkEvent, string? PasswordMeeting, int? MaxAttendees, string? ProcessNote,

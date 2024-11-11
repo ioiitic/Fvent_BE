@@ -208,7 +208,7 @@ public class UsersController(IUserService userService, IEventService eventServic
 
     #region User Notification
     [HttpGet("notifications")]
-    public async Task<IActionResult> GetList()
+    public async Task<IActionResult> GetNotifications()
     {
         var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
         var res = await notificationService.GetListNotifications(Guid.Parse(userId));
