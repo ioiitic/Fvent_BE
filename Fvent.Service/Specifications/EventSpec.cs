@@ -84,6 +84,7 @@ public static class EventSpec
             Include(u => u.EventType!);
             Include(u => u.EventMedias!);
             Include(e => e.Tags!);
+            Include(e => e.Form!.FormDetails!);
         }
     }
 

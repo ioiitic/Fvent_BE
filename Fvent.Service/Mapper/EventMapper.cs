@@ -45,7 +45,8 @@ public static class EventMapper
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.Status.ToString(),
             null,
-            src.Tags.Select(t => t.Tag).ToList());
+            src.Tags.Select(t => t.Tag).ToList(),
+            null);
 
     public static EventRes ToResponse(
         this Event src,
@@ -68,8 +69,12 @@ public static class EventMapper
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.Status.ToString(),
             isRegistered,
-            src.Tags.Select(t => t.Tag).ToList());
+            src.Tags.Select(t => t.Tag).ToList(),
+            src.Form?.FormDetails?.Select(d => d.ToResponse()).ToList());
 
     public static EventRateRes ToResponse(this double src)
         => new(src);
+
+    public static FormDetailsRes ToResponse(this FormDetail src)
+        => new(src.Name, src.Type, src.Options);
 }

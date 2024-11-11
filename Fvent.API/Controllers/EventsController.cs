@@ -1,7 +1,6 @@
 ﻿using Fvent.BO.Exceptions;
 using Fvent.Service.Request;
 using Fvent.Service.Services;
-using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -13,7 +12,7 @@ namespace Fvent.API.Controllers;
 public class EventsController(IEventService eventService, ICommentService commentService,
                               IFollowerService followerService, IRatingService ratingService,
                               IRegistationService registationService, IReviewService reviewService,
-                              IUserService userService) : ControllerBase
+                              IFormService formService) : ControllerBase
 {
     #region Event
     /// <summary>
@@ -283,6 +282,7 @@ public class EventsController(IEventService eventService, ICommentService commen
         {
             return Unauthorized("Invalid or missing user ID.");
         }
+
         var res = await registationService.RegisterFreeEvent(eventId, userId);
 
         return Ok(res);
@@ -356,6 +356,42 @@ public class EventsController(IEventService eventService, ICommentService commen
             return Unauthorized("Invalid or missing user ID.");
         }
         var res = await reviewService.CreateReview(eventId, userId, req);
+
+        return Ok(res);
+    }
+    #endregion
+
+    #region Event Form
+    /// <summary>
+    /// Get form submits for an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpGet("{eventId}/form-submit")]
+    public async Task<IActionResult> GetFormSubmits([FromRoute] Guid eventId)
+    {
+        var res = await formService.GetFormSubmits(eventId);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("{eventId}/submit-form")]
+    public async Task<IActionResult> SubmitForm([FromRoute] Guid eventId, FormSubmitReq req)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await formService.SubmitForm(eventId, userId, req);
 
         return Ok(res);
     }

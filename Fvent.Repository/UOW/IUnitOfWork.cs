@@ -18,6 +18,8 @@ public interface IUnitOfWork
     ITagRepo Tag { get; }
     IRefreshTokenRepo RefreshToken { get; }
     IEventFileRepo EventFile { get; }
+    IFormRepo Form { get; }
+    IFormSubmitRepo FormSubmit { get; }
 
     bool IsUpdate<TEntity>(TEntity entity) where TEntity : class;
     Task SaveChangesAsync();

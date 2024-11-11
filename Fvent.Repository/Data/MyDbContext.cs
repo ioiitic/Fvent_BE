@@ -27,6 +27,7 @@ public class MyDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Form> Forms { get; set; }
     public DbSet<FormDetail> FormDetails { get; set; }
+    public DbSet<FormSubmit> FormSubmits { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -89,5 +90,10 @@ public class MyDbContext : DbContext
 
         modelBuilder.Entity<VerificationToken>()
                     .HasKey(vt => vt.UserId);
+
+        modelBuilder.Entity<FormSubmit>()
+                    .HasOne(c => c.User)
+                    .WithOne()
+                    .OnDelete(DeleteBehavior.Restrict);
     }
 }
