@@ -8,10 +8,10 @@ public interface IEventService
 {
     Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req);
     Task<EventRes> GetEvent(Guid eventId, Guid? userId);
-    Task<IList<EventRes>> GetListEventsByOrganizer(Guid organizerId);
+    Task<IList<EventRes>> GetListEventsByOrganizer(GetEventByOrganizerReq req);
     Task<PageResult<EventRes>> GetListRecommend(Guid userId);
-    Task<IdRes> CreateEvent(CreateEventReq req);
-    Task<IdRes> UpdateEvent(Guid id, UpdateEventReq req);
+    Task<IdRes> CreateEvent(CreateEventReq req, Guid organizerId);
+    Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req);
     Task<IdRes> SubmitEvent(Guid id);
     Task<IdRes> ApproveEvent(Guid id, bool isApproved, string processNote);
     Task CheckinEvent(Guid eventId, Guid userId);

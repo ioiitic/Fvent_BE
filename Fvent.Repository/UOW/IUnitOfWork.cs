@@ -17,6 +17,7 @@ public interface IUnitOfWork
     IEventMediaRepo EventMedia { get; }
     ITagRepo Tag { get; }
     IRefreshTokenRepo RefreshToken { get; }
+    IEventFileRepo EventFile { get; }
 
     bool IsUpdate<TEntity>(TEntity entity) where TEntity : class;
     Task SaveChangesAsync();

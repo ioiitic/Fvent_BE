@@ -48,6 +48,9 @@ public class MyDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasQueryFilter(u => !u.IsDeleted && u.EmailVerified);
 
+        modelBuilder.Entity<Event>()
+            .HasQueryFilter(u => !u.IsDeleted);
+
         modelBuilder.Entity<Comment>()
             .HasOne(c => c.User)
             .WithMany(u => u.Comments)
