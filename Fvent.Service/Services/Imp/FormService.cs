@@ -24,4 +24,12 @@ public class FormService(IUnitOfWork uOW) : IFormService
 
         return formSubmit.FormSubmitId.ToResponse();
     }
+
+    public async Task<IList<FormSubmitRes>> GetFormSubmits(Guid eventId, Guid userId)
+    {
+        var spec = new GetFormSubmitSpec(eventId, userId);
+        var res = await uOW.FormSubmit.GetListAsync(spec);
+
+        return res.Select(f => f.ToResponse()).ToList();
+    }
 }

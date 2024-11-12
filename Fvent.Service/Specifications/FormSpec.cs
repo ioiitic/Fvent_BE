@@ -11,6 +11,14 @@ public static class FormSpec
         public GetFormSubmitSpec(Guid eventId)
         {
             Filter(f => f.EventId == eventId);
+
+            Include(f => f.User!);
+        }
+
+        public GetFormSubmitSpec(Guid eventId, Guid userId)
+        {
+            Filter(f => f.EventId == eventId);
+            Filter(f => f.UserId == userId);
         }
     }
 }
