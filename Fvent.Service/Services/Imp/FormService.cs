@@ -6,7 +6,7 @@ using static Fvent.Service.Specifications.FormSpec;
 
 namespace Fvent.Service.Services.Imp;
 
-public class FormService(IUnitOfWork uOW) : IFormService
+public class FormService(IUnitOfWork uOW, IRegistationService registationService) : IFormService
 {
     public async Task<IList<FormSubmitRes>> GetFormSubmits(Guid eventId)
     {
@@ -22,6 +22,16 @@ public class FormService(IUnitOfWork uOW) : IFormService
         await uOW.FormSubmit.AddAsync(formSubmit);
         await uOW.SaveChangesAsync();
 
+        await registationService.RegisterFreeEvent(eventId, userId);
+
         return formSubmit.FormSubmitId.ToResponse();
+    }
+
+    public async Task<IList<FormSubmitRes>> GetFormSubmits(Guid eventId, Guid userId)
+    {
+        var spec = new GetFormSubmitSpec(eventId, userId);
+        var res = await uOW.FormSubmit.GetListAsync(spec);
+
+        return res.Select(f => f.ToResponse()).ToList();
     }
 }

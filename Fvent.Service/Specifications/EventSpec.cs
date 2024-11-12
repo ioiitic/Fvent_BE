@@ -10,8 +10,8 @@ public static class EventSpec
 {
     public class GetEventSpec : Specification<Event>
     {
-        public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag, string? status,
-                            string orderBy, bool isDescending, int pageNumber, int pageSize)
+        public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag,
+                            string? status, string orderBy, bool isDescending, int pageNumber, int pageSize)
         {
             // Filter by search keyword (for event name or description)
             if (!string.IsNullOrEmpty(searchKeyword))
