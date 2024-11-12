@@ -1,4 +1,5 @@
-﻿using Fvent.Service.Request;
+﻿using Fvent.BO.Exceptions;
+using Fvent.Service.Request;
 using Fvent.Service.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +38,18 @@ public class UsersController(IUserService userService, IEventService eventServic
     {
         var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
         var res = await userService.Get(Guid.Parse(userId));
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Get user info
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("{userId}")]
+    public async Task<IActionResult> GetUserById([FromRoute] Guid userId)
+    {
+        var res = await userService.Get(userId);
 
         return Ok(res);
     }
@@ -84,6 +97,40 @@ public class UsersController(IUserService userService, IEventService eventServic
 
         return Ok(res);
     }
+
+    /// <summary>
+    /// Add FPT CardId to User profile
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPut("addCard")]
+    public async Task<IActionResult> AddCard([FromBody]AddCardIdRequest req)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await userService.AddCardId(userId, req.CardUrl);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// For Moderator approve User
+    /// </summary>
+    /// <param name="isApproved"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPut("{userId}/approve")]
+    public async Task<IActionResult> ApproveUser([FromRoute] Guid userId, [FromQuery] bool isApproved, [FromBody] ApproveUserRequest req)
+    {
+        var res = await userService.ApproveUser(userId, isApproved, req.ProcessNote);
+
+        return Ok(res);
+    }
     #endregion
 
     #region User Registration
@@ -95,10 +142,15 @@ public class UsersController(IUserService userService, IEventService eventServic
     [HttpGet]
     [Authorize]
     [Route("participant")]
-    public async Task<IActionResult> GetEventRegisters()
+    public async Task<IActionResult> GetEventRegisters([FromQuery] bool isCompleted)
     {
-        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
-        var res = await eventService.GetRegisteredEvents(Guid.Parse(userId));
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+        var res = await eventService.GetRegisteredEvents(userId, isCompleted);
 
         return Ok(res);
     }
@@ -131,11 +183,37 @@ public class UsersController(IUserService userService, IEventService eventServic
         await userService.ResetPasswordAsync(userId, token, newPassword);
         return Ok("Password has been reset successfully.");
     }
+
+    [HttpPut("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        try
+        {
+            await userService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword);
+            return Ok("Password changed successfully.");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound("User not found.");
+        }
+    }
+
     #endregion
 
     #region User Notification
     [HttpGet("notifications")]
-    public async Task<IActionResult> GetList()
+    public async Task<IActionResult> GetNotifications()
     {
         var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
         var res = await notificationService.GetListNotifications(Guid.Parse(userId));

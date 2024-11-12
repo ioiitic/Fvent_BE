@@ -2,13 +2,13 @@
 
 public class EventType
 {
-    public EventType(string eventTypeName)
-    {
-        this.EventTypeName = eventTypeName;
-    }
-
     public Guid EventTypeId { get; set; }
     public string EventTypeName { get; set; }
+
+    public EventType(string eventTypeName)
+    {
+        EventTypeName = eventTypeName;
+    }
 
     public void Update(string newName)
     {

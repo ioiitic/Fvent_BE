@@ -1,5 +1,7 @@
 ﻿using Fvent.BO.Entities;
+using Fvent.BO.Enums;
 using Fvent.Repository.Common;
+using Microsoft.Extensions.DependencyInjection;
 using System.Drawing.Printing;
 
 namespace Fvent.Service.Specifications;
@@ -8,8 +10,8 @@ public static class EventSpec
 {
     public class GetEventSpec : Specification<Event>
     {
-        public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, string? eventType, string? eventTag,
-                            string orderBy, bool isDescending, int pageNumber, int pageSize)
+        public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag,
+                            string? status, string orderBy, bool isDescending, int pageNumber, int pageSize)
         {
             // Filter by search keyword (for event name or description)
             if (!string.IsNullOrEmpty(searchKeyword))
@@ -21,25 +23,32 @@ public static class EventSpec
             if (inMonth.HasValue)
             {
                 var month = inMonth.Value;
-                var year = DateTime.UtcNow.Year;
-                if (inYear.HasValue)
-                {
-                    year = inYear.Value;
-                }
-                
+                var year = inYear ?? DateTime.UtcNow.Year;
+
                 Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
-
-            // Filter by event type
-            if (!string.IsNullOrEmpty(eventType))
+            else if (!inMonth.HasValue && inYear.HasValue)
             {
-                Filter(e => e.EventType!.EventTypeName == eventType);
+                var year = inYear.Value;
+                Filter(e => (e.StartTime.Year == year ||  e.EndTime.Year == year));
+            }
+
+            // Filter by multiple event types if provided
+            if (eventTypes != null && eventTypes.Any())
+            {
+                Filter(e => eventTypes.Contains(e.EventType!.EventTypeName));
             }
 
             // Filter by event tag (assuming each event has an IList<EventTag> called Tags)
             if (!string.IsNullOrEmpty(eventTag))
             {
                 Filter(e => e.Tags!.Any(tag => tag.Tag == eventTag));
+            }
+
+            // Filter by event status if provided
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
+            {
+                Filter(e => e.Status == eventStatus);
             }
 
             if (orderBy is not null)
@@ -58,12 +67,6 @@ public static class EventSpec
                 }
             }
 
-            // Filter by event type
-            if (!string.IsNullOrEmpty(eventType))
-            {
-                Filter(e => e.EventType!.EventTypeName == eventType);
-            }
-
             AddPagination(pageNumber, pageSize);
 
             // Include related entities
@@ -80,6 +83,8 @@ public static class EventSpec
             Include(u => u.Organizer!);
             Include(u => u.EventType!);
             Include(u => u.EventMedias!);
+            Include(e => e.Tags!);
+            Include(e => e.Form!.FormDetails!);
         }
     }
 
@@ -93,9 +98,19 @@ public static class EventSpec
 
     public class GetRegisteredEventsSpec : Specification<Event>
     {
-        public GetRegisteredEventsSpec(Guid userId)
+        public GetRegisteredEventsSpec(Guid userId, bool isCompleted)
         {
+            
             Filter(e => e.Registrations!.Any(r => r.UserId == userId));
+
+            if (isCompleted)
+            {
+                Filter(e => e.Status == EventStatus.Completed);
+            }
+            else
+            {
+                Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress);
+            }
 
             Include("Registrations.User.Role");
             Include(e => e.Organizer!);
@@ -145,9 +160,15 @@ public static class EventSpec
 
     public class GetEventByOrganizerSpec : Specification<Event>
     {
-        public GetEventByOrganizerSpec(Guid Id)
+        public GetEventByOrganizerSpec(Guid Id, string? status)
         {
             Filter(e => e.OrganizerId == Id);
+
+            // Filter by event status if provided
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
+            {
+                Filter(e => e.Status == eventStatus);
+            }
 
             Include(e => e.Tags!);
             Include(u => u.Organizer!);

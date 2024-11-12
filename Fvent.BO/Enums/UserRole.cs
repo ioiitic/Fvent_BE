@@ -2,7 +2,9 @@
 
 public enum UserRole
 {
+    Guess,
     Admin,
+    Student,
     Organizer,
-    User
+    Moderator
 }

@@ -26,6 +26,7 @@ namespace Fvent.Service.Mapper
         public static NotificationRes ToReponse(this Notification src)
         {
             return new NotificationRes(
+                src.NotificationId,
                 src.EventId,
                 src.UserId,
                 src.Message,

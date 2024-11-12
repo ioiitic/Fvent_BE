@@ -9,18 +9,18 @@ namespace Fvent.API.Controllers;
 public class NotificationController(INotificationService notificationService) : ControllerBase
 {
     #region Notification
-    /// <summary>
-    /// Get all notifications of user
-    /// </summary>
-    /// <param name="userId"></param>
-    /// <returns></returns>
-    [HttpGet("{userId}")]
-    public async Task<IActionResult> GetNotifications(Guid userId)
-    {
-        var res = await notificationService.GetNotification(userId);
+    ///// <summary>
+    ///// Get all notifications of user
+    ///// </summary>
+    ///// <param name="userId"></param>
+    ///// <returns></returns>
+    //[HttpGet("{userId}")]
+    //public async Task<IActionResult> GetNotifications(Guid userId)
+    //{
+    //    var res = await notificationService.GetNotification(userId);
 
-        return Ok(res);
-    }
+    //    return Ok(res);
+    //}
 
     /// <summary>
     /// Post a notification

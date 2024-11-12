@@ -1,20 +1,18 @@
-﻿using Fvent.BO.Enums;
-
-namespace Fvent.Service.Request;
+﻿namespace Fvent.Service.Request;
 
 public record AuthReq(string Email, string Password);
 
 public record RefreshTokenReq(string Token);
 
-public record GetListUsersReq(string? Username, string? Email, string? RoleName, bool? Verified, string? OrderBy,
+public record GetListUsersReq(string? Username, string? Email, string? RoleName, string? Verified, string? OrderBy,
                               bool IsDescending = false, int PageNumber = 1, int PageSize = 9);
 
-public record CreateUserReq(string Username, string Email, string Password, string FirstName, string LastName,
+public record CreateUserReq(string Username, string Email, string Password, 
                             string PhoneNumber, string Role);
 
-public record UpdateUserReq(string Username, string AvatarUrl, string Email, string Password, string FirstName,
-                            string LastName, string PhoneNumber, string CardUrl, string Campus);
+public record UpdateUserReq(string Username, string AvatarUrl, string PhoneNumber);
 
 public record ForgotPasswordReq(string email);
-
-//public record ResetPasswordReq(Guid userId, string token, string newPassword);
+public record ChangePasswordRequest(string OldPassword, string NewPassword);
+public record ApproveUserRequest(string ProcessNote);
+public record AddCardIdRequest(string CardUrl);

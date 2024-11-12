@@ -1,19 +1,10 @@
 ﻿namespace Fvent.Service.Result;
 
-public record EventRes(Guid EventId,
-                       string EventName,
-                       string Description,
-                       DateTime StartTime,
-                       DateTime EndTime,
-                       string Location,
-                       string LinkEvent,
-                       string PasswordMeeting,
-                       int? MaxAttendees,
-                       string ProcessNote,
-                       string OrganizerName,
-                       string EventTypeName,
-                       string PosterImg,
-                       string ThumbnailImg,
-                       EventStatus Status,
-                       List<string> EventTags); 
+public record EventRes(Guid EventId, string EventName, string Description, DateTime StartTime, DateTime EndTime,
+                       string Location, string LinkEvent, string PasswordMeeting, int? MaxAttendees, string ProcessNote,
+                       Guid OrganizerId, string OrganizerName, string EventTypeName, string PosterImg,
+                       string ThumbnailImg, string Status, bool? IsRegistered, List<string> EventTags,
+                       IList<FormDetailsRes>? Form);
 public record EventRateRes(double AvgRate);
+
+public record FormDetailsRes(string Name, string Type, IList<string> Options);

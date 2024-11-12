@@ -14,47 +14,63 @@ namespace Fvent.Service.Services.Imp;
 public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService) : IUserService
 {
     #region Authen
-    public async Task<AuthResponse> Authen(AuthReq req)
-    {
+    public async Task<AuthResponse> Authen(AuthReq req, string ipAddress)
+    { 
+        // Check user authen
         var spec = new AuthenUserSpec(req.Email, req.Password);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
+        // Generate jwt token and refresh token
         var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
-
-        var rfsToken = JS.GenerateRefreshToken();
-        var rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
-
-        while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
-        {
-            rfsToken = JS.GenerateRefreshToken();
-            rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
-        }
+        var rfsToken = await CreateRefreshToken(user, ipAddress);
 
         return new AuthResponse(token, rfsToken.Token);
     }
 
-    public async Task<AuthResponse> Refresh(RefreshTokenReq req)
+    public async Task<AuthResponse> Refresh(RefreshTokenReq req, string ipAddress)
     {
+        // Check refresh toen exist
         var rfsSpec = new CheckRefreshTokenSpec(req.Token);
         var rfsToken = await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec) 
             ?? throw new NotFoundException(typeof(RefreshToken));
 
-        var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
-
-        rfsToken = JS.GenerateRefreshToken();
-
-        while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
+        // Validate token
+        if (rfsToken.IsRevoked)
         {
-            rfsToken = JS.GenerateRefreshToken();
-            rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
+            throw new AuthenticationException("Refresh token is revoked!");
         }
+        if (rfsToken.IsExpired)
+        {
+            throw new AuthenticationException("Refresh token is expired!");
+        }
+
+        // Generate jwt token and refresh token
+        var user = rfsToken.User!;
+        var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
+        rfsToken = await CreateRefreshToken(user, ipAddress);
 
         return new AuthResponse(token, rfsToken.Token);
     }
 
+    private async Task<RefreshToken> CreateRefreshToken(User user, string ipAddress)
+    {
+        var rfsToken = JS.GenerateRefreshToken(ipAddress);
+        var rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
+        while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
+        {
+            rfsToken = JS.GenerateRefreshToken(ipAddress);
+        }
+
+        // Replace refresh token
+        user.RefreshTokens!.Add(rfsToken);
+        uOW.SaveChanges();
+
+        return rfsToken;
+    }
     #endregion
 
+    #region Email
     public async Task<UserRes> GetByEmail(string email)
     {
         var spec = new GetUserSpec(email);
@@ -64,6 +80,9 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         return user.ToResponse<UserRes>();
     }
 
+    #endregion
+
+    #region User
     public async Task<IdRes> Update(Guid id, UpdateUserReq req)
     {
         var spec = new GetUserSpec(id);
@@ -72,12 +91,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         user.Update(req.Username,
             req.AvatarUrl,
-            req.Email,
-            req.Password,
-            req.FirstName,
-            req.LastName,
-            req.PhoneNumber,
-            req.CardUrl);
+            req.PhoneNumber);
 
         if (uOW.IsUpdate(user))
             user.UpdatedAt = DateTime.UtcNow;
@@ -86,7 +100,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         return user.UserId.ToResponse();
     }
-
+    #endregion
     #region Admin
     /// <summary>
     /// Service for Admin Get list users info
@@ -107,6 +121,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     {
         var user = req.ToUser();
         user.EmailVerified = false;
+        user.Verified = VerifiedStatus.Unverified;
 
         await uOW.Users.AddAsync(user);
         await uOW.SaveChangesAsync();
@@ -123,6 +138,42 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         await emailService.SendEmailAsync(user.Email, "Email Verification", emailBody);
 
         return user.UserId.ToResponse();
+    }
+
+    public async Task<IdRes> AddCardId(Guid id, string cardUrl)
+    {
+        var spec = new GetUserSpec(id);
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+
+        user.CardUrl = cardUrl;
+        user.Verified = VerifiedStatus.UnderVerify;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await uOW.SaveChangesAsync();
+
+        return user.UserId.ToResponse();
+    }
+
+    public async Task<IdRes> ApproveUser(Guid id, bool isApproved, string processNote)
+    {
+        var spec = new GetUserSpec(id);
+        var _user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+        if (isApproved)
+        {
+            _user.Verified = VerifiedStatus.Verified;
+        }
+        else
+        {
+            _user.Verified = VerifiedStatus.Rejected;
+        }
+
+        _user.ProcessNote = processNote;
+
+        await uOW.SaveChangesAsync();
+
+        return _user.UserId.ToResponse();
     }
 
     public async Task VerifyEmailAsync(Guid userId, string token)
@@ -161,7 +212,6 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         {
             uOW.VerificationToken.Delete(storedToken); // Remove the existing token before generating a new one
         }
-
 
         var token = Guid.NewGuid().ToString();
         var resetToken = new VerificationToken(user.UserId, token, DateTime.UtcNow.AddHours(1));
@@ -205,7 +255,20 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         await uOW.SaveChangesAsync();
     }
 
+    public async Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword)
+    {
+        var user = await uOW.Users.FindFirstOrDefaultAsync(new GetUserSpec(userId))
+            ?? throw new NotFoundException(typeof(User));
 
+        // Verify the old password
+        if (user.Password.CompareTo(oldPassword)!=0)
+        {
+            throw new UnauthorizedAccessException("Old password is incorrect.");
+        }
+
+        user.Password = newPassword;
+        await uOW.SaveChangesAsync();
+    }
 
     public async Task Delete(Guid id)
     {
@@ -239,5 +302,4 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         //return $"https://localhost:7289/api/users/reset-password?userId={userId}&token={token}";
         return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
     }
-
 }

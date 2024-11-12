@@ -35,11 +35,12 @@ public static class JwtService
         return tokenHandler.WriteToken(token);
     }
 
-    public static RefreshToken GenerateRefreshToken()
+    public static RefreshToken GenerateRefreshToken(string ipAddress)
     {
         var refreshToken = new RefreshToken
         {
-            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            IpAddress = ipAddress,
             Expires = DateTime.UtcNow.AddDays(7),
             Created = DateTime.UtcNow
         };

@@ -1,6 +1,6 @@
-﻿using Fvent.Service.Request;
+﻿using Fvent.BO.Exceptions;
+using Fvent.Service.Request;
 using Fvent.Service.Services;
-using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,7 +12,7 @@ namespace Fvent.API.Controllers;
 public class EventsController(IEventService eventService, ICommentService commentService,
                               IFollowerService followerService, IRatingService ratingService,
                               IRegistationService registationService, IReviewService reviewService,
-                              IUserService userService) : ControllerBase
+                              IFormService formService) : ControllerBase
 {
     #region Event
     /// <summary>
@@ -34,12 +34,21 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpGet("{eventId}")]
-    public async Task<IActionResult> GetEvent(Guid eventId)
+    public async Task<IActionResult> GetEvent([FromRoute] Guid eventId)
     {
-        var res = await eventService.GetEvent(eventId);
+        Guid? userId = null;
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var parsedUserId))
+        {
+            userId = parsedUserId;
+        }
+
+        var res = await eventService.GetEvent(eventId, userId);
 
         return Ok(res);
     }
+
 
     /// <summary>
     /// Get list events belong to organizer
@@ -47,9 +56,9 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="organizerId"></param>
     /// <returns></returns>
     [HttpGet("organizer")]
-    public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] IdReq organizerId)
+    public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] GetEventByOrganizerReq req)
     {
-        var res = await eventService.GetListEventsByOrganizer(organizerId.Id);
+        var res = await eventService.GetListEventsByOrganizer(req);
 
         return Ok(res);
     }
@@ -59,13 +68,17 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// </summary>
     /// <returns></returns>
     [HttpGet("recommendation")]
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "student")]
     public async Task<IActionResult> GetListRecommend()
     {
-        var email = HttpContext.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-        var user = await userService.GetByEmail(email!);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        var res = await eventService.GetListRecommend(new IdReq(user.UserId));
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.GetListRecommend(userId);
 
         return Ok(res);
     }
@@ -78,7 +91,14 @@ public class EventsController(IEventService eventService, ICommentService commen
     [HttpPost]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventReq req)
     {
-        var res = await eventService.CreateEvent(req);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.CreateEvent(req, organizerId);
 
         return Ok(res);
     }
@@ -92,9 +112,70 @@ public class EventsController(IEventService eventService, ICommentService commen
     [HttpPut("{eventId}")]
     public async Task<IActionResult> UpdateEvent([FromRoute] Guid eventId, [FromBody] UpdateEventReq req)
     {
-        var res = await eventService.UpdateEvent(eventId, req);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.UpdateEvent(eventId, organizerId, req);
 
         return Ok(res);
+    }
+
+    /// <summary>
+    /// Organizer publish event for review
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpPut("{eventId}/submit")]
+    public async Task<IActionResult> SubmitEvent([FromRoute] Guid eventId)
+    {
+        var res = await eventService.SubmitEvent(eventId);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Moderator approve Event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="isApproved"></param>
+    /// <param name="processNote"></param>
+    /// <returns></returns>
+    [HttpPut("{eventId}/approve")]
+    public async Task<IActionResult> ApproveEvent([FromRoute] Guid eventId, [FromQuery] bool isApproved, [FromBody] ApproveEventRequest processNote)
+    {
+        var res = await eventService.ApproveEvent(eventId, isApproved, processNote.ProcessNote);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Use for registerd user check-in an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpPut("{eventId}/checkin")]
+    public async Task<IActionResult> CheckinEvent([FromRoute] Guid eventId)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        try
+        {
+            await eventService.CheckinEvent(eventId, userId);
+            return Ok("Check-in successful");
+        }
+        catch (NotFoundException)
+        {
+            return NotFound("Please register for the event first.");
+        }
     }
 
     /// <summary>
@@ -193,9 +274,16 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpPost("{eventId}/register")]
-    public async Task<IActionResult> RegisterEvent(Guid eventId, [FromBody] IdReq userId)
+    public async Task<IActionResult> RegisterEvent(Guid eventId)
     {
-        var res = await registationService.RegisterFreeEvent(eventId, userId.Id);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await registationService.RegisterFreeEvent(eventId, userId);
 
         return Ok(res);
     }
@@ -207,9 +295,16 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpDelete("{eventId}/unregister")]
-    public async Task<IActionResult> UnRegisterEvent(Guid eventId, [FromBody] IdReq userId)
+    public async Task<IActionResult> UnRegisterEvent(Guid eventId)
     {
-        await registationService.UnRegisterEvent(eventId, userId.Id);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        await registationService.UnRegisterEvent(eventId, userId);
 
         return Ok();
     }
@@ -239,7 +334,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     [Route("{eventId}/reviews")]
     public async Task<IActionResult> GetEventReviews([FromRoute] Guid eventId)
     {
-        var res = await reviewService.GetReview(eventId);
+        var res = await reviewService.GetListReviews(eventId);
 
         return Ok(res);
     }
@@ -254,7 +349,49 @@ public class EventsController(IEventService eventService, ICommentService commen
     [HttpPost("{eventId}/reviews")]
     public async Task<IActionResult> CreateReview([FromRoute] Guid eventId, [FromBody] CreateReviewReq req)
     {
-        var res = await reviewService.CreateReview(eventId, req);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+        var res = await reviewService.CreateReview(eventId, userId, req);
+
+        return Ok(res);
+    }
+    #endregion
+
+    #region Event Form
+    /// <summary>
+    /// Get form submits for an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpGet("{eventId}/form-submit")]
+    public async Task<IActionResult> GetFormSubmits([FromRoute] Guid eventId)
+    {
+        var res = await formService.GetFormSubmits(eventId);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("{eventId}/submit-form")]
+    public async Task<IActionResult> SubmitForm([FromRoute] Guid eventId, FormSubmitReq req)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await formService.SubmitForm(eventId, userId, req);
 
         return Ok(res);
     }

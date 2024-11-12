@@ -9,6 +9,7 @@ public static class ServiceConfigs
 {
     public static IServiceCollection AddController(this IServiceCollection services)
     {
+        // Set up cors
         services.AddCors(options =>
         {
             options.AddPolicy("AllowSpecificOrigin",

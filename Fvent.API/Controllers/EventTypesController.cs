@@ -1,14 +1,18 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers
 {
-    [Route("api/eventtypes")]
+    [Route("api/event-types")]
     [ApiController]
     public class EventTypesController(IEventTypeService eventTypeService) : ControllerBase
     {
+        #region EventType
+        /// <summary>
+        /// Get list event types
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> GetList()
         {
@@ -17,14 +21,24 @@ namespace Fvent.API.Controllers
             return Ok(res);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetEventType(Guid id)
+        /// <summary>
+        /// Get event type
+        /// </summary>
+        /// <param name="eventTypeId"></param>
+        /// <returns></returns>
+        [HttpGet("{eventTypeId}")]
+        public async Task<IActionResult> GetEventType([FromRoute] Guid eventTypeId)
         {
-            var res = await eventTypeService.GetEventType(id);
+            var res = await eventTypeService.GetEventType(eventTypeId);
 
             return Ok(res);
         }
 
+        /// <summary>
+        /// Create an event type
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> CreateEventType([FromBody] CreateEventTypeReq req)
         {
@@ -33,20 +47,32 @@ namespace Fvent.API.Controllers
             return Ok(res);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEventType([FromRoute] Guid id, [FromBody] UpdateEventTypeReq req)
+        /// <summary>
+        /// Update an event type
+        /// </summary>
+        /// <param name="eventTypeId"></param>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [HttpPut("{eventTypeId}")]
+        public async Task<IActionResult> UpdateEventType([FromRoute] Guid eventTypeId, [FromBody] UpdateEventTypeReq req)
         {
-            var res = await eventTypeService.UpdateEventType(id, req.eventTypeName);
+            var res = await eventTypeService.UpdateEventType(eventTypeId, req.eventTypeName);
 
             return Ok(res);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEventType([FromRoute] Guid id)
+        /// <summary>
+        /// Delete an event type
+        /// </summary>
+        /// <param name="eventTypeId"></param>
+        /// <returns></returns>
+        [HttpDelete("{eventTypeId}")]
+        public async Task<IActionResult> DeleteEventType([FromRoute] Guid eventTypeId)
         {
-            await eventTypeService.DeleteEventType(id);
+            await eventTypeService.DeleteEventType(eventTypeId);
 
             return Ok();
         }
+        #endregion
     }
 }

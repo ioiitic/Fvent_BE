@@ -21,9 +21,11 @@ public class MyDbContext : DbContext
     public DbSet<EventMedia> EventMedia { get; set; }
     public DbSet<EventFollower> EventFollowers { get; set; }
     public DbSet<Notification> Notifications { get; set; }
-    public DbSet<Conversation> Conversations { get; set; }
-    public DbSet<Message> Messages { get; set; }
     public DbSet<VerificationToken> VerificationTokens { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Form> Forms { get; set; }
+    public DbSet<FormDetail> FormDetails { get; set; }
+    public DbSet<FormSubmit> FormSubmits { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -44,6 +46,9 @@ public class MyDbContext : DbContext
     {
         modelBuilder.Entity<User>()
             .HasQueryFilter(u => !u.IsDeleted && u.EmailVerified);
+
+        modelBuilder.Entity<Event>()
+            .HasQueryFilter(u => !u.IsDeleted);
 
         modelBuilder.Entity<Comment>()
             .HasOne(c => c.User)
@@ -75,13 +80,12 @@ public class MyDbContext : DbContext
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<Message>()
-            .HasOne(c => c.Sender)
-            .WithMany(u => u.Messages)
-            .HasForeignKey(c => c.SenderId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         modelBuilder.Entity<VerificationToken>()
                     .HasKey(vt => vt.UserId);
+
+        modelBuilder.Entity<FormSubmit>()
+                    .HasOne(c => c.User)
+                    .WithOne()
+                    .OnDelete(DeleteBehavior.Restrict);
     }
 }

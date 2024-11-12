@@ -20,4 +20,15 @@ public static class ReviewSpec
             Include(u => u.Event!);
         }
     }
+
+    public class GetReviewByEventSpec : Specification<EventReview>
+    {
+        public GetReviewByEventSpec(Guid id)
+        {
+            Filter(u => u.EventId == id);
+
+            Include(u => u.User!);
+            Include(u => u.Event!);
+        }
+    }
 }
