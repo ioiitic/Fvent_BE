@@ -17,5 +17,5 @@ public interface IEventService
     Task CheckinEvent(Guid eventId, Guid userId);
     Task DeleteEvent(Guid id);
     Task<IList<UserRes>> GetRegisteredUsers(Guid eventId);
-    Task<IList<EventRes>> GetRegisteredEvents(Guid userId);
+    Task<IList<EventRes>> GetRegisteredEvents(Guid userId, bool isCompleted);
 }

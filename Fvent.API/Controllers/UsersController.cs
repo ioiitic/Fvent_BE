@@ -142,10 +142,15 @@ public class UsersController(IUserService userService, IEventService eventServic
     [HttpGet]
     [Authorize]
     [Route("participant")]
-    public async Task<IActionResult> GetEventRegisters()
+    public async Task<IActionResult> GetEventRegisters([FromQuery] bool isCompleted)
     {
-        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
-        var res = await eventService.GetRegisteredEvents(Guid.Parse(userId));
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+        var res = await eventService.GetRegisteredEvents(userId, isCompleted);
 
         return Ok(res);
     }
