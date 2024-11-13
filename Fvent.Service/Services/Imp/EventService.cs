@@ -274,9 +274,9 @@ public class EventService(IUnitOfWork uOW) : IEventService
     #endregion
 
     #region Event-User
-    public async Task<IList<EventRes>> GetRegisteredEvents(Guid userId)
+    public async Task<IList<EventRes>> GetRegisteredEvents(Guid userId, bool isCompleted)
     {
-        var spec = new GetRegisteredEventsSpec(userId);
+        var spec = new GetRegisteredEventsSpec(userId, isCompleted);
         var events = await uOW.Events.GetListAsync(spec);
 
         return events.Select(e => e.ToResponse()).ToList();

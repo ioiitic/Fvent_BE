@@ -98,9 +98,19 @@ public static class EventSpec
 
     public class GetRegisteredEventsSpec : Specification<Event>
     {
-        public GetRegisteredEventsSpec(Guid userId)
+        public GetRegisteredEventsSpec(Guid userId, bool isCompleted)
         {
+            
             Filter(e => e.Registrations!.Any(r => r.UserId == userId));
+
+            if (isCompleted)
+            {
+                Filter(e => e.Status == EventStatus.Completed);
+            }
+            else
+            {
+                Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress);
+            }
 
             Include("Registrations.User.Role");
             Include(e => e.Organizer!);

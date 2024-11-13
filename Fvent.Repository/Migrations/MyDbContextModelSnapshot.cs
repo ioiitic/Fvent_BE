@@ -59,25 +59,6 @@ namespace Fvent.Repository.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("Fvent.BO.Entities.Conversation", b =>
-                {
-                    b.Property<Guid>("ConversationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("ConversationId");
-
-                    b.HasIndex("EventId");
-
-                    b.ToTable("Conversations");
-                });
-
             modelBuilder.Entity("Fvent.BO.Entities.Event", b =>
                 {
                     b.Property<Guid>("EventId")
@@ -394,39 +375,6 @@ namespace Fvent.Repository.Migrations
                     b.ToTable("FormSubmits");
                 });
 
-            modelBuilder.Entity("Fvent.BO.Entities.Message", b =>
-                {
-                    b.Property<int>("MessageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageId"));
-
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("ConversationId1")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("MessageText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("SenderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("SentTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("MessageId");
-
-                    b.HasIndex("ConversationId1");
-
-                    b.HasIndex("SenderId");
-
-                    b.ToTable("Messages");
-                });
-
             modelBuilder.Entity("Fvent.BO.Entities.Notification", b =>
                 {
                     b.Property<Guid>("NotificationId")
@@ -631,17 +579,6 @@ namespace Fvent.Repository.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Fvent.BO.Entities.Conversation", b =>
-                {
-                    b.HasOne("Fvent.BO.Entities.Event", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Event");
-                });
-
             modelBuilder.Entity("Fvent.BO.Entities.Event", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.EventType", "EventType")
@@ -787,23 +724,6 @@ namespace Fvent.Repository.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Fvent.BO.Entities.Message", b =>
-                {
-                    b.HasOne("Fvent.BO.Entities.Conversation", "Conversation")
-                        .WithMany()
-                        .HasForeignKey("ConversationId1");
-
-                    b.HasOne("Fvent.BO.Entities.User", "Sender")
-                        .WithMany("Messages")
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Conversation");
-
-                    b.Navigation("Sender");
-                });
-
             modelBuilder.Entity("Fvent.BO.Entities.Notification", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.Event", "Event")
@@ -866,8 +786,6 @@ namespace Fvent.Repository.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Followers");
-
-                    b.Navigation("Messages");
 
                     b.Navigation("Notifications");
 
