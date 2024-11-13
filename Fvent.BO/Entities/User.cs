@@ -17,7 +17,6 @@ public class User : ISoftDelete
 
     public int RoleId { get; set; }
     public Role? Role { get; set; }
-    public FormSubmit? FormSubmit { get; set; }
     public IList<Comment>? Comments { get; set; }
     public IList<EventFollower>? Followers { get; set; }
     public IList<EventRegistration>? Registrations { get; set; }

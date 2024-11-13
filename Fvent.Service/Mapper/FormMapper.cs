@@ -10,5 +10,5 @@ public static class FormMapper
         => new(src.Data, src.User!.ToResponse<UserRes>());
 
     public static FormSubmit ToSubmit(this FormSubmitReq src, Guid eventId, Guid userId)
-        => new(userId, eventId, src.Data);
+        => new(userId, eventId, src.Data.ToString()!);
 }
