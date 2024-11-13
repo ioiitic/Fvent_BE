@@ -2,6 +2,7 @@
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
+using System.Text.Json;
 using static Fvent.Service.Specifications.FormSpec;
 
 namespace Fvent.Service.Services.Imp;
@@ -12,6 +13,8 @@ public class FormService(IUnitOfWork uOW, IRegistationService registationService
     {
         var spec = new GetFormSubmitSpec(eventId);
         var res = await uOW.FormSubmit.GetListAsync(spec);
+        //var test2 = JsonSerializer.Deserialize<Object>(src.Data);
+        var test = res.Select(f => f.ToResponse()).ToList();
 
         return res.Select(f => f.ToResponse()).ToList();
     }

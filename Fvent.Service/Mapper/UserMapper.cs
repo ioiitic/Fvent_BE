@@ -35,7 +35,7 @@ public static class UserMapper
         {
             Type t when t == typeof(UserRes) =>
                 new UserRes(src.UserId, src.Username, src.AvatarUrl, src.Email,
-                            src.PhoneNumber, src.CardUrl, src.Verified.ToString(), src.ProcessNote, src.Role!.RoleName) as TEntity,
+                            src.PhoneNumber, src.CardUrl, src.Verified.ToString(), src.ProcessNote, src.Role?.RoleName) as TEntity,
 
             Type t when t == typeof(GetListUserRes) =>
                 new GetListUserRes(src.Username, src.AvatarUrl, src.Email,
