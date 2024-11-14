@@ -26,9 +26,10 @@ public interface IUserService
 
     #region Email
     Task VerifyEmailAsync(Guid userId, string token);
+    Task<IdRes> ResendVerificationEmail(string userEmail, string role);
     Task RequestPasswordResetAsync(string email);
     #endregion
-
+    Task<IdRes> RegisterModerator(CreateModeratReq req);
     Task ResetPasswordAsync(Guid userId, string token, string newPassword);
     Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword);
     Task Delete(Guid id);

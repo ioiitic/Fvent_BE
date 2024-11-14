@@ -10,6 +10,8 @@ public record GetListUsersReq(string? Username, string? Email, string? RoleName,
 public record CreateUserReq(string Username, string Email, string Password, 
                             string PhoneNumber, string Role);
 
+public record CreateModeratReq(string Username, string Email, string Password);
+
 public record UpdateUserReq(string Username, string AvatarUrl, string PhoneNumber);
 
 public record ForgotPasswordReq(string email);

@@ -7,6 +7,7 @@ namespace Fvent.Service.Services;
 public interface IEventService
 {
     Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req);
+    Task<List<EventBannerRes>> GetEventBanners();
     Task<EventRes> GetEvent(Guid eventId, Guid? userId);
     Task<IList<EventRes>> GetListEventsByOrganizer(GetEventByOrganizerReq req);
     Task<PageResult<EventRes>> GetListRecommend(Guid userId);

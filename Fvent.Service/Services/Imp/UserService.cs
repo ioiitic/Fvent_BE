@@ -1,5 +1,6 @@
 ﻿using Fvent.BO.Common;
 using Fvent.BO.Entities;
+using Fvent.BO.Enums;
 using Fvent.BO.Exceptions;
 using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
@@ -115,6 +116,29 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         return new PageResult<GetListUserRes>(users.Items.Select(u => u.ToResponse<GetListUserRes>()), users.PageNumber,
                                               users.PageSize, users.Count, users.TotalItems, users.TotalPages);
     }
+
+    public async Task<IdRes> RegisterModerator(CreateModeratReq req)
+    {
+        // Convert the request to a User entity
+        var moderator = req.ToModerator();
+        // Mark email as verified since an admin creates the account
+        moderator.EmailVerified = true;
+        // Set the verification status as Admin Verified
+        moderator.Verified = VerifiedStatus.Verified;
+        // Set the role to Moderator
+        moderator.RoleId = (int)UserRole.Moderator;
+
+        // Add the moderator user to the database and save
+        await uOW.Users.AddAsync(moderator);
+        await uOW.SaveChangesAsync();
+
+        //// Send a notification email with initial login instructions (optional)
+        //var emailBody = EmailTemplates.ModeratorWelcomeTemplate.Replace("{moderatorName}", moderator.Username);
+        //await emailService.SendEmailAsync(moderator.Email, "Welcome to Fvent as Moderator", emailBody);
+
+        return moderator.UserId.ToResponse();
+    }
+
     #endregion
 
     public async Task<IdRes> Register(CreateUserReq req)
@@ -135,7 +159,52 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         // Send the verification email using Gmail SMTP
         var emailBody = EmailTemplates.EmailVerificationTemplate.Replace("{verificationLink}", verificationLink);
-        await emailService.SendEmailAsync(user.Email, "Email Verification", emailBody);
+        await emailService.SendEmailAsync(user.Email, "Xác Nhận Email", emailBody);
+
+        return user.UserId.ToResponse();
+    }
+
+    public async Task<IdRes> ResendVerificationEmail(string userEmail, string role)
+    {
+        var spec = new GetUserSpec(userEmail, role);
+     
+
+        // Find the user by email
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec);
+
+        if (user == null || user.EmailVerified )
+        {
+            throw new Exception("User does not exist or is already verified.");
+        }
+
+        // Generate a new token
+        var token = Guid.NewGuid().ToString();
+        var verificationLink = GenerateVerificationLink(user.UserId, token);
+
+        // Check if there's an existing verification token for this user
+        var specSub = new GetVerificationTokenSpec(user.UserId);
+        var existingToken = await uOW.VerificationToken.FindFirstOrDefaultAsync(specSub);
+  
+
+        if (existingToken != null)
+        {
+            // Update the existing token
+            existingToken.Token = token;
+            existingToken.ExpiryDate = DateTime.Now.AddHours(24);
+        }
+        else
+        {
+            // Add a new verification token if none exists
+            var verificationToken = new VerificationToken(user.UserId, token);
+            await uOW.VerificationToken.AddAsync(verificationToken);
+        }
+
+        // Save changes to update or add the token
+        await uOW.SaveChangesAsync();
+
+        // Send the verification email
+        var emailBody = EmailTemplates.EmailVerificationTemplate.Replace("{verificationLink}", verificationLink);
+        await emailService.SendEmailAsync(user.Email, "Email Verification - Resend", emailBody);
 
         return user.UserId.ToResponse();
     }

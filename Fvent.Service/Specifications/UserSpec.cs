@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Entities;
+using Fvent.BO.Enums;
 using Fvent.Repository.Common;
 using Fvent.Service.Mapper;
 using Fvent.Service.Result;
@@ -63,6 +64,18 @@ public static class UserSpec
         public GetUserSpec(string email)
         {
             Filter(u => u.Email == email);
+
+            Include(u => u.Role!);
+        }
+
+        public GetUserSpec(string email, string role)
+        {
+            if (!Enum.TryParse<UserRole>(role, true, out var userRole))
+            {
+                throw new ArgumentException("Invalid role specified");
+            }
+
+            Filter(u => u.Email == email && u.RoleId == (int) userRole);
 
             Include(u => u.Role!);
         }

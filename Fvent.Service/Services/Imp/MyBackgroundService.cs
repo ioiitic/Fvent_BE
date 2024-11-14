@@ -29,6 +29,15 @@ public class MyBackgroundService : BackgroundService
                 }
             }
             await uOW.SaveChangesAsync();
+
+            var verificationToken = await uOW.VerificationToken.GetAllAsync();
+            foreach(var verification in verificationToken)
+            {
+                if(verification.ExpiryDate < DateTime.Now) 
+                    uOW.VerificationToken.Delete(verification);
+            }
+            await uOW.SaveChangesAsync();
+
             await Task.Delay(30000);
         }
     }

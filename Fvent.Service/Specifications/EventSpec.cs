@@ -13,6 +13,7 @@ public static class EventSpec
         public GetEventSpec(string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag,
                             string? status, string orderBy, bool isDescending, int pageNumber, int pageSize)
         {
+            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress || e.Status == EventStatus.Completed);
             // Filter by search keyword (for event name or description)
             if (!string.IsNullOrEmpty(searchKeyword))
             {
@@ -85,6 +86,14 @@ public static class EventSpec
             Include(u => u.EventMedias!);
             Include(e => e.Tags!);
             Include(e => e.Form!.FormDetails!);
+        }
+
+        public GetEventSpec()
+        {
+            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress || e.Status == EventStatus.Completed);
+            OrderBy(u => u.StartTime, true);
+
+            Include(u => u.EventMedias!);
         }
     }
 

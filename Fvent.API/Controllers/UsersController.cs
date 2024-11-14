@@ -29,6 +29,19 @@ public class UsersController(IUserService userService, IEventService eventServic
     }
 
     /// <summary>
+    /// Add moderator account
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("addModerator")]
+    public async Task<IActionResult> AddModerator([FromBody] CreateModeratReq req)
+    {
+        var res = await userService.RegisterModerator(req);
+
+        return Ok(res);
+    }
+
+    /// <summary>
     /// Get own info
     /// </summary>
     /// <returns></returns>

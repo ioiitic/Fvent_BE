@@ -25,7 +25,22 @@ public static class UserMapper
             src.PhoneNumber,
             "", 
             (int)userRole,
-            DateTime.UtcNow
+            DateTime.Now
+        );
+    }
+
+    public static User ToModerator(this CreateModeratReq src)
+    {
+        return new User(
+            src.Username,
+            DefaultImage.DefaultAvatar,
+            src.Email,
+            src.Password,
+            "",
+            "",
+            "",
+            (int)UserRole.Moderator,
+            DateTime.Now
         );
     }
 

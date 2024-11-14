@@ -23,7 +23,7 @@ public static class EventMapper
             EventStatus.Draft,
             organizerId,
             src.EventTypeId,
-            DateTime.UtcNow);
+            DateTime.Now);
 
     public static EventRes ToResponse(
         this Event src)
@@ -48,6 +48,11 @@ public static class EventMapper
             src.Tags.Select(t => t.Tag).ToList(),
             null);
 
+    public static EventBannerRes ToBannerResponse(
+        this Event src)
+        => new(
+            src.EventId,
+            src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default");
     public static EventRes ToResponse(
         this Event src,
         bool isRegistered)

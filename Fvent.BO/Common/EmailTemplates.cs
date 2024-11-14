@@ -8,11 +8,11 @@ public class EmailTemplates
 {
     public static readonly string EmailVerificationTemplate = $@"
     <!DOCTYPE html>
-    <html lang='en'>
+    <html lang='vi'>
     <head>
         <meta charset='UTF-8'>
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-        <title>Email Verification</title>
+        <title>Xác Minh Email</title>
         <style>
             body {{
                 font-family: Arial, sans-serif;
@@ -69,30 +69,31 @@ public class EmailTemplates
     <body>
         <div class='container'>
             <div class='header'>
-                <h1>Confirm Your Email Address</h1>
+                <h1>Xác Nhận Địa Chỉ Email Của Bạn</h1>
             </div>
             <div class='content'>
-                <h2>Welcome to Fvent!</h2>
-                <p>Thank you for signing up with us. To complete your registration, we just need to confirm your email address.</p>
-                <p>Please click the button below to verify your email:</p>
-                <a href='{{verificationLink}}' class='btn'>Verify Email</a>
-                <p>If you didn't create an account with Fvent, please disregard this email.</p>
+                <h2>Chào mừng đến với Fvent!</h2>
+                <p>Cảm ơn bạn đã đăng ký với chúng tôi. Để hoàn tất đăng ký, chúng tôi cần xác nhận địa chỉ email của bạn.</p>
+                <p>Vui lòng nhấp vào nút dưới đây để xác minh email:</p>
+                <a href='{{verificationLink}}' class='btn'>Xác Minh Email</a>
+                <p>Nếu bạn không tạo tài khoản với Fvent, xin vui lòng bỏ qua email này.</p>
             </div>
             <div class='footer'>
-                <p>This email was sent by Fvent. If you have any questions, feel free to <a href='mailto:support@fvent.com'>contact us</a>.</p>
+                <p>Email này được gửi từ Fvent. Nếu bạn có bất kỳ thắc mắc nào, vui lòng <a href='mailto:thiendn.work@gmail.com'>liên hệ với chúng tôi</a>.</p>
             </div>
         </div>
     </body>
     </html>
     ";
+
     public static readonly string PasswordResetTemplate = $@"
         <!DOCTYPE html>
-<html lang=""en"">
+<html lang=""vi"">
 
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Password Reset</title>
+    <title>Đặt Lại Mật Khẩu</title>
     <style>
         body {{
             font-family: Arial, sans-serif;
@@ -174,24 +175,22 @@ public class EmailTemplates
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h1>Password Reset Request</h1>
+            <h1>Yêu Cầu Đặt Lại Mật Khẩu</h1>
         </div>
         <div class=""content"">
-            <h2>We received a request to reset your password.</h2>
-            <p>To reset your password, please click the button below:</p>
-            <a href=""{{resetLink}}"" class=""btn"">Reset Password</a>
-            <p>If you didn't request this, please disregard this email.</p>
+            <h2>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu của bạn.</h2>
+            <p>Để đặt lại mật khẩu, vui lòng nhấp vào nút dưới đây:</p>
+            <a href=""{{resetLink}}"" class=""btn"">Đặt Lại Mật Khẩu</a>
+            <p>Nếu bạn không yêu cầu đặt lại mật khẩu, xin vui lòng bỏ qua email này.</p>
         </div>
         <div class=""footer"">
-            <p>This email was sent by Fvent. If you have any questions, feel free to <a href=""mailto:support@fvent.com"">contact us</a>.</p>
+            <p>Email này được gửi từ Fvent. Nếu bạn có bất kỳ thắc mắc nào, vui lòng <a href=""mailto:thiendn.work@gmail.com"">liên hệ với chúng tôi</a>.</p>
         </div>
     </div>
 </body>
 
 </html>
 
-
-
-        ";
+";
 }
 

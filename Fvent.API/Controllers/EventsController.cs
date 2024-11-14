@@ -29,6 +29,19 @@ public class EventsController(IEventService eventService, ICommentService commen
     }
 
     /// <summary>
+    /// Get list event's banners
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpGet("banners")]
+    public async Task<IActionResult> GetListEventBanners()
+    {
+        var res = await eventService.GetEventBanners();
+
+        return Ok(res);
+    }
+
+    /// <summary>
     /// Get an event detail
     /// </summary>
     /// <param name="eventId"></param>

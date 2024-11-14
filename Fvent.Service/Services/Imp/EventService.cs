@@ -112,7 +112,16 @@ public class EventService(IUnitOfWork uOW) : IEventService
         );
     }
 
+    public async Task<List<EventBannerRes>> GetEventBanners()
+    {
+        var spec = new GetEventSpec();
+        var events = await uOW.Events.GetListAsync(spec);
 
+        var eventBanners = events.Take(6).Select(t => t.ToBannerResponse()).ToList();
+
+        return eventBanners;
+        
+    }
 
     /// <summary>
     /// Get Event Detail
