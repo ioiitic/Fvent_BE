@@ -109,6 +109,8 @@ public static class UserSpec
         public CheckRefreshTokenSpec(string token)
         {
             Filter(t => t.Token == token);
+            Include(t => t.User!);
+            Include("User.Role");
         }
     }
   

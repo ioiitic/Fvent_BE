@@ -5,7 +5,7 @@ public record EventRes(Guid EventId, string EventName, string Description, DateT
                        Guid OrganizerId, string OrganizerName, string EventTypeName, string PosterImg,
                        string ThumbnailImg, string Status, bool? IsRegistered, List<string> EventTags,
                        IList<FormDetailsRes>? Form);
-public record EventRateRes(double AvgRate);
+public record EventRateRes(double AvgRate, int TotalRate);
 
 public record EventBannerRes(Guid EventId, string PosterImg);
 

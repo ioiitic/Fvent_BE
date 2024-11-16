@@ -77,8 +77,8 @@ public static class EventMapper
             src.Tags.Select(t => t.Tag).ToList(),
             src.Form?.FormDetails?.Select(d => d.ToResponse()).ToList());
 
-    public static EventRateRes ToResponse(this double src)
-        => new(src);
+    public static EventRateRes ToResponse(this double src, int total )
+        => new(src, total);
 
     public static FormDetailsRes ToResponse(this FormDetail src)
         => new(src.Name, src.Type, src.Options);

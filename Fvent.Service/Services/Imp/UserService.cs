@@ -31,7 +31,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     public async Task<AuthResponse> Refresh(RefreshTokenReq req, string ipAddress)
     {
-        // Check refresh toen exist
+        // Check if the refresh token exists
         var rfsSpec = new CheckRefreshTokenSpec(req.Token);
         var rfsToken = await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)
             ?? throw new NotFoundException(typeof(RefreshToken));
@@ -46,13 +46,19 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             throw new AuthenticationException("Refresh token is expired!");
         }
 
-        // Generate jwt token and refresh token
-        var user = rfsToken.User!;
-        var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
-        rfsToken = await CreateRefreshToken(user, ipAddress);
+        // Load the associated user
+        var user = rfsToken.User ?? throw new Exception("Associated user not found for the refresh token.");
 
-        return new AuthResponse(token, rfsToken.Token);
+        // Ensure RefreshTokens is initialized
+        user.RefreshTokens ??= new List<RefreshToken>();
+
+        // Generate JWT token and refresh token
+        var token = JS.GenerateToken(user.UserId, user.Email, user.Role ?? throw new Exception("User role is missing"), configuration);
+        var newRefreshToken = await CreateRefreshToken(user, ipAddress);
+
+        return new AuthResponse(token, newRefreshToken.Token);
     }
+
 
     private async Task<RefreshToken> CreateRefreshToken(User user, string ipAddress)
     {
@@ -65,7 +71,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         // Replace refresh token
         user.RefreshTokens!.Add(rfsToken);
-        uOW.SaveChanges();
+        await uOW.SaveChangesAsync();
 
         return rfsToken;
     }

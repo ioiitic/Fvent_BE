@@ -107,9 +107,16 @@ public static class EventSpec
 
     public class GetRegisteredEventsSpec : Specification<Event>
     {
-        public GetRegisteredEventsSpec(Guid userId, bool isCompleted)
+        public GetRegisteredEventsSpec(Guid userId, int? inMonth, bool isCompleted)
         {
-            
+            // Filter by month for StartTime and EndTime
+            if (inMonth.HasValue)
+            {
+                var month = inMonth.Value;
+
+                Filter(e => (e.StartTime.Month == month || e.EndTime.Month == month ));
+            }
+
             Filter(e => e.Registrations!.Any(r => r.UserId == userId));
 
             if (isCompleted)
@@ -120,7 +127,7 @@ public static class EventSpec
             {
                 Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress);
             }
-
+            OrderBy(u => u.StartTime, true);
             Include("Registrations.User.Role");
             Include(e => e.Organizer!);
             Include(e => e.EventType!);

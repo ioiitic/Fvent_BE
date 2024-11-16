@@ -38,6 +38,14 @@ public class MyBackgroundService : BackgroundService
             }
             await uOW.SaveChangesAsync();
 
+            var refreshToken = await uOW.RefreshToken.GetAllAsync();
+            foreach (var refresh in refreshToken)
+            {
+                if (refresh.Expires < DateTime.Now)
+                    uOW.RefreshToken.Delete(refresh);
+            }
+            await uOW.SaveChangesAsync();
+
             await Task.Delay(30000);
         }
     }
