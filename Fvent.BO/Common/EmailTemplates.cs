@@ -192,5 +192,88 @@ public class EmailTemplates
 </html>
 
 ";
+
+    public static readonly string ModeratorWelcomeTemplate = $@"
+<!DOCTYPE html>
+<html lang='vi'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Chào Mừng Moderator</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{
+            background-color: #ffffff;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }}
+        .header {{
+            background-color: #007BFF;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 24px;
+        }}
+        .content {{
+            padding: 20px;
+            color: #333333;
+            line-height: 1.6;
+        }}
+        .content h2 {{
+            color: #007BFF;
+        }}
+        .btn {{
+            display: inline-block;
+            background-color: #007BFF;
+            color: white;
+            padding: 12px 25px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 20px;
+        }}
+        .footer {{
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Chào Mừng Moderator!</h1>
+        </div>
+        <div class='content'>
+            <h2>Xin chào {{moderatorName}},</h2>
+            <p>Chúng tôi rất vui mừng chào đón bạn đến với vai trò Moderator tại Fvent!</p>
+            <p>Hãy bắt đầu bằng cách đăng nhập vào hệ thống để quản lý các sự kiện và hỗ trợ cộng đồng Fvent.</p>
+            <p>Đừng ngần ngại liên hệ với đội ngũ hỗ trợ của chúng tôi nếu bạn cần thêm thông tin.</p>
+            <p>Chúc bạn thành công trong vai trò mới!</p>
+            <a href='{{loginLink}}' class='btn'>Đăng Nhập Ngay</a>
+        </div>
+        <div class='footer'>
+            <p>Email này được gửi từ Fvent. Nếu bạn có bất kỳ thắc mắc nào, vui lòng <a href='mailto:thiendn.work@gmail.com'>liên hệ với chúng tôi</a>.</p>
+        </div>
+    </div>
+</body>
+</html>
+";
+
 }
 

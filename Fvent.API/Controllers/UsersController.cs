@@ -34,6 +34,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpPost("addModerator")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> AddModerator([FromBody] CreateModeratReq req)
     {
         var res = await userService.RegisterModerator(req);
@@ -186,7 +187,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordReq request)
     {
-        await userService.RequestPasswordResetAsync(request.email);
+        await userService.RequestPasswordResetAsync(request.Email, request.Role);
         return Ok("Password reset link has been sent.");
     }
 

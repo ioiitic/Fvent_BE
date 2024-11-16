@@ -14,7 +14,7 @@ public record CreateModeratReq(string Username, string Email, string Password);
 
 public record UpdateUserReq(string Username, string AvatarUrl, string PhoneNumber);
 
-public record ForgotPasswordReq(string email);
+public record ForgotPasswordReq(string Email, string Role);
 public record ChangePasswordRequest(string OldPassword, string NewPassword);
 public record ApproveUserRequest(string ProcessNote);
 public record AddCardIdRequest(string CardUrl);
