@@ -17,8 +17,8 @@ public static class EventSpec
             // Filter by search keyword (for event name or description)
             if (!string.IsNullOrEmpty(searchKeyword))
             {
-                Filter(e => e.EventName.Contains(searchKeyword) || e.Organizer!.Username.Contains(searchKeyword));
-                Filter(e => e.Tags!.Any(tag => tag.Tag.Contains(searchKeyword)));
+                Filter(e => e.EventName.Contains(searchKeyword) || e.Organizer!.Username.Contains(searchKeyword) 
+                                                                || e.Tags!.Any(tag => tag.Tag.Contains(searchKeyword)));
             }
 
             // Filter by month for StartTime and EndTime
@@ -103,6 +103,77 @@ public static class EventSpec
         public GetEventRateSpec(Guid id)
         {
             Filter(er => er.EventId == id);
+        }
+    }
+
+    public class GetEventAdminSpec : Specification<Event>
+    {
+        public GetEventAdminSpec(string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag,
+                            string? status, string orderBy, bool isDescending, int pageNumber, int pageSize)
+        {
+            Filter(e => e.Status != EventStatus.Draft);
+            // Filter by search keyword (for event name or description)
+            if (!string.IsNullOrEmpty(searchKeyword))
+            {
+                Filter(e => e.EventName.Contains(searchKeyword) || e.Organizer!.Username.Contains(searchKeyword)
+                                                                || e.Tags!.Any(tag => tag.Tag.Contains(searchKeyword)));
+            }
+
+            // Filter by month for StartTime and EndTime
+            if (inMonth.HasValue)
+            {
+                var month = inMonth.Value;
+                var year = inYear ?? DateTime.UtcNow.Year;
+
+                Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
+            }
+            else if (!inMonth.HasValue && inYear.HasValue)
+            {
+                var year = inYear.Value;
+                Filter(e => (e.StartTime.Year == year ||  e.EndTime.Year == year));
+            }
+
+            // Filter by multiple event types if provided
+            if (eventTypes != null && eventTypes.Any())
+            {
+                Filter(e => eventTypes.Contains(e.EventType!.EventTypeName));
+            }
+
+            // Filter by event tag (assuming each event has an IList<EventTag> called Tags)
+            if (!string.IsNullOrEmpty(eventTag))
+            {
+                Filter(e => e.Tags!.Any(tag => tag.Tag == eventTag));
+            }
+
+            // Filter by event status if provided
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
+            {
+                Filter(e => e.Status == eventStatus);
+            }
+
+            if (orderBy is not null)
+            {
+                switch (orderBy)
+                {
+                    case "StartTime":
+                        OrderBy(u => u.StartTime, isDescending);
+                        break;
+                    case "EndTime":
+                        OrderBy(u => u.EndTime, isDescending);
+                        break;
+                    case "Name":
+                        OrderBy(u => u.EventName, isDescending);
+                        break;
+                }
+            }
+
+            AddPagination(pageNumber, pageSize);
+
+            // Include related entities
+            Include(e => e.Organizer!);
+            Include(e => e.EventType!);
+            Include(e => e.EventMedias!);
+            Include(e => e.Tags!);
         }
     }
 

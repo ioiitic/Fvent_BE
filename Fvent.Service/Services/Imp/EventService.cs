@@ -113,6 +113,26 @@ public class EventService(IUnitOfWork uOW) : IEventService
         );
     }
 
+    public async Task<PageResult<EventRes>> GetListEventsForAdmin(GetEventsRequest req)
+    {
+        var spec = new GetEventAdminSpec(req.SearchKeyword, req.InMonth, req.InYear, req.EventTypes, req.EventTag, req.Status, req.OrderBy, req.IsDescending, req.PageNumber, req.PageSize);
+
+        // Get paginated list of events
+        var _events = await uOW.Events.GetPageAsync(spec);
+
+        // Map each event to EventRes with the ToResponse extension method
+        var eventResponses = _events.Items.Select(eventEntity => eventEntity.ToResponse()).ToList();
+
+        return new PageResult<EventRes>(
+            eventResponses,
+            _events.PageNumber,
+            _events.PageSize,
+            _events.Count,
+            _events.TotalItems,
+            _events.TotalPages
+        );
+    }
+
     public async Task<List<EventBannerRes>> GetEventBanners()
     {
         var spec = new GetEventSpec();

@@ -20,7 +20,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     /// </summary>
     /// <returns></returns>
     [HttpGet()]
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin, moderator")]
     public async Task<IActionResult> GetList([FromQuery] GetListUsersReq req)
     {
         var res = await userService.GetList(req);
@@ -157,7 +157,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     [HttpGet]
     [Authorize]
     [Route("participant")]
-    [Authorize(Roles = "organizer")]
+    [Authorize(Roles = "student")]
     public async Task<IActionResult> GetEventRegisters([FromQuery] int? inMonth, [FromQuery] bool isCompleted)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;

@@ -29,6 +29,20 @@ public class EventsController(IEventService eventService, ICommentService commen
     }
 
     /// <summary>
+    /// Get list events
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpGet("getAllEvents")]
+    [Authorize(Roles = "admin, moderator")]
+    public async Task<IActionResult> GetListEventsForAdmin([FromQuery] GetEventsRequest request)
+    {
+        var res = await eventService.GetListEventsForAdmin(request);
+
+        return Ok(res);
+    }
+
+    /// <summary>
     /// Get list event's banners
     /// </summary>
     /// <param name="request"></param>
