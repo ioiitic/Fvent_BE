@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static Fvent.Service.Specifications.EventRegistationSpec;
+using static Fvent.Service.Specifications.FormSpec;
 using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp
@@ -34,13 +35,22 @@ namespace Fvent.Service.Services.Imp
 
         public async Task UnRegisterEvent(Guid eventId, Guid userId)
         {
-                var spec = new GetEventRegistrationSpec(eventId, userId);
-                var regis = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
-                    ?? throw new NotFoundException(typeof(User));
+            var spec = new GetEventRegistrationSpec(eventId, userId);
+            var regis = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
+                ?? throw new NotFoundException(typeof(EventRegistration));
 
-                uOW.EventRegistration.Delete(regis);
+            uOW.EventRegistration.Delete(regis);
 
-                await uOW.SaveChangesAsync();
+            var specSub = new GetFormSubmitSpec(eventId, userId);
+            var formsubmit = await uOW.FormSubmit.FindFirstOrDefaultAsync(specSub);
+
+            if (formsubmit != null)
+            {
+                uOW.FormSubmit.Delete(formsubmit);
+            }
+
+
+            await uOW.SaveChangesAsync();
         }
 
         public async Task<IList<UserRes>> GetAllParticipantsForEvent(Guid eventId)

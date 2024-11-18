@@ -14,6 +14,7 @@ using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
+using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp;
 
@@ -233,28 +234,37 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
-        _event.Status = EventStatus.UnderReview;
+
+        if(_event.Status == EventStatus.Draft || _event.Status == EventStatus.Rejected)
+            _event.Status = EventStatus.UnderReview;
         
         await uOW.SaveChangesAsync();
 
         return _event.EventId.ToResponse();
     }
 
-    public async Task<IdRes> ApproveEvent(Guid id, bool isApproved, string processNote)
+    public async Task<IdRes> ApproveEvent(Guid id, bool isApproved,Guid userId, string processNote)
     {
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
-        if (isApproved)
-        {
-            _event.Status = EventStatus.Upcoming;
-        }
-        else
-        {
-            _event.Status = EventStatus.Rejected;
-        }
 
-        _event.ProcessNote = processNote;   
+        var specSub = new GetUserSpec(userId);
+        var _moderator = await uOW.Users.FindFirstOrDefaultAsync(specSub);
+        
+        if(_event.Status == EventStatus.UnderReview)
+        {
+            if (isApproved)
+            {
+                _event.Status = EventStatus.Upcoming;
+            }
+            else
+            {
+                _event.Status = EventStatus.Rejected;
+            }
+            _event.ProcessNote = processNote;
+            _event.ReviewBy = _moderator!.Username;
+        }
 
         await uOW.SaveChangesAsync();
 
@@ -290,6 +300,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         return events.Select(e => e.ToResponse()).ToList();
     }
+
 
     public async Task<IList<UserRes>> GetRegisteredUsers(Guid eventId)
     {

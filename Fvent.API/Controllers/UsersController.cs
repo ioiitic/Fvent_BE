@@ -139,6 +139,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpPut("{userId}/approve")]
+    [Authorize(Roles = "moderator")]
     public async Task<IActionResult> ApproveUser([FromRoute] Guid userId, [FromQuery] bool isApproved, [FromBody] ApproveUserRequest req)
     {
         var res = await userService.ApproveUser(userId, isApproved, req.ProcessNote);
@@ -156,6 +157,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     [HttpGet]
     [Authorize]
     [Route("participant")]
+    [Authorize(Roles = "organizer")]
     public async Task<IActionResult> GetEventRegisters([FromQuery] int? inMonth, [FromQuery] bool isCompleted)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;

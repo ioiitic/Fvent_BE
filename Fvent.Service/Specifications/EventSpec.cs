@@ -17,7 +17,8 @@ public static class EventSpec
             // Filter by search keyword (for event name or description)
             if (!string.IsNullOrEmpty(searchKeyword))
             {
-                Filter(e => e.EventName.Contains(searchKeyword) || e.Description.Contains(searchKeyword) || e.Organizer!.Username.Contains(searchKeyword));
+                Filter(e => e.EventName.Contains(searchKeyword) || e.Organizer!.Username.Contains(searchKeyword));
+                Filter(e => e.Tags!.Any(tag => tag.Tag.Contains(searchKeyword)));
             }
 
             // Filter by month for StartTime and EndTime

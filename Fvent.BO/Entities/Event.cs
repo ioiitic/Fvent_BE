@@ -17,6 +17,7 @@ public class Event : ISoftDelete
     public string ProcessNote { get; set; }
     public EventStatus Status { get; set; }
     public Guid OrganizerId { get; set; }
+    public string? ReviewBy { get; set; }
     public Guid EventTypeId { get; set; }
 
     public User? Organizer { get; set; }
@@ -33,7 +34,7 @@ public class Event : ISoftDelete
     public DateTime? DeletedAt { get; set; }
 
     public Event(string eventName, string description, DateTime startTime, DateTime endTime, string linkEvent, string passwordMeeting, string location,
-                 int? maxAttendees, string processNote, EventStatus status, Guid organizerId, Guid eventTypeId,
+                 int? maxAttendees, string processNote, EventStatus status, Guid organizerId, string? reviewBy, Guid eventTypeId,
                  DateTime createdAt)
     {
         EventName = eventName;
@@ -46,6 +47,7 @@ public class Event : ISoftDelete
         MaxAttendees = maxAttendees;
         ProcessNote = processNote;
         OrganizerId = organizerId;
+        ReviewBy = reviewBy;
         EventTypeId = eventTypeId;
         Status = status;
         CreatedAt = createdAt;

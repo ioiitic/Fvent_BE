@@ -102,6 +102,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpPost]
+    [Authorize(Roles = "organizer")]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventReq req)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -123,6 +124,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpPut("{eventId}")]
+    [Authorize(Roles = "organizer")]
     public async Task<IActionResult> UpdateEvent([FromRoute] Guid eventId, [FromBody] UpdateEventReq req)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -143,6 +145,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpPut("{eventId}/submit")]
+    [Authorize(Roles = "organizer")]
     public async Task<IActionResult> SubmitEvent([FromRoute] Guid eventId)
     {
         var res = await eventService.SubmitEvent(eventId);
@@ -158,9 +161,17 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="processNote"></param>
     /// <returns></returns>
     [HttpPut("{eventId}/approve")]
+    [Authorize(Roles = "moderator")]
     public async Task<IActionResult> ApproveEvent([FromRoute] Guid eventId, [FromQuery] bool isApproved, [FromBody] ApproveEventRequest processNote)
     {
-        var res = await eventService.ApproveEvent(eventId, isApproved, processNote.ProcessNote);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.ApproveEvent(eventId, isApproved, userId, processNote.ProcessNote);
 
         return Ok(res);
     }
@@ -171,6 +182,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpPut("{eventId}/checkin")]
+    [Authorize(Roles = "student")]
     public async Task<IActionResult> CheckinEvent([FromRoute] Guid eventId)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -197,6 +209,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpDelete("{eventId}")]
+    [Authorize(Roles = "organizer")]
     public async Task<IActionResult> DeleteEvent([FromRoute] Guid eventId)
     {
         await eventService.DeleteEvent(eventId);
@@ -264,20 +277,6 @@ public class EventsController(IEventService eventService, ICommentService commen
     }
     #endregion
 
-    #region Event Rating
-    /// <summary>
-    /// Get averate rating of an event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <returns></returns>
-    [HttpGet("{eventId}/average-rating")]
-    public async Task<IActionResult> GetEventRate([FromRoute] Guid eventId)
-    {
-        var res = await ratingService.GetEventRate(eventId);
-
-        return Ok(res);
-    }
-    #endregion
 
     #region Event Registration
     /// <summary>
@@ -287,6 +286,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpPost("{eventId}/register")]
+    [Authorize(Roles = "student")]
     public async Task<IActionResult> RegisterEvent(Guid eventId)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -308,6 +308,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpDelete("{eventId}/unregister")]
+    [Authorize(Roles = "student")]
     public async Task<IActionResult> UnRegisterEvent(Guid eventId)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -328,6 +329,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpGet("{eventId}/participants")]
+    [Authorize(Roles = "organizer")]
     public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
     {
         var res = await eventService.GetRegisteredUsers(eventId);
@@ -348,6 +350,19 @@ public class EventsController(IEventService eventService, ICommentService commen
     public async Task<IActionResult> GetEventReviews([FromRoute] Guid eventId)
     {
         var res = await reviewService.GetListReviews(eventId);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Get averate rating of an event
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpGet("{eventId}/average-rating")]
+    public async Task<IActionResult> GetEventRate([FromRoute] Guid eventId)
+    {
+        var res = await ratingService.GetEventRate(eventId);
 
         return Ok(res);
     }
@@ -381,6 +396,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="eventId"></param>
     /// <returns></returns>
     [HttpGet("{eventId}/form-submit")]
+
     public async Task<IActionResult> GetFormSubmits([FromRoute] Guid eventId)
     {
         var res = await formService.GetFormSubmits(eventId);
@@ -395,6 +411,7 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpPost("{eventId}/submit-form")]
+    [Authorize(Roles = "student")]
     public async Task<IActionResult> SubmitForm([FromRoute] Guid eventId, FormSubmitReq req)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;

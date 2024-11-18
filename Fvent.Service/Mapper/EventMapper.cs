@@ -22,6 +22,7 @@ public static class EventMapper
             "",
             EventStatus.Draft,
             organizerId,
+            "",
             src.EventTypeId,
             DateTime.Now);
 
