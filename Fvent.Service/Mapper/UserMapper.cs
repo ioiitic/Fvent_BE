@@ -34,22 +34,17 @@ public static class UserMapper
         var result = typeof(TEntity) switch
         {
             Type t when t == typeof(UserRes) =>
-                new UserRes(src.UserId, src.Username, src.AvatarUrl, src.Email,
-                            src.PhoneNumber, src.CardUrl, src.Verified.ToString(), src.ProcessNote, src.Role?.RoleName) as TEntity,
+                new UserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.CardUrl,
+                            src.Verified.ToString(), src.ProcessNote, src.Role?.RoleName) as TEntity,
 
             Type t when t == typeof(GetListUserRes) =>
-                new GetListUserRes(src.Username, src.AvatarUrl, src.Email,
-                                        src.PhoneNumber, src.CardUrl, src.Verified, src.Role!.RoleName, src.CreatedAt,
-                                        src.UpdatedAt, src.IsDeleted, src.DeletedAt) as TEntity,
+                new GetListUserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.CardUrl,
+                                   src.Verified, src.Role!.RoleName, src.CreatedAt, src.UpdatedAt, src.IsDeleted,
+                                   src.DeletedAt) as TEntity,
 
             _ => throw new InvalidOperationException($"Unsupported type: {typeof(TEntity).Name}")
         };
 
-        if (result is null)
-        {
-            throw new InvalidOperationException($"Failed to cast to {typeof(TEntity).Name}");
-        }
-
-        return result;
+        return result ?? throw new InvalidOperationException($"Failed to cast to {typeof(TEntity).Name}");
     }
 }
