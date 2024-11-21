@@ -86,6 +86,7 @@ public static class EventSpec
             Include(u => u.EventType!);
             Include(u => u.EventMedias!);
             Include(e => e.Tags!);
+            Include(e => e.EventFile!);
             Include(e => e.Form!.FormDetails!);
         }
 
@@ -237,6 +238,7 @@ public static class EventSpec
     {
         public GetListRecommend(IEnumerable<Guid> eventTypes, IEnumerable<string> eventTags)
         {
+            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress || e.Status == EventStatus.Completed);
             Filter(e => eventTypes.Any(t => e.EventTypeId == t) || eventTags.Any(type => e.Tags!.Any(tag => tag.Tag.Equals(type))));
 
             Include(e => e.Organizer!);

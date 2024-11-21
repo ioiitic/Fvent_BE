@@ -46,6 +46,7 @@ public static class EventMapper
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.Status.ToString(),
             null,
+            null,
             src.Tags.Select(t => t.Tag).ToList(),
             null);
 
@@ -75,6 +76,7 @@ public static class EventMapper
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.Status.ToString(),
             isRegistered,
+            src.EventFile.FileUrl,
             src.Tags.Select(t => t.Tag).ToList(),
             src.Form?.FormDetails?.Select(d => d.ToResponse()).ToList());
 
