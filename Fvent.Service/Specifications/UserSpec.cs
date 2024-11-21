@@ -1,8 +1,6 @@
 ﻿using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.Repository.Common;
-using Fvent.Service.Mapper;
-using Fvent.Service.Result;
 
 namespace Fvent.Service.Specifications;
 
