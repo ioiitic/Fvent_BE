@@ -10,6 +10,7 @@ using Fvent.Service.Result;
 using LinqKit;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Linq.Expressions;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
@@ -264,11 +265,14 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
 
 
-    public async Task<IdRes> SubmitEvent(Guid id)
+    public async Task<IdRes> SubmitEvent(Guid id, Guid organizerId)
     {
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
+
+        if (_event.OrganizerId != organizerId)
+            throw new Exception("Not have permission for submit Event");
 
         if(_event.Status == EventStatus.Draft || _event.Status == EventStatus.Rejected)
             _event.Status = EventStatus.UnderReview;
@@ -343,9 +347,15 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var events = await uOW.Events.GetListAsync(spec);
 
         var users = events.SelectMany(e => e.Registrations!)
-            .Select(r => r.User);
+                          .Select(r =>
+                           {
+                               var userResponse = r.User!.ToResponse<UserRes>();
+                               userResponse = userResponse with { IsCheckin = r.IsCheckIn }; 
+                               return userResponse;
+                           })
+                          .ToList();
 
-        return users.Select(u => u.ToResponse<UserRes>()).ToList();
+        return users;
     }
     #endregion
 

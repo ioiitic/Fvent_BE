@@ -221,6 +221,7 @@ public static class EventSpec
             Include(e => e.EventType!);
             Include(e => e.Tags!);
             Include(e => e.EventMedias!);
+            Include(e => e.Registrations!);
         }
     }
 

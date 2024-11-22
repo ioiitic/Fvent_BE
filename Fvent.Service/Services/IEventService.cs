@@ -14,7 +14,7 @@ public interface IEventService
     Task<PageResult<EventRes>> GetListRecommend(Guid userId);
     Task<IdRes> CreateEvent(CreateEventReq req, Guid organizerId);
     Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req);
-    Task<IdRes> SubmitEvent(Guid id);
+    Task<IdRes> SubmitEvent(Guid id, Guid organizerId);
     Task<IdRes> ApproveEvent(Guid id, bool isApproved,Guid userId, string processNote);
     Task CheckinEvent(Guid eventId, Guid userId);
     Task DeleteEvent(Guid id);
