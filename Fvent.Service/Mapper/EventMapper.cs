@@ -54,7 +54,7 @@ public static class EventMapper
         this Event src)
         => new(
             src.EventId,
-            src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default");
+            src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default");
     public static EventRes ToResponse(
         this Event src,
         bool isRegistered)

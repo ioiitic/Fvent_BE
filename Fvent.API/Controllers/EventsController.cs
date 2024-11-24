@@ -446,7 +446,7 @@ public class EventsController(IEventService eventService, ICommentService commen
         return Ok(res);
     }
 
-    [HttpPost("{eventId}/get-user-formSubmit")]
+    [HttpGet("{eventId}/get-user-formSubmit")]
     public async Task<IActionResult> UserFormSubmit([FromRoute] Guid eventId, [FromQuery] Guid userId)
     {
 

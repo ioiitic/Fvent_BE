@@ -23,6 +23,7 @@ public class User : ISoftDelete
     public IList<EventReview>? Reviews { get; set; }
     public IList<Notification>? Notifications { get; set; }
     public IList<RefreshToken>? RefreshTokens { get; set; }
+    public IList<FormSubmit>? FormSubmits { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
