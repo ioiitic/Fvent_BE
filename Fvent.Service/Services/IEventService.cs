@@ -18,4 +18,9 @@ public interface IEventService
     Task DeleteEvent(Guid id);
     Task<IList<UserRes>> GetRegisteredUsers(Guid eventId);
     Task<IList<EventRes>> GetRegisteredEvents(Guid userId, bool isCompleted);
+
+    #region Report
+    Task<EventReportRes> Report();
+    Task<EventReportDetailRes> ReportByEvent(Guid eventId);
+    #endregion
 }

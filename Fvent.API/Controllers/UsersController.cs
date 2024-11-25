@@ -238,4 +238,16 @@ public class UsersController(IUserService userService, IEventService eventServic
         return Ok(res);
     }
     #endregion
+
+    #region Report
+    [HttpGet("report")]
+    public async Task<IActionResult> Report()
+    {
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+        var res = await userService.GetReport(Guid.Parse(userId));
+
+        return Ok(res);
+    }
+    #endregion
 }

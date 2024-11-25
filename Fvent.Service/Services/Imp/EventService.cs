@@ -315,4 +315,16 @@ public class EventService(IUnitOfWork uOW) : IEventService
         await uOW.Notification.AddAsync(notification);
         await uOW.SaveChangesAsync();
     }
+
+    #region Report
+    public Task<EventReportRes> Report()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<EventReportDetailRes> ReportByEvent(Guid eventId)
+    {
+        throw new NotImplementedException();
+    }
+    #endregion
 }

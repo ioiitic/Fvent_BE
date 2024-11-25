@@ -7,8 +7,8 @@ namespace Fvent.Service.Services;
 public interface IUserService
 {
     #region Authen
-    Task<AuthResponse> Authen(AuthReq req, string ipAddress);
-    Task<AuthResponse> Refresh(RefreshTokenReq req, string ipAddress);
+    Task<AuthRes> Authen(AuthReq req, string ipAddress);
+    Task<AuthRes> Refresh(RefreshTokenReq req, string ipAddress);
     Task<IdRes> Register(CreateUserReq req);
     #endregion
 
@@ -32,4 +32,7 @@ public interface IUserService
     Task ResetPasswordAsync(Guid userId, string token, string newPassword);
     Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword);
     Task Delete(Guid id);
+    #region Report
+    Task<UserReportRes> GetReport(Guid userId);
+    #endregion
 }

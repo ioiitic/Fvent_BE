@@ -5,16 +5,17 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
+using LinqKit;
 using Microsoft.Extensions.Configuration;
 using static Fvent.Service.Specifications.UserSpec;
 using JS = Fvent.Service.Utils.JwtService;
 
 namespace Fvent.Service.Services.Imp;
 
-public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService) : IUserService
+public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService, IEventService eventService) : IUserService
 {
     #region Authen
-    public async Task<AuthResponse> Authen(AuthReq req, string ipAddress)
+    public async Task<AuthRes> Authen(AuthReq req, string ipAddress)
     { 
         // Check user authen
         var spec = new AuthenUserSpec(req.Email, req.Password);
@@ -25,10 +26,10 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
         var rfsToken = await CreateRefreshToken(user, ipAddress);
 
-        return new AuthResponse(token, rfsToken.Token);
+        return new AuthRes(token, rfsToken.Token);
     }
 
-    public async Task<AuthResponse> Refresh(RefreshTokenReq req, string ipAddress)
+    public async Task<AuthRes> Refresh(RefreshTokenReq req, string ipAddress)
     {
         // Check refresh toen exist
         var rfsSpec = new CheckRefreshTokenSpec(req.Token);
@@ -50,7 +51,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
         rfsToken = await CreateRefreshToken(user, ipAddress);
 
-        return new AuthResponse(token, rfsToken.Token);
+        return new AuthRes(token, rfsToken.Token);
     }
 
     private async Task<RefreshToken> CreateRefreshToken(User user, string ipAddress)
@@ -102,10 +103,6 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     }
     #endregion
     #region Admin
-    /// <summary>
-    /// Service for Admin Get list users info
-    /// </summary>
-    /// <returns></returns>
     public async Task<PageResult<GetListUserRes>> GetList(GetListUsersReq req)
     {
         var spec = new GetListUsersSpec(req.Username, req.Email, req.RoleName, req.Verified, req.OrderBy,
@@ -283,11 +280,17 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     public async Task<UserRes> Get(Guid id)
     {
+        var user = await _Get(id);
+
+        return user.ToResponse<UserRes>();
+    }
+    private async Task<User> _Get(Guid id)
+    {
         var spec = new GetUserSpec(id);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
-        return user.ToResponse<UserRes>();
+        return user;
     }
 
     private string GenerateVerificationLink(Guid userId, string token)
@@ -296,10 +299,37 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         return $"https://fvent.somee.com/api/users/verify-email?userId={userId}&token={token}";
 
     }
-
     private string GenerateResetLink(Guid userId, string token)
     {
         //return $"https://localhost:7289/api/users/reset-password?userId={userId}&token={token}";
         return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
     }
+
+    #region Report
+    public async Task<UserReportRes> GetReport(Guid userId)
+    {
+        var events = await eventService.GetRegisteredEvents(userId, true);
+
+        var noOfEvents = events.Count();
+        var organizersList = events
+            .GroupBy(e => e.OrganizerId)
+            .Distinct()
+            .Select(e => new
+            {   
+                OrganizerId = e.Key,
+                EventCount = e.Count()
+            })
+            .OrderByDescending(o => o.EventCount)
+            .Take(5);   
+
+        var organizers = new List<OrganizerReportInfo>();
+        foreach (var organizer in organizersList)
+        {
+            var user = await _Get(organizer.OrganizerId);
+            organizers.Add(user.ToResponse<OrganizerReportInfo>(organizer.EventCount));
+        }
+
+        return new UserReportRes(noOfEvents, organizersList.Count(), organizers);
+    }
+    #endregion
 }

@@ -1,6 +1,8 @@
-﻿using Fvent.BO.Exceptions;
+﻿using Fvent.BO.Entities;
+using Fvent.BO.Exceptions;
 using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -392,6 +394,24 @@ public class EventsController(IEventService eventService, ICommentService commen
         }
 
         var res = await formService.SubmitForm(eventId, userId, req);
+
+        return Ok(res);
+    }
+    #endregion
+
+    #region Report
+    [HttpGet("report")]
+    public async Task<IActionResult> Report()
+    {
+        var res = await eventService.Report();
+
+        return Ok(res);
+    }
+
+    [HttpGet("{eventId}/report")]
+    public async Task<IActionResult> ReportByEvent(Guid eventId)
+    {
+        var res = await eventService.ReportByEvent(eventId);
 
         return Ok(res);
     }

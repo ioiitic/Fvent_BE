@@ -76,6 +76,7 @@ public static class UserSpec
             Include(u => u.RefreshTokens!);
         }
     }
+
     public class GetVerificationTokenSpec : Specification<VerificationToken>
     {
         public GetVerificationTokenSpec(Guid userId, string token)
