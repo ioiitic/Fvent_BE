@@ -51,6 +51,8 @@ public static class ServiceConfigs
 
         services.AddHostedService<MyBackgroundService>();
 
+        services.AddHttpClient<ExpoNotificationService>();
+
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IFollowerService, FollowerService>();

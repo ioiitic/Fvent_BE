@@ -1,6 +1,6 @@
 ﻿namespace Fvent.Service.Request;
 
-public record AuthReq(string Email, string Password);
+public record AuthReq(string Email, string Password, string? FcmToken);
 
 public record RefreshTokenReq(string Token);
 

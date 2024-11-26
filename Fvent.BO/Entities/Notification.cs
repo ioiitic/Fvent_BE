@@ -5,28 +5,24 @@
         public Guid NotificationId { get; set; }
         public Guid UserId { get; set; }
         public Guid EventId { get; set; }
-        public string Message { get; set; }
-        public int ReadStatus { get; set; } // Stored as an int in the database3
+        public string? Title { get; set; }
+        public string? Message { get; set; }
+        public ReadStatus ReadStatus { get; set; }
         public DateTime SentTime { get; set; }
 
-        public User User { get; set; }
-        public Event Event { get; set; }
+        public User? User { get; set; }
+        public Event? Event { get; set; }
 
-        public Notification()
-        {
-            SentTime = DateTime.UtcNow;
-        }
+        public Notification() { }
 
-        public static Notification Create(Guid userId, Guid eventId, string message, ReadStatus status)
+        public Notification(Guid userId, Guid eventId, string title, string message, ReadStatus status)
         {
-            return new Notification
-            {
-                UserId = userId,
-                EventId = eventId,
-                Message = message,
-                ReadStatus = (int)status,
-                SentTime = DateTime.UtcNow
-            };
+            UserId = userId;
+            EventId = eventId;
+            Title = title;
+            Message = message;
+            ReadStatus = status;
+            SentTime = DateTime.Now;
         }
     }
 }

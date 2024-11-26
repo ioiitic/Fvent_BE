@@ -223,6 +223,15 @@ public static class EventSpec
         }
     }
 
+    public class GetEventReminderSpec : Specification<Event>
+    {
+        public GetEventReminderSpec(int ReminderThresholdMinutes)
+        {
+            Filter(e => e.Status == EventStatus.Upcoming && e.StartTime > DateTime.Now &&
+                                                          e.StartTime <= DateTime.Now.AddMinutes(ReminderThresholdMinutes));
+        }
+    }
+
     public class GetEventReviewsSpec : Specification<EventReview>
     {
         public GetEventReviewsSpec(Guid Id)

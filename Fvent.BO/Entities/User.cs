@@ -14,6 +14,7 @@ public class User : ISoftDelete
     public bool EmailVerified { get; set; } = false;
     public VerifiedStatus Verified { get; set; }
     public string ProcessNote { get; set; } = "";
+    public string FcmToken { get; set; }
 
     public int RoleId { get; set; }
     public Role? Role { get; set; }
@@ -29,7 +30,7 @@ public class User : ISoftDelete
     public bool IsDeleted { get; set; } = false;
     public DateTime? DeletedAt { get; set; }
 
-    public User(string username, string avatarUrl, string email, string password, string processNote,
+    public User(string username, string avatarUrl, string email, string password, string processNote, string fcmToken,
                 string phoneNumber, string cardUrl, int roleId, DateTime createdAt)
     {
         Username = username;
@@ -37,6 +38,7 @@ public class User : ISoftDelete
         Email = email;
         Password = password;
         ProcessNote = processNote;
+        FcmToken = fcmToken;
         PhoneNumber = phoneNumber;
         CardUrl = cardUrl;
         RoleId = roleId;

@@ -14,9 +14,10 @@ namespace Fvent.Service.Mapper
     {
         public static Notification ToNotification(this CreateNotificationReq src)
         {
-            return Notification.Create(
+            return new Notification(
                 src.userId,
                 src.eventId,
+                src.title,
                 src.message,
                 ReadStatus.Unread
             );
@@ -29,8 +30,9 @@ namespace Fvent.Service.Mapper
                 src.NotificationId,
                 src.EventId,
                 src.UserId,
+                src.Title,
                 src.Message,
-                ((ReadStatus)src.ReadStatus).ToString(), // Convert the enum to its string name
+                src.ReadStatus.ToString(),
                 src.SentTime
             );
         }

@@ -9,6 +9,7 @@ using Fvent.Service.Result;
 using Fvent.Service.Specifications;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using static Fvent.Service.Specifications.EventRegistationSpec;
@@ -210,25 +211,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
         // Step 4: Notify users (track unique users with HashSet)
         var notifiedUsers = new HashSet<Guid>();
 
-        // Step 5: Notify users who follow the event
-        var followSpec = new GetUserFollowsEventSpec(id); 
-
-        var followedEvents = await uOW.EventFollower.GetListAsync(followSpec);
-        var followedUsers = followedEvents.Select(f => f.UserId).ToList();
-
-        foreach (var userId in followedUsers)
-        {
-            if (notifiedUsers.Add(userId)) // Only notify if userId is not already in the set
-            {
-                // Create notification for the follower
-                var notificationReq = new CreateNotificationReq(userId,
-                                                _event.EventId,
-                                                $"The event '{_event.EventName}' has been updated.");
-                await CreateNotification(notificationReq); 
-            }
-        }
-
-        // Step 6: Notify users who have registered for the event
+        // Step 5: Notify users who have registered for the event
         var participantSpec = new GetEventParticipantsSpec(id);
 
         var participants = await uOW.EventRegistration.GetListAsync(participantSpec);
@@ -241,7 +224,8 @@ public class EventService(IUnitOfWork uOW) : IEventService
                 // Create notification for the participant
                 var notificationReq = new CreateNotificationReq(userId,
                                                 _event.EventId,
-                                                $"The event '{_event.EventName}' has been updated.");
+                                                "Sự kiện bạn quan tâm có biến!",
+                                                $"The event '{_event.EventName}' đã có cập nhật mới.");
                 await CreateNotification(notificationReq); 
             }
         }

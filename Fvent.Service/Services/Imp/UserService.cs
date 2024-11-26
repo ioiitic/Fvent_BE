@@ -26,6 +26,12 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
         var rfsToken = await CreateRefreshToken(user, ipAddress);
 
+        if(req.FcmToken is not null)
+        {
+            user.FcmToken = req.FcmToken;
+        }
+        await uOW.SaveChangesAsync();
+
         return new AuthResponse(token, rfsToken.Token);
     }
 
