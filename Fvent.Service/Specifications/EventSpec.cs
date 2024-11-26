@@ -209,6 +209,7 @@ public static class EventSpec
             Include(e => e.EventType!);
             Include(e => e.Tags!);
             Include(e => e.EventMedias!);
+            Include(e => e.EventFile!);
         }
 
     }
@@ -242,13 +243,14 @@ public static class EventSpec
     {
         public GetListRecommend(IEnumerable<Guid> eventTypes, IEnumerable<string> eventTags)
         {
-            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress || e.Status == EventStatus.Completed);
+            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress);
             Filter(e => eventTypes.Any(t => e.EventTypeId == t) || eventTags.Any(type => e.Tags!.Any(tag => tag.Tag.Equals(type))));
 
             Include(e => e.Organizer!);
             Include(e => e.EventType!);
             Include(e => e.Tags!);
             Include(e => e.EventMedias!);
+            Include(e => e.EventFile!);
         }
     }
 
@@ -268,6 +270,7 @@ public static class EventSpec
             Include(u => u.Organizer!);
             Include(e => e.EventType!);
             Include(e => e.EventMedias!);
+            Include(e => e.EventFile!);
         }
     }
     public class GetUserFollowsEventSpec : Specification<EventFollower>
