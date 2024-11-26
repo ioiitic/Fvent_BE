@@ -498,6 +498,15 @@ namespace Fvent.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("BanEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BanReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("BanStartDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("CardUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -513,6 +522,9 @@ namespace Fvent.Repository.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("EmailVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsBanned")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
@@ -532,6 +544,10 @@ namespace Fvent.Repository.Migrations
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");

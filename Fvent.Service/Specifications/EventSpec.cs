@@ -80,6 +80,7 @@ public static class EventSpec
             Include(e => e.EventType!);
             Include(e => e.EventMedias!);
             Include(e => e.Tags!);
+            Include(e => e.EventFile!);
         }
 
         public GetEventSpec(Guid id)
@@ -154,22 +155,19 @@ public static class EventSpec
             if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
             {
                 Filter(e => e.Status == eventStatus);
-            }
 
-            if (orderBy is not null)
-            {
-                switch (orderBy)
+                if (eventStatus == EventStatus.Completed)
                 {
-                    case "StartTime":
-                        OrderBy(u => u.StartTime, isDescending);
-                        break;
-                    case "EndTime":
-                        OrderBy(u => u.EndTime, isDescending);
-                        break;
-                    case "Name":
-                        OrderBy(u => u.EventName, isDescending);
-                        break;
+                    OrderBy(u => u.EndTime, true);
                 }
+                else
+                {
+                    OrderBy(u => u.StartTime, false);
+                }
+            }
+            else
+            {
+                OrderBy(u => u.StartTime, true);
             }
 
             AddPagination(pageNumber, pageSize);
@@ -179,6 +177,7 @@ public static class EventSpec
             Include(e => e.EventType!);
             Include(e => e.EventMedias!);
             Include(e => e.Tags!);
+            Include(e => e.EventFile!);
         }
     }
 

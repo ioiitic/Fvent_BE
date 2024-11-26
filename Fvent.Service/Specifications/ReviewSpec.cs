@@ -12,6 +12,11 @@ public static class ReviewSpec
             Include(u => u.User!);
             Include(u => u.Event!);
         }
+        
+        public GetReviewSpec(Guid eventId, Guid? userId)
+        {
+            Filter(u => u.EventId == eventId && u.UserId == userId);
+        }
         public GetReviewSpec(Guid id)
         {
             Filter(u => u.EventReviewId == id);

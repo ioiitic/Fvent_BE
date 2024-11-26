@@ -14,6 +14,7 @@ using System.Linq.Expressions;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
+using static Fvent.Service.Specifications.ReviewSpec;
 using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp;
@@ -244,23 +245,54 @@ public class EventService(IUnitOfWork uOW) : IEventService
     public async Task<EventRes> GetEvent(Guid eventId, Guid? userId)
     {
         bool isRegistered = false;
-        var spec = new GetEventSpec(eventId);
+        bool isReviewed = false;
+        bool isOverlap = false;
+        bool canReview = false;
 
-        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
+        var specEvent = new GetEventSpec(eventId);
+
+        var _event = await uOW.Events.FindFirstOrDefaultAsync(specEvent)
             ?? throw new NotFoundException(typeof(Event));
 
         if (userId.HasValue)
         {
-            var subSpec = new GetEventRegistrationSpec(eventId, userId.Value);
-            var _eventTag = await uOW.EventRegistration.GetListAsync(subSpec);
+            var specRegis = new GetEventRegistrationSpec(eventId, userId.Value);
+            var specReview = new GetReviewSpec(eventId, userId);
 
-            if (!_eventTag.IsNullOrEmpty())
+            var specOverlap = new GetEventRegistrationSpec(userId, _event.EventId, _event.StartTime, _event.EndTime);
+
+            var _eventReview = await uOW.Reviews.GetListAsync(specReview);
+
+            if (!_eventReview.IsNullOrEmpty())
+            {
+                isReviewed = true;
+            }
+
+            var _eventOverlap = await uOW.EventRegistration.GetListAsync(specOverlap);
+
+            if (!_eventOverlap.IsNullOrEmpty())
+            {
+                isOverlap = true;
+            }
+
+            var _eventRegis = await uOW.EventRegistration.GetListAsync(specRegis);
+
+            if (!_eventRegis.IsNullOrEmpty())
             {
                 isRegistered = true;
             }
+
+            if(_event.EndTime <= _event.EndTime.AddDays(2) && !_eventRegis.IsNullOrEmpty())
+            {
+                canReview = true;
+            }
+            else
+            {
+                canReview = false;
+            }
         }
 
-        return _event.ToResponse(isRegistered);
+        return _event.ToResponse(isRegistered, isReviewed, isOverlap, canReview);
     }
 
 

@@ -47,6 +47,9 @@ public static class EventMapper
             src.Status.ToString(),
             null,
             null,
+            null,
+            null,
+            src.EventFile.FileUrl,
             src.Tags.Select(t => t.Tag).ToList(),
             null);
 
@@ -57,7 +60,10 @@ public static class EventMapper
             src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default");
     public static EventRes ToResponse(
         this Event src,
-        bool isRegistered)
+        bool isRegistered,
+        bool isReviewed,
+        bool isOverlap,
+        bool canReview)
         => new(
             src.EventId,
             src.EventName,
@@ -76,6 +82,9 @@ public static class EventMapper
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.Status.ToString(),
             isRegistered,
+            isReviewed,
+            isOverlap,
+            canReview,
             src.EventFile.FileUrl,
             src.Tags.Select(t => t.Tag).ToList(),
             src.Form?.FormDetails?.Select(d => d.ToResponse()).ToList());

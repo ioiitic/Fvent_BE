@@ -22,6 +22,14 @@ public static class EventRegistationSpec
         {
             Filter(p => p.EventId == eventId && p.UserId == userId);
         }
+        public GetEventRegistrationSpec(Guid? userId,Guid eventId, DateTime startTime, DateTime endTime)
+        {
+            Filter(p => p.UserId == userId && p.EventId != eventId
+                    && p.Event.StartTime < endTime
+                    && p.Event.EndTime > startTime);
+            Include(p => p.Event!);
+        }
+
     }
 
     public class GetListUserEventsSpec : Specification<EventRegistration>
