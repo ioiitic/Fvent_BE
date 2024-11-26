@@ -378,8 +378,7 @@ namespace Fvent.Repository.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("FormSubmits");
                 });
@@ -501,6 +500,15 @@ namespace Fvent.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("BanEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BanReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("BanStartDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("CardUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -518,6 +526,8 @@ namespace Fvent.Repository.Migrations
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("bit");
                     b.Property<string>("FcmToken")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -539,6 +549,10 @@ namespace Fvent.Repository.Migrations
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -729,8 +743,8 @@ namespace Fvent.Repository.Migrations
                         .IsRequired();
 
                     b.HasOne("Fvent.BO.Entities.User", "User")
-                        .WithOne()
-                        .HasForeignKey("Fvent.BO.Entities.FormSubmit", "UserId")
+                        .WithMany("FormSubmits")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -801,6 +815,8 @@ namespace Fvent.Repository.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Followers");
+
+                    b.Navigation("FormSubmits");
 
                     b.Navigation("Notifications");
 

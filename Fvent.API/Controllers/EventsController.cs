@@ -162,7 +162,13 @@ public class EventsController(IEventService eventService, ICommentService commen
     [Authorize(Roles = "organizer")]
     public async Task<IActionResult> SubmitEvent([FromRoute] Guid eventId)
     {
-        var res = await eventService.SubmitEvent(eventId);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+        var res = await eventService.SubmitEvent(eventId, organizerId);
 
         return Ok(res);
     }
@@ -436,6 +442,15 @@ public class EventsController(IEventService eventService, ICommentService commen
         }
 
         var res = await formService.SubmitForm(eventId, userId, req);
+
+        return Ok(res);
+    }
+
+    [HttpGet("{eventId}/get-user-formSubmit")]
+    public async Task<IActionResult> UserFormSubmit([FromRoute] Guid eventId, [FromQuery] Guid userId)
+    {
+
+        var res = await formService.GetFormSubmit(eventId, userId);
 
         return Ok(res);
     }

@@ -57,19 +57,17 @@ public class Event : ISoftDelete
     {
         Status = status;
     }
-
-    public void Update(string eventName, string description, DateTime startTime, DateTime endTime, string location,
-                       int? maxAttendees, string processNote, EventStatus status, Guid organizerId, Guid eventTypeId)
+    public void Update(string? eventName, string? description, DateTime? startTime, DateTime? endTime, string? location,
+                       string? linkEvent, string? passwordMeeting, int? maxAttendees, Guid? eventTypeId)
     {
-        EventName = eventName;
-        Description = description;
-        StartTime = startTime;
-        EndTime = endTime;
-        Location = location;
-        MaxAttendees = maxAttendees;
-        ProcessNote = processNote;
-        OrganizerId = organizerId;
-        EventTypeId = eventTypeId;
-        Status = status;
+        EventName = eventName ?? EventName;
+        Description = description ?? Description;
+        StartTime = startTime ?? StartTime;
+        EndTime = endTime ?? EndTime;
+        Location = location ?? Location;
+        LinkEvent = linkEvent ?? LinkEvent;
+        PasswordMeeting = passwordMeeting ?? PasswordMeeting;
+        MaxAttendees = maxAttendees ?? MaxAttendees;
+        EventTypeId = eventTypeId ?? EventTypeId;
     }
 }

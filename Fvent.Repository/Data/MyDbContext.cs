@@ -88,7 +88,7 @@ public class MyDbContext : DbContext
 
         modelBuilder.Entity<FormSubmit>()
                     .HasOne(c => c.User)
-                    .WithOne()
+                    .WithMany(u => u.FormSubmits)
                     .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -3,7 +3,7 @@
 public record EventRes(Guid EventId, string EventName, string Description, DateTime StartTime, DateTime EndTime,
                        string Location, string LinkEvent, string PasswordMeeting, int? MaxAttendees, string ProcessNote,
                        Guid OrganizerId, string OrganizerName, string EventTypeName, string PosterImg,
-                       string ThumbnailImg, string Status, bool? IsRegistered, List<string> EventTags,
+                       string ThumbnailImg, string Status, bool? IsRegistered,bool? IsReviewed,bool? IsOverlap,bool? CanReview, string proposal, List<string> EventTags,
                        IList<FormDetailsRes>? Form);
 public record EventRateRes(double AvgRate, int TotalRate);
 

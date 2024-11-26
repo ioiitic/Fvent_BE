@@ -19,6 +19,7 @@ public static class FormSpec
         {
             Filter(f => f.EventId == eventId);
             Filter(f => f.UserId == userId);
+            Include(u => u.User!);
         }
     }
 }

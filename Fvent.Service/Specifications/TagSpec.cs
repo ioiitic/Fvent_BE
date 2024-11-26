@@ -13,6 +13,7 @@ public static class TagSpec
         }
         public GetTagSpec()
         {
+            OrderBy(u => u.TagName, false);
         }
     }
 }

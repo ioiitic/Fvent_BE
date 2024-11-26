@@ -10,6 +10,7 @@ public class FormSubmit
 
     public User? User { get; set; }
     public Event? Event { get; set; }
+  
 
     public FormSubmit(Guid userId, Guid eventId, string data)
     {

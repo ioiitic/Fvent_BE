@@ -1,8 +1,10 @@
 ﻿using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.Repository.Common;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Drawing.Printing;
+using System.Text;
 
 namespace Fvent.Service.Specifications;
 
@@ -17,8 +19,13 @@ public static class EventSpec
             // Filter by search keyword (for event name or description)
             if (!string.IsNullOrEmpty(searchKeyword))
             {
-                Filter(e => e.EventName.Contains(searchKeyword) || e.Organizer!.Username.Contains(searchKeyword) 
-                                                                || e.Tags!.Any(tag => tag.Tag.Contains(searchKeyword)));
+                if (!string.IsNullOrEmpty(searchKeyword))
+                {
+                    Filter(e => EF.Functions.Collate(e.EventName, "SQL_Latin1_General_CP1_CI_AI").Contains(searchKeyword) ||
+                                EF.Functions.Collate(e.Organizer!.Username, "SQL_Latin1_General_CP1_CI_AI").Contains(searchKeyword) ||
+                                e.Tags!.Any(tag => EF.Functions.Collate(tag.Tag, "SQL_Latin1_General_CP1_CI_AI").Contains(searchKeyword)));
+                }
+
             }
 
             // Filter by month for StartTime and EndTime
@@ -51,22 +58,19 @@ public static class EventSpec
             if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
             {
                 Filter(e => e.Status == eventStatus);
-            }
 
-            if (orderBy is not null)
-            {
-                switch (orderBy)
+                if(eventStatus == EventStatus.Completed)
                 {
-                    case "StartTime":
-                        OrderBy(u => u.StartTime, isDescending);
-                        break;
-                    case "EndTime":
-                        OrderBy(u => u.EndTime, isDescending);
-                        break;
-                    case "Name":
-                        OrderBy(u => u.EventName, isDescending);
-                        break;
+                    OrderBy(u => u.EndTime, true);
                 }
+                else
+                {
+                    OrderBy(u => u.StartTime, false);
+                }
+            }
+            else
+            {
+                OrderBy(u => u.StartTime, true);
             }
 
             AddPagination(pageNumber, pageSize);
@@ -76,6 +80,7 @@ public static class EventSpec
             Include(e => e.EventType!);
             Include(e => e.EventMedias!);
             Include(e => e.Tags!);
+            Include(e => e.EventFile!);
         }
 
         public GetEventSpec(Guid id)
@@ -86,6 +91,7 @@ public static class EventSpec
             Include(u => u.EventType!);
             Include(u => u.EventMedias!);
             Include(e => e.Tags!);
+            Include(e => e.EventFile!);
             Include(e => e.Form!.FormDetails!);
         }
 
@@ -149,22 +155,19 @@ public static class EventSpec
             if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
             {
                 Filter(e => e.Status == eventStatus);
-            }
 
-            if (orderBy is not null)
-            {
-                switch (orderBy)
+                if (eventStatus == EventStatus.Completed)
                 {
-                    case "StartTime":
-                        OrderBy(u => u.StartTime, isDescending);
-                        break;
-                    case "EndTime":
-                        OrderBy(u => u.EndTime, isDescending);
-                        break;
-                    case "Name":
-                        OrderBy(u => u.EventName, isDescending);
-                        break;
+                    OrderBy(u => u.EndTime, true);
                 }
+                else
+                {
+                    OrderBy(u => u.StartTime, false);
+                }
+            }
+            else
+            {
+                OrderBy(u => u.StartTime, true);
             }
 
             AddPagination(pageNumber, pageSize);
@@ -174,6 +177,7 @@ public static class EventSpec
             Include(e => e.EventType!);
             Include(e => e.EventMedias!);
             Include(e => e.Tags!);
+            Include(e => e.EventFile!);
         }
     }
 
@@ -220,6 +224,7 @@ public static class EventSpec
             Include(e => e.EventType!);
             Include(e => e.Tags!);
             Include(e => e.EventMedias!);
+            Include(e => e.Registrations!);
         }
     }
 
@@ -246,6 +251,7 @@ public static class EventSpec
     {
         public GetListRecommend(IEnumerable<Guid> eventTypes, IEnumerable<string> eventTags)
         {
+            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress || e.Status == EventStatus.Completed);
             Filter(e => eventTypes.Any(t => e.EventTypeId == t) || eventTags.Any(type => e.Tags!.Any(tag => tag.Tag.Equals(type))));
 
             Include(e => e.Organizer!);

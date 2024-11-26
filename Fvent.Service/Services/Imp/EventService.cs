@@ -1,4 +1,5 @@
-﻿using Fvent.BO.Common;
+﻿using Azure;
+using Fvent.BO.Common;
 using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.BO.Exceptions;
@@ -6,15 +7,16 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
-using Fvent.Service.Specifications;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Linq.Expressions;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
+using static Fvent.Service.Specifications.ReviewSpec;
 using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp;
@@ -54,11 +56,11 @@ public class EventService(IUnitOfWork uOW) : IEventService
             };
 
             _event.Form = form;
-           
-            
         }
+
         await uOW.Events.AddAsync(_event);
         await uOW.SaveChangesAsync();
+
         foreach (var item in req.EventTags)
         {
             EventTag tag = new EventTag(_event.EventId, (string)item);
@@ -69,9 +71,9 @@ public class EventService(IUnitOfWork uOW) : IEventService
         EventMedia poster = new(_event.EventId, (int)MediaType.Poster, req.PosterImg);
         EventMedia thumbnail = new(_event.EventId, (int)MediaType.Thumbnail, req.ThumbnailImg);
 
-        if(req.proposal is not null)
+        if(req.Proposal is not null)
         {
-            EventFile eventFile = new(req.proposal, _event.EventId);
+            EventFile eventFile = new(req.Proposal, _event.EventId);
             await uOW.EventFile.AddAsync(eventFile);
         }
        
@@ -79,6 +81,97 @@ public class EventService(IUnitOfWork uOW) : IEventService
         await uOW.EventMedia.AddAsync(thumbnail); 
 
         await uOW.SaveChangesAsync();
+
+        return _event.EventId.ToResponse();
+    }
+
+    public async Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req)
+    {
+        var spec = new GetEventSpec(id);
+        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(Event));
+
+        if (req.CreateFormDetailsReq is not null)
+        {
+            var formDetails = req.CreateFormDetailsReq.Select(f => new FormDetail(f.name, f.type, f.options));
+            var form = new Form
+            {
+                FormDetails = formDetails.ToList(),
+            };
+
+            _event.Form = form;
+        }
+
+        await uOW.SaveChangesAsync();
+        if (req.EventTags is not null)
+        {
+            _event.Tags = _event.Tags ?? [];
+            _event.Tags.ForEach(tag => uOW.EventTag.Delete(tag));
+            foreach (var item in req.EventTags)
+            {
+                EventTag tag = new EventTag(_event.EventId, (string)item);
+                _event.Tags.Add(tag);
+            }
+        }
+
+        await uOW.SaveChangesAsync();
+        if (req.PosterImg is not null)
+        {
+            EventMedia poster = new(_event.EventId, (int)MediaType.Poster, req.PosterImg);
+
+            _event.EventMedias = _event.EventMedias ?? [];
+            _event.EventMedias.ForEach(media => uOW.EventMedia.Delete(media));
+            _event.EventMedias.Add(poster);
+        }
+        await uOW.SaveChangesAsync();
+        if (req.ThumbnailImg is not null)
+        {
+            EventMedia thumbnail = new(_event.EventId, (int)MediaType.Thumbnail, req.ThumbnailImg);
+
+            _event.EventMedias = _event.EventMedias ?? [];
+            _event.EventMedias.ForEach(media => uOW.EventMedia.Delete(media));
+            _event.EventMedias.Add(thumbnail);
+        }
+        await uOW.SaveChangesAsync();
+        if (req.Proposal is not null)
+        {
+            EventFile eventFile = new(req.Proposal, _event.EventId);
+
+            _event.EventFile = eventFile;
+        }
+
+        await uOW.SaveChangesAsync();
+        _event.Update(req.EventName, req.Description, req.StartTime, req.EndTime, req.Location, req.LinkEvent,
+                      req.PasswordMeeting, req.MaxAttendees, req.EventTypeId);
+
+        await uOW.SaveChangesAsync();
+        if (uOW.IsUpdate(_event))
+        {
+            _event.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await uOW.SaveChangesAsync();
+
+        // Step 4: Notify users (track unique users with HashSet)
+        var notifiedUsers = new HashSet<Guid>();
+
+        // Step 6: Notify users who have registered for the event
+        var participantSpec = new GetEventParticipantsSpec(id);
+
+        var participants = await uOW.EventRegistration.GetListAsync(participantSpec);
+        var registeredUsers = participants.Select(p => p.UserId).ToList();
+
+        foreach (var userId in registeredUsers)
+        {
+            if (notifiedUsers.Add(userId)) // Only notify if userId is not already in the set
+            {
+                // Create notification for the participant
+                var notificationReq = new CreateNotificationReq(userId,
+                                                _event.EventId,
+                                                $"The event '{_event.EventName}' has been updated.");
+                await CreateNotification(notificationReq);
+            }
+        }
 
         return _event.EventId.ToResponse();
     }
@@ -154,90 +247,68 @@ public class EventService(IUnitOfWork uOW) : IEventService
     public async Task<EventRes> GetEvent(Guid eventId, Guid? userId)
     {
         bool isRegistered = false;
-        var spec = new GetEventSpec(eventId);
+        bool isReviewed = false;
+        bool isOverlap = false;
+        bool canReview = false;
 
-        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
+        var specEvent = new GetEventSpec(eventId);
+
+        var _event = await uOW.Events.FindFirstOrDefaultAsync(specEvent)
             ?? throw new NotFoundException(typeof(Event));
 
         if (userId.HasValue)
         {
-            var subSpec = new GetEventRegistrationSpec(eventId, userId.Value);
-            var _eventTag = await uOW.EventRegistration.GetListAsync(subSpec);
+            var specRegis = new GetEventRegistrationSpec(eventId, userId.Value);
+            var specReview = new GetReviewSpec(eventId, userId);
 
-            if (!_eventTag.IsNullOrEmpty())
+            var specOverlap = new GetEventRegistrationSpec(userId, _event.EventId, _event.StartTime, _event.EndTime);
+
+            var _eventReview = await uOW.Reviews.GetListAsync(specReview);
+
+            if (!_eventReview.IsNullOrEmpty())
+            {
+                isReviewed = true;
+            }
+
+            var _eventOverlap = await uOW.EventRegistration.GetListAsync(specOverlap);
+
+            if (!_eventOverlap.IsNullOrEmpty())
+            {
+                isOverlap = true;
+            }
+
+            var _eventRegis = await uOW.EventRegistration.GetListAsync(specRegis);
+
+            if (!_eventRegis.IsNullOrEmpty())
             {
                 isRegistered = true;
             }
-        }
 
-        return _event.ToResponse(isRegistered);
-    }
-
-
-    /// <summary>
-    /// Update an Available Event
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
-    public async Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req)
-    {
-        // Step 1: Find the event
-        var spec = new GetEventSpec(id);
-        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
-            ?? throw new NotFoundException(typeof(Event));
-
-        // Step 2: Update the event with the new details
-        _event.Update(req.EventName,
-            req.Description,
-            req.StartTime,
-            req.EndTime,
-            req.Location,
-            req.MaxAttendees,
-            req.ProcessNote,
-            req.Status,
-            organizerId,
-            req.EventTypeId);
-
-        if (uOW.IsUpdate(_event))
-        {
-            _event.UpdatedAt = DateTime.UtcNow;
-        }
-
-        // Step 3: Save changes to the event
-        await uOW.SaveChangesAsync();
-
-        // Step 4: Notify users (track unique users with HashSet)
-        var notifiedUsers = new HashSet<Guid>();
-
-        // Step 5: Notify users who have registered for the event
-        var participantSpec = new GetEventParticipantsSpec(id);
-
-        var participants = await uOW.EventRegistration.GetListAsync(participantSpec);
-        var registeredUsers = participants.Select(p => p.UserId).ToList();
-
-        foreach (var userId in registeredUsers)
-        {
-            if (notifiedUsers.Add(userId)) // Only notify if userId is not already in the set
+            if(_event.EndTime <= _event.EndTime.AddDays(2) && !_eventRegis.IsNullOrEmpty())
             {
-                // Create notification for the participant
-                var notificationReq = new CreateNotificationReq(userId,
-                                                _event.EventId,
-                                                "Sự kiện bạn quan tâm có biến!",
-                                                $"The event '{_event.EventName}' đã có cập nhật mới.");
-                await CreateNotification(notificationReq); 
+                canReview = true;
+            }
+            else
+            {
+                canReview = false;
             }
         }
 
-        return _event.EventId.ToResponse();
+        return _event.ToResponse(isRegistered, isReviewed, isOverlap, canReview);
     }
 
-    public async Task<IdRes> SubmitEvent(Guid id)
+
+
+
+
+    public async Task<IdRes> SubmitEvent(Guid id, Guid organizerId)
     {
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
+
+        if (_event.OrganizerId != organizerId)
+            throw new Exception("Not have permission for submit Event");
 
         if(_event.Status == EventStatus.Draft || _event.Status == EventStatus.Rejected)
             _event.Status = EventStatus.UnderReview;
@@ -312,9 +383,15 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var events = await uOW.Events.GetListAsync(spec);
 
         var users = events.SelectMany(e => e.Registrations!)
-            .Select(r => r.User);
+                          .Select(r =>
+                           {
+                               var userResponse = r.User!.ToResponse<UserRes>();
+                               userResponse = userResponse with { IsCheckin = r.IsCheckIn }; 
+                               return userResponse;
+                           })
+                          .ToList();
 
-        return users.Select(u => u.ToResponse<UserRes>()).ToList();
+        return users;
     }
     #endregion
 
