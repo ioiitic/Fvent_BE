@@ -168,6 +168,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
                 // Create notification for the participant
                 var notificationReq = new CreateNotificationReq(userId,
                                                 _event.EventId,
+                                                "hello",
                                                 $"The event '{_event.EventName}' has been updated.");
                 await CreateNotification(notificationReq);
             }
