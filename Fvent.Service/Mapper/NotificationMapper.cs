@@ -28,8 +28,8 @@ namespace Fvent.Service.Mapper
         {
             return new NotificationRes(
                 src.NotificationId,
-                src.EventId,
                 src.UserId,
+                src.EventId,
                 src.Title,
                 src.Message,
                 src.ReadStatus.ToString(),

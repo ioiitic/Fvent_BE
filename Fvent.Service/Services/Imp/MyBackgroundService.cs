@@ -87,6 +87,7 @@ public class MyBackgroundService : BackgroundService
 
                 var notification = notificationReq.ToNotification();
                 await uOW.Notification.AddAsync(notification);
+                await uOW.SaveChangesAsync();
             }
 
             // Send bulk notifications via Firebase
@@ -148,6 +149,7 @@ public class MyBackgroundService : BackgroundService
 
                             var notification = notificationReq.ToNotification();
                             await uOW.Notification.AddAsync(notification);
+                            await uOW.SaveChangesAsync();
                         }
 
                         await firebaseService.SendBulkNotificationsAsync(
@@ -171,6 +173,7 @@ public class MyBackgroundService : BackgroundService
 
                             var notification = notificationReq.ToNotification();
                             await uOW.Notification.AddAsync(notification);
+                            await uOW.SaveChangesAsync();
                         }
 
                         await firebaseService.SendBulkNotificationsAsync(

@@ -16,7 +16,7 @@ public interface IEventService
     Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req);
     Task<IdRes> SubmitEvent(Guid id, Guid organizerId);
     Task<IdRes> ApproveEvent(Guid id, bool isApproved,Guid userId, string processNote);
-    Task CheckinEvent(Guid eventId, Guid userId);
+    Task CheckinEvent(Guid eventId, Guid userId, bool isOrganizer);
     Task DeleteEvent(Guid id);
     Task<IList<UserRes>> GetRegisteredUsers(Guid eventId);
     Task<IList<EventRes>> GetRegisteredEvents(Guid userId,int? inMonth, int? inYear, bool isCompleted);

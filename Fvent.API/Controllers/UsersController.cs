@@ -253,5 +253,22 @@ public class UsersController(IUserService userService, IEventService eventServic
 
         return Ok(res);
     }
+
+
+    [HttpGet("DateTimeNow")]
+    public async Task<IActionResult> GetDateTimeNow()
+    {
+        var res = DateTime.UtcNow;
+        var subRes = DateTime.Now;
+
+        var result = new
+        {
+            UtcNow = res,
+            LocalNow = subRes
+        };
+
+        return Ok(result);
+    }
+
     #endregion
 }

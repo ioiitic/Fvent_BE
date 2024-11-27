@@ -102,6 +102,13 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var spec = new GetUserSpec(id);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
+        
+        // Check for unique StudentId
+        var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(req.StudentId));
+        if (existingStudent != null)
+        {
+            throw new Exception($"Student ID {req.StudentId} is already in use");
+        }
 
         user.Update(req.Username,
             req.AvatarUrl,
@@ -179,6 +186,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             {
                 throw new Exception("This email has been used");
             }
+
             // Step 2: Generate or replace a reset token
             var storedToken = await uOW.VerificationToken.FindFirstOrDefaultAsync(new GetVerificationTokenSpec(existingUser.UserId));
 
@@ -186,10 +194,19 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             {
                 uOW.VerificationToken.Delete(storedToken); // Remove the existing token before generating a new one
             }
+
             // Update existing user details
             existingUser.Username = req.Username;
             existingUser.Password = req.Password;
             existingUser.PhoneNumber = req.PhoneNumber;
+            // Check for unique StudentId
+            var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(req.StudentId));
+            if (existingStudent != null)
+            {
+                throw new Exception($"Student ID {req.StudentId} is already in use");
+            }
+
+            existingUser.StudentId = req.StudentId;
 
             userId = existingUser.UserId;
         }
@@ -212,6 +229,13 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                 newUser.StudentId = studentId;
             }
 
+            // Check for unique StudentId
+            var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(newUser.StudentId));
+            if (existingStudent != null)
+            {
+                throw new Exception($"Student ID {newUser.StudentId} is already in use");
+            }
+
             await uOW.Users.AddAsync(newUser);
             userId = newUser.UserId;
         }
@@ -232,6 +256,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         return userId.ToResponse();
     }
+
 
 
     public async Task<IdRes> ResendVerificationEmail(string userEmail, string role)
@@ -284,6 +309,13 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var spec = new GetUserSpec(id);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
+
+        // Check for unique StudentId
+        var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(user.StudentId));
+        if (existingStudent != null)
+        {
+            throw new Exception($"Student ID {user.StudentId} is already in use");
+        }
 
         user.CardUrl = cardUrl;
         user.Verified = VerifiedStatus.UnderVerify;
@@ -440,14 +472,14 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     private string GenerateVerificationLink(Guid userId, string token)
     {
-        return $"https://localhost:3000/xac-thuc-email?userId={userId}&token={token}";
+        return $"https://fvent.vercel.app/xac-thuc-email?userId={userId}&token={token}";
         //return $"https://fvent.somee.com/api/users/verify-email?userId={userId}&token={token}";
 
     }
 
     private string GenerateResetLink(Guid userId, string token)
     {
-        //return $"https://localhost:7289/api/users/reset-password?userId={userId}&token={token}";
-        return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
+        return $"https://localhost:3000/api/users/reset-password?userId={userId}&token={token}";
+        //return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
     }
 }

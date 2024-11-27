@@ -214,7 +214,24 @@ public class EventsController(IEventService eventService, ICommentService commen
 
         try
         {
-            await eventService.CheckinEvent(eventId, userId);
+            await eventService.CheckinEvent(eventId, userId, false);
+            return Ok("Check-in successful");
+        }
+        catch (NotFoundException)
+        {
+            return NotFound("Please register for the event first.");
+        }
+    }
+
+    [HttpPut("{eventId}/checkin-organizer")]
+    [Authorize(Roles = "organizer")]
+    public async Task<IActionResult> CheckinEventByOrganizer([FromRoute] Guid eventId, [FromQuery] Guid userId)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        try
+        {
+            await eventService.CheckinEvent(eventId, userId, true);
             return Ok("Check-in successful");
         }
         catch (NotFoundException)

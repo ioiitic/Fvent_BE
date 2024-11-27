@@ -1,6 +1,7 @@
 ﻿using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.Repository.Common;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Fvent.Service.Specifications;
 
@@ -119,6 +120,13 @@ public static class UserSpec
             Filter(t => t.Token == token);
 
             Include("User.Role");
+        }
+    }
+    public class GetUserByStudentIdSpec : Specification<User>
+    {
+        public GetUserByStudentIdSpec(string studentId)
+        {
+            Filter(u => u.StudentId == studentId && u.Verified == VerifiedStatus.Verified);
         }
     }
 }

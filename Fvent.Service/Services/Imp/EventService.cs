@@ -353,13 +353,23 @@ public class EventService(IUnitOfWork uOW) : IEventService
         return _event.EventId.ToResponse();
     }
 
-    public async Task CheckinEvent(Guid eventId, Guid userId)
+    public async Task CheckinEvent(Guid eventId, Guid userId, bool isOrganzier)
     {
         var spec = new GetEventRegistrationSpec(eventId, userId);
         var _event = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(EventRegistration));
-        _event.IsCheckIn = true;
-
+        if (isOrganzier)
+        {
+            if(_event.IsCheckIn == true)
+            {
+                _event.IsCheckIn = false;
+            }
+            else _event.IsCheckIn = true;
+        }
+        else
+        {
+            _event.IsCheckIn = true;
+        }
         await uOW.SaveChangesAsync();
     }
 
