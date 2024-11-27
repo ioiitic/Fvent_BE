@@ -48,16 +48,19 @@ public static class UserMapper
         );
     }
 
-    public static TEntity ToResponse<TEntity>(this User src) where TEntity : class
+    public static TEntity ToResponse<TEntity>(this User src, bool isHaveUnreadNoti = false) where TEntity : class
     {
         var result = typeof(TEntity) switch
         {
             Type t when t == typeof(UserRes) =>
-                new UserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.CardUrl,
-                            src.Verified.ToString(), src.ProcessNote, null, src.Role?.RoleName) as TEntity,
+             new UserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.StudentId, src.CardUrl,
+                         src.Verified.ToString(), src.ProcessNote, null, null, src.Role?.RoleName)
+             {
+                 IsHaveUnreadNoti = isHaveUnreadNoti 
+             } as TEntity,
 
             Type t when t == typeof(GetListUserRes) =>
-                new GetListUserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.CardUrl,
+                new GetListUserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.StudentId, src.CardUrl,
                                    src.Verified, src.Role!.RoleName, src.CreatedAt, src.UpdatedAt, src.IsDeleted,
                                    src.DeletedAt) as TEntity,
 

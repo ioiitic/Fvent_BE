@@ -35,4 +35,15 @@ public static class NotificationSpec
             Include(u => u.Event!);
         }
     }
+
+    public class GetUnreadNotificationByUserSpec : Specification<Notification>
+    {
+        public GetUnreadNotificationByUserSpec(Guid id)
+        {
+            Filter(u => u.UserId == id && u.ReadStatus == ReadStatus.Unread);
+
+            Include(u => u.User!);
+            Include(u => u.Event!);
+        }
+    }
 }

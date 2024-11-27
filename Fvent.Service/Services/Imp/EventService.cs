@@ -1,4 +1,5 @@
 ﻿using Azure;
+using FirebaseAdmin.Messaging;
 using Fvent.BO.Common;
 using Fvent.BO.Entities;
 using Fvent.BO.Enums;
@@ -87,6 +88,8 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
     public async Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req)
     {
+        var serviceKeyPath = Path.Combine(AppContext.BaseDirectory, "firebase-service-key.json");
+        var firebaseService = new FirebaseService(serviceKeyPath);
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
@@ -160,6 +163,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         var participants = await uOW.EventRegistration.GetListAsync(participantSpec);
         var registeredUsers = participants.Select(p => p.UserId).ToList();
+        var fcmTokens = participants.Select(p => p.User!.FcmToken).ToList();
 
         foreach (var userId in registeredUsers)
         {
@@ -168,11 +172,20 @@ public class EventService(IUnitOfWork uOW) : IEventService
                 // Create notification for the participant
                 var notificationReq = new CreateNotificationReq(userId,
                                                 _event.EventId,
-                                                "hello",
-                                                $"The event '{_event.EventName}' has been updated.");
+                                                "Đã có một sự thay đổi bất ngờ!!!",
+                                                $"Sự kiện '{_event.EventName}' bạn đăng kí tham gia có cập nhật mới.");
+
                 await CreateNotification(notificationReq);
             }
         }
+
+
+
+        // Send a single notification to the user
+        await firebaseService.SendBulkNotificationsAsync(fcmTokens,
+                                                        "Đã có một sự thay đổi bất ngờ!!!",
+                                                        $"Sự kiện '{_event.EventName}' bạn đăng kí tham gia có cập nhật mới."
+        );
 
         return _event.EventId.ToResponse();
     }
@@ -247,60 +260,53 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <exception cref="NotFoundException"></exception>
     public async Task<EventRes> GetEvent(Guid eventId, Guid? userId)
     {
+        // Flags for user-specific event details
         bool isRegistered = false;
         bool isReviewed = false;
         bool isOverlap = false;
         bool canReview = false;
 
+        // Fetch the event details
         var specEvent = new GetEventSpec(eventId);
-
         var _event = await uOW.Events.FindFirstOrDefaultAsync(specEvent)
             ?? throw new NotFoundException(typeof(Event));
 
         if (userId.HasValue)
         {
-            var specRegis = new GetEventRegistrationSpec(eventId, userId.Value);
+            // User-specific queries
+            var userIdValue = userId.Value;
+
+            var specRegis = new GetEventRegistrationSpec(eventId, userIdValue);
             var specReview = new GetReviewSpec(eventId, userId);
+            var specOverlap = new GetEventRegistrationSpec(userIdValue, _event.EventId, _event.StartTime, _event.EndTime);
 
-            var specOverlap = new GetEventRegistrationSpec(userId, _event.EventId, _event.StartTime, _event.EndTime);
+            // Run queries concurrently
+            var taskEventReview = uOW.Reviews.GetListAsync(specReview);
+            var taskEventOverlap = uOW.EventRegistration.GetListAsync(specOverlap);
+            var taskEventRegis = uOW.EventRegistration.FindFirstOrDefaultAsync(specRegis);
 
-            var _eventReview = await uOW.Reviews.GetListAsync(specReview);
+            await Task.WhenAll(taskEventReview, taskEventOverlap, taskEventRegis);
 
-            if (!_eventReview.IsNullOrEmpty())
-            {
-                isReviewed = true;
-            }
+            var eventReview = taskEventReview.Result;
+            var eventOverlap = taskEventOverlap.Result;
+            var eventRegis = taskEventRegis.Result;
 
-            var _eventOverlap = await uOW.EventRegistration.GetListAsync(specOverlap);
+            // Set flags based on results
+            isReviewed = !eventReview.IsNullOrEmpty();
+            isOverlap = !eventOverlap.IsNullOrEmpty();
+            isRegistered = eventRegis is not null;
 
-            if (!_eventOverlap.IsNullOrEmpty())
-            {
-                isOverlap = true;
-            }
-
-            var _eventRegis = await uOW.EventRegistration.GetListAsync(specRegis);
-
-            if (!_eventRegis.IsNullOrEmpty())
-            {
-                isRegistered = true;
-            }
-
-            if(_event.EndTime <= _event.EndTime.AddDays(2) && !_eventRegis.IsNullOrEmpty())
+            // Logic to determine if the user can review
+            if (_event.EndTime <= DateTime.Now && _event.EndTime >= DateTime.Now.AddDays(-2) &&
+                eventRegis?.IsCheckIn == true)
             {
                 canReview = true;
             }
-            else
-            {
-                canReview = false;
-            }
         }
 
+        // Return the event response
         return _event.ToResponse(isRegistered, isReviewed, isOverlap, canReview);
     }
-
-
-
-
 
     public async Task<IdRes> SubmitEvent(Guid id, Guid organizerId)
     {
@@ -369,9 +375,9 @@ public class EventService(IUnitOfWork uOW) : IEventService
     #endregion
 
     #region Event-User
-    public async Task<IList<EventRes>> GetRegisteredEvents(Guid userId,int? inMonth, bool isCompleted)
+    public async Task<IList<EventRes>> GetRegisteredEvents(Guid userId,int? inMonth,int? inYear, bool isCompleted)
     {
-        var spec = new GetRegisteredEventsSpec(userId, inMonth, isCompleted);
+        var spec = new GetRegisteredEventsSpec(userId, inMonth, inYear, isCompleted);
         var events = await uOW.Events.GetListAsync(spec);
 
         return events.Select(e => e.ToResponse()).ToList();

@@ -7,6 +7,7 @@ using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 using Microsoft.Extensions.Configuration;
+using static Fvent.Service.Specifications.NotificationSpec;
 using static Fvent.Service.Specifications.UserSpec;
 using JS = Fvent.Service.Utils.JwtService;
 
@@ -104,7 +105,8 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         user.Update(req.Username,
             req.AvatarUrl,
-            req.PhoneNumber);
+            req.PhoneNumber,
+            req.StudentId);
 
         if (uOW.IsUpdate(user))
             user.UpdatedAt = DateTime.UtcNow;
@@ -114,6 +116,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         return user.UserId.ToResponse();
     }
     #endregion
+
     #region Admin
     /// <summary>
     /// Service for Admin Get list users info
@@ -196,6 +199,18 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             var newUser = req.ToUser();
             newUser.EmailVerified = false;
             newUser.Verified = VerifiedStatus.Unverified;
+
+            // Check if the email matches @fpt.edu.vn pattern
+            if (req.Email.EndsWith("@fpt.edu.vn", StringComparison.OrdinalIgnoreCase))
+            {
+                // Extract the 8-character Student ID
+                var studentId = req.Email.Split('@')[0];
+                studentId = studentId.Length >= 8 ? studentId[^8..].ToUpper() : studentId.ToUpper();
+
+                // Assign VerifiedStatus.Verified and set StudentId
+                newUser.Verified = VerifiedStatus.Verified;
+                newUser.StudentId = studentId;
+            }
 
             await uOW.Users.AddAsync(newUser);
             userId = newUser.UserId;
@@ -323,10 +338,10 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         return;
     }
 
-    public async Task RequestPasswordResetAsync(string email, string role)
+    public async Task RequestPasswordResetAsync(string email)
     {
         // Step 1: Find user by email
-        var spec = new GetUserSpec(email, role);
+        var spec = new GetUserSpec(email);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
@@ -408,17 +423,25 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     public async Task<UserRes> Get(Guid id)
     {
+        // Fetch user using specification
         var spec = new GetUserSpec(id);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
 
-        return user.ToResponse<UserRes>();
+        // Check if user has notifications
+        var specSub = new GetUnreadNotificationByUserSpec(id);
+        var isHaveUnreadNoti = await uOW.Notification.FindFirstOrDefaultAsync(specSub) != null;
+
+        // Map user entity to response object, passing isHaveNoti
+        return user.ToResponse<UserRes>(isHaveUnreadNoti);
     }
+
+
 
     private string GenerateVerificationLink(Guid userId, string token)
     {
-        //return $"https://localhost:7289/api/users/verify-email?userId={userId}&token={token}";
-        return $"https://fvent.somee.com/api/users/verify-email?userId={userId}&token={token}";
+        return $"https://localhost:3000/xac-thuc-email?userId={userId}&token={token}";
+        //return $"https://fvent.somee.com/api/users/verify-email?userId={userId}&token={token}";
 
     }
 

@@ -158,7 +158,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     [Authorize]
     [Route("participant")]
     [Authorize(Roles = "student")]
-    public async Task<IActionResult> GetEventRegisters([FromQuery] int? inMonth, [FromQuery] bool isCompleted)
+    public async Task<IActionResult> GetEventRegisters([FromQuery] int? inMonth, [FromQuery] int? inYear, [FromQuery] bool isCompleted)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
@@ -166,7 +166,7 @@ public class UsersController(IUserService userService, IEventService eventServic
         {
             return Unauthorized("Invalid or missing user ID.");
         }
-        var res = await eventService.GetRegisteredEvents(userId, inMonth, isCompleted);
+        var res = await eventService.GetRegisteredEvents(userId, inMonth, inYear, isCompleted);
 
         return Ok(res);
     }
@@ -189,7 +189,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordReq request)
     {
-        await userService.RequestPasswordResetAsync(request.Email, request.Role);
+        await userService.RequestPasswordResetAsync(request.Email);
         return Ok("Password reset link has been sent.");
     }
 

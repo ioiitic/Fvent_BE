@@ -183,14 +183,15 @@ public static class EventSpec
 
     public class GetRegisteredEventsSpec : Specification<Event>
     {
-        public GetRegisteredEventsSpec(Guid userId, int? inMonth, bool isCompleted)
+        public GetRegisteredEventsSpec(Guid userId, int? inMonth, int? inYear, bool isCompleted)
         {
             // Filter by month for StartTime and EndTime
             if (inMonth.HasValue)
             {
                 var month = inMonth.Value;
+                var year = inYear ?? DateTime.UtcNow.Year;
 
-                Filter(e => (e.StartTime.Month == month || e.EndTime.Month == month ));
+                Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
 
             Filter(e => e.Registrations!.Any(r => r.UserId == userId));
@@ -209,6 +210,7 @@ public static class EventSpec
             Include(e => e.EventType!);
             Include(e => e.Tags!);
             Include(e => e.EventMedias!);
+            Include(e => e.EventFile!);
         }
 
     }
@@ -251,13 +253,14 @@ public static class EventSpec
     {
         public GetListRecommend(IEnumerable<Guid> eventTypes, IEnumerable<string> eventTags)
         {
-            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress || e.Status == EventStatus.Completed);
+            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress);
             Filter(e => eventTypes.Any(t => e.EventTypeId == t) || eventTags.Any(type => e.Tags!.Any(tag => tag.Tag.Equals(type))));
 
             Include(e => e.Organizer!);
             Include(e => e.EventType!);
             Include(e => e.Tags!);
             Include(e => e.EventMedias!);
+            Include(e => e.EventFile!);
         }
     }
 
@@ -277,6 +280,7 @@ public static class EventSpec
             Include(u => u.Organizer!);
             Include(e => e.EventType!);
             Include(e => e.EventMedias!);
+            Include(e => e.EventFile!);
         }
     }
     public class GetUserFollowsEventSpec : Specification<EventFollower>

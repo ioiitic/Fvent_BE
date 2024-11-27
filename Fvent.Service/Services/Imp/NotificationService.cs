@@ -1,4 +1,5 @@
-﻿using Fvent.BO.Entities;
+﻿using FirebaseAdmin.Messaging;
+using Fvent.BO.Entities;
 using Fvent.BO.Exceptions;
 using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
@@ -109,7 +110,7 @@ public class NotificationService(IUnitOfWork uOW, ExpoNotificationService expoNo
     {
         var spec = new GetNotificationSpec(id);
         var notification = await uOW.Notification.FindFirstOrDefaultAsync(spec)
-            ?? throw new NotFoundException(typeof(Notification));
+            ?? throw new NotFoundException(typeof(BO.Entities.Notification));
 
         uOW.Notification.Delete(notification);
 
@@ -120,7 +121,7 @@ public class NotificationService(IUnitOfWork uOW, ExpoNotificationService expoNo
     {
         var spec = new GetNotificationSpec(id);
         var notification = await uOW.Notification.FindFirstOrDefaultAsync(spec)
-            ?? throw new NotFoundException(typeof(Notification));
+            ?? throw new NotFoundException(typeof(BO.Entities.Notification));
         var oldNotification = notification;
         notification.ReadStatus = ReadStatus.Read;
 
@@ -157,9 +158,10 @@ public class NotificationService(IUnitOfWork uOW, ExpoNotificationService expoNo
     {
         var spec = new GetNotificationSpec(id);
         var notification = await uOW.Notification.FindFirstOrDefaultAsync(spec)
-            ?? throw new NotFoundException(typeof(Notification));
+            ?? throw new NotFoundException(typeof(BO.Entities.Notification));
 
         return notification.ToReponse();
     }
+
 
 }

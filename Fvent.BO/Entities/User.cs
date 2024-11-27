@@ -53,10 +53,11 @@ public class User : ISoftDelete
         CreatedAt = createdAt;
     }
 
-    public void Update(string username, string avatarUrl, string phoneNumber)
+    public void Update(string username, string avatarUrl, string phoneNumber, string studentId)
     {
         Username = username;
         AvatarUrl = avatarUrl;
         PhoneNumber = phoneNumber;
+        StudentId = studentId;
     }
 }

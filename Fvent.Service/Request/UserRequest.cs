@@ -12,9 +12,9 @@ public record CreateUserReq(string Username, string Email, string Password, stri
 
 public record CreateModeratReq(string Username, string Email, string Password);
 
-public record UpdateUserReq(string Username, string AvatarUrl, string PhoneNumber);
+public record UpdateUserReq(string Username, string AvatarUrl, string PhoneNumber, string StudentId);
 
-public record ForgotPasswordReq(string Email, string Role);
+public record ForgotPasswordReq(string Email);
 public record ChangePasswordRequest(string OldPassword, string NewPassword);
 public record ApproveUserRequest(string ProcessNote);
 public record AddCardIdRequest(string CardUrl);
