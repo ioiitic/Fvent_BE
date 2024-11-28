@@ -53,9 +53,7 @@ public static class ServiceConfigs
 
         services.AddHttpClient<ExpoNotificationService>();
 
-        services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<IEventService, EventService>();
-        services.AddScoped<IFollowerService, FollowerService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IRatingService, RatingService>();
         services.AddScoped<IRegistationService, RegistationService>();

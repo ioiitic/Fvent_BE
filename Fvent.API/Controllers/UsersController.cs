@@ -10,8 +10,7 @@ namespace Fvent.API.Controllers;
 [ApiController]
 [Route("api/users")]
 public class UsersController(IUserService userService, IEventService eventService,
-                             INotificationService notificationService, 
-                             IFollowerService eventFollowerService) : ControllerBase
+                             INotificationService notificationService) : ControllerBase
 {
 
     #region User
@@ -244,14 +243,6 @@ public class UsersController(IUserService userService, IEventService eventServic
         await notificationService.ClearNotification(Guid.Parse(userId));
 
         return Ok();
-    }
-
-    [HttpGet("followed-events")]
-    public async Task<IActionResult> GetFollowedEvents(Guid userId)
-    {
-        var res = await eventFollowerService.GetFollowedEvents(userId);
-
-        return Ok(res);
     }
 
 

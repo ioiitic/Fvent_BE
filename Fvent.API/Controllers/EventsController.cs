@@ -9,8 +9,7 @@ namespace Fvent.API.Controllers;
 
 [Route("api/events")]
 [ApiController]
-public class EventsController(IEventService eventService, ICommentService commentService,
-                              IFollowerService followerService, IRatingService ratingService,
+public class EventsController(IEventService eventService, IRatingService ratingService,
                               IRegistationService registationService, IReviewService reviewService,
                               IFormService formService) : ControllerBase
 {
@@ -250,65 +249,6 @@ public class EventsController(IEventService eventService, ICommentService commen
     public async Task<IActionResult> DeleteEvent([FromRoute] Guid eventId)
     {
         await eventService.DeleteEvent(eventId);
-
-        return Ok();
-    }
-    #endregion
-
-    #region Event Comment
-    /// <summary>
-    /// Get comments of an event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <returns></returns>
-    [HttpGet("{eventId}/comments")]
-    public async Task<IActionResult> GetComments(Guid eventId)
-    {
-        var res = await commentService.GetListComments(eventId);
-
-        return Ok(res);
-    }
-
-    /// <summary>
-    /// Comment on an event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    [HttpPost("{eventId}/comments")]
-    public async Task<IActionResult> CreateComment(Guid eventId, [FromBody] CreateCommentReq req)
-    {
-        var res = await commentService.CreateComment(eventId, req);
-
-        return Ok(res);
-    }
-    #endregion
-
-    #region Event Following
-    /// <summary>
-    /// Follow an event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <param name="userId"></param>
-    /// <returns></returns>
-    [HttpPost("{eventId}/follow")]
-    public async Task<IActionResult> FollowEvent(Guid eventId, [FromBody] IdReq userId)
-    {
-        var res = await followerService.FollowEvent(eventId, userId.Id);
-
-        return Ok(res);
-    }
-
-    /// <summary>
-    /// Unfollow an event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <param name="userId"></param>
-    /// <returns></returns>
-    [HttpDelete("{eventId}/unfollow")]
-    public async Task<IActionResult> UnfollowEvent(Guid eventId, [FromBody] IdReq userId)
-    {
-        await followerService.UnfollowEvent(eventId, userId.Id);
 
         return Ok();
     }
