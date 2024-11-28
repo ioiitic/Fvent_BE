@@ -105,7 +105,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         
         // Check for unique StudentId
         var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(req.StudentId));
-        if (existingStudent != null)
+        if (existingStudent != null && existingStudent.UserId != user.UserId)
         {
             throw new Exception($"Student ID {req.StudentId} is already in use");
         }

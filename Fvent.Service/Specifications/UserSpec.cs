@@ -31,15 +31,7 @@ public static class UserSpec
                 Filter(e => e.Verified == verifiedStatus);
             }
 
-            if (orderBy is not null)
-            {
-                switch (orderBy)
-                {
-                    case "email":
-                        OrderBy(u => u.Email, isDescending);
-                        break;
-                }
-            }
+            OrderBy(u => u.Verified, true);
             AddPagination(pageNumber, pageSize);
 
             Include(u => u.Role!);

@@ -266,7 +266,7 @@ public static class EventSpec
 
     public class GetEventByOrganizerSpec : Specification<Event>
     {
-        public GetEventByOrganizerSpec(Guid Id, string? status)
+        public GetEventByOrganizerSpec(Guid Id, string? searchKeyword, string? status)
         {
             Filter(e => e.OrganizerId == Id);
 

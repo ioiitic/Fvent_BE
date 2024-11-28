@@ -18,4 +18,4 @@ public record GetEventsRequest(string? SearchKeyword, int? InMonth, int? InYear,
                                string? EventTag, string? Status, string OrderBy = "StartTime", bool IsDescending = false,
                                int PageNumber = 1, int PageSize = 9);
 public record ApproveEventRequest(string ProcessNote);
-public record GetEventByOrganizerReq(Guid OrganizerId, string? Status);
+public record GetEventByOrganizerReq(Guid OrganizerId, string? searchKeyword, string? Status);

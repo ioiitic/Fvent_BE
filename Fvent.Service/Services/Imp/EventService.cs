@@ -376,7 +376,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
     public async Task<IList<EventRes>> GetListEventsByOrganizer(GetEventByOrganizerReq req)
     {
-        var spec = new GetEventByOrganizerSpec(req.OrganizerId, req.Status);
+        var spec = new GetEventByOrganizerSpec(req.OrganizerId, req.searchKeyword, req.Status);
 
         var _events = await uOW.Events.GetListAsync(spec);
 
