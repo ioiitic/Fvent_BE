@@ -1,4 +1,6 @@
-﻿using Fvent.Repository.UOW;
+﻿using Fvent.BO.Entities;
+using Fvent.BO.Exceptions;
+using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
@@ -11,7 +13,9 @@ public class FormService(IUnitOfWork uOW, IRegistationService registationService
     public async Task<IList<FormSubmitRes>> GetFormSubmits(Guid eventId)
     {
         var spec = new GetFormSubmitSpec(eventId);
-        var res = await uOW.FormSubmit.GetListAsync(spec);
+        var res = await uOW.FormSubmit.GetListAsync(spec);  
+        //var test2 = JsonSerializer.Deserialize<Object>(src.Data);
+        var test = res.Select(f => f.ToResponse()).ToList();
 
         return res.Select(f => f.ToResponse()).ToList();
     }
@@ -27,11 +31,24 @@ public class FormService(IUnitOfWork uOW, IRegistationService registationService
         return formSubmit.FormSubmitId.ToResponse();
     }
 
-    public async Task<IList<FormSubmitRes>> GetFormSubmits(Guid eventId, Guid userId)
+    public async Task<FormSubmitRes> GetFormSubmit(Guid eventId, Guid userId)
     {
         var spec = new GetFormSubmitSpec(eventId, userId);
-        var res = await uOW.FormSubmit.GetListAsync(spec);
+        var res = await uOW.FormSubmit.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(FormSubmit));
 
-        return res.Select(f => f.ToResponse()).ToList();
+        return res.ToResponse();
+    }
+
+    public async Task<bool> DeleteFormSubmit(Guid eventId, Guid userId)
+    {
+        var spec = new GetFormSubmitSpec(eventId, userId);
+        var res = await uOW.FormSubmit.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(FormSubmit));
+
+        uOW.FormSubmit.Delete(res);
+        await uOW.SaveChangesAsync();
+
+        return true;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers;
@@ -40,6 +41,7 @@ public class TagsController(ITagService TagService) : ControllerBase
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpPost]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> CreateTag([FromBody] CreateTagReq req)
     {
         var res = await TagService.CreateTag(req.SvgContent, req.TagName);
@@ -54,6 +56,7 @@ public class TagsController(ITagService TagService) : ControllerBase
     /// <param name="tagId"></param>
     /// <returns></returns>
     [HttpDelete("{tagId}")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> DeleteTag([FromRoute] Guid tagId)
     {
         await TagService.DeleteTag(tagId);

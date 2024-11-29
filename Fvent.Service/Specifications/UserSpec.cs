@@ -1,7 +1,7 @@
 ﻿using Fvent.BO.Entities;
+using Fvent.BO.Enums;
 using Fvent.Repository.Common;
-using Fvent.Service.Mapper;
-using Fvent.Service.Result;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Fvent.Service.Specifications;
 
@@ -31,15 +31,7 @@ public static class UserSpec
                 Filter(e => e.Verified == verifiedStatus);
             }
 
-            if (orderBy is not null)
-            {
-                switch (orderBy)
-                {
-                    case "email":
-                        OrderBy(u => u.Email, isDescending);
-                        break;
-                }
-            }
+            OrderBy(u => u.Verified, true);
             AddPagination(pageNumber, pageSize);
 
             Include(u => u.Role!);
@@ -63,6 +55,18 @@ public static class UserSpec
         public GetUserSpec(string email)
         {
             Filter(u => u.Email == email);
+
+            Include(u => u.Role!);
+        }
+
+        public GetUserSpec(string email, string role)
+        {
+            if (!Enum.TryParse<UserRole>(role, true, out var userRole))
+            {
+                throw new ArgumentException("Invalid role specified");
+            }
+
+            Filter(u => u.Email == email && u.RoleId == (int) userRole);
 
             Include(u => u.Role!);
         }
@@ -96,6 +100,8 @@ public static class UserSpec
         public CheckRefreshTokenSpec(string token)
         {
             Filter(t => t.Token == token);
+            Include(t => t.User!);
+            Include("User.Role");
         }
     }
   
@@ -106,6 +112,13 @@ public static class UserSpec
             Filter(t => t.Token == token);
 
             Include("User.Role");
+        }
+    }
+    public class GetUserByStudentIdSpec : Specification<User>
+    {
+        public GetUserByStudentIdSpec(string studentId)
+        {
+            Filter(u => u.StudentId == studentId && u.Verified == VerifiedStatus.Verified);
         }
     }
 }

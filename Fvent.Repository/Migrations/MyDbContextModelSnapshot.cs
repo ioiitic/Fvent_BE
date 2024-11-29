@@ -22,43 +22,6 @@ namespace Fvent.Repository.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Fvent.BO.Entities.Comment", b =>
-                {
-                    b.Property<Guid>("CommentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CommentText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("CommentId");
-
-                    b.HasIndex("EventId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Comments");
-                });
-
             modelBuilder.Entity("Fvent.BO.Entities.Event", b =>
                 {
                     b.Property<Guid>("EventId")
@@ -111,6 +74,9 @@ namespace Fvent.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ReviewBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
 
@@ -156,30 +122,6 @@ namespace Fvent.Repository.Migrations
                         .IsUnique();
 
                     b.ToTable("EventFiles");
-                });
-
-            modelBuilder.Entity("Fvent.BO.Entities.EventFollower", b =>
-                {
-                    b.Property<Guid>("EventFollowerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("FollowTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("EventFollowerId");
-
-                    b.HasIndex("EventId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EventFollowers");
                 });
 
             modelBuilder.Entity("Fvent.BO.Entities.EventMedia", b =>
@@ -301,9 +243,15 @@ namespace Fvent.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("EventTypeName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.HasKey("EventTypeId");
 
@@ -369,8 +317,7 @@ namespace Fvent.Repository.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("FormSubmits");
                 });
@@ -385,7 +332,6 @@ namespace Fvent.Repository.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Message")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ReadStatus")
@@ -393,6 +339,9 @@ namespace Fvent.Repository.Migrations
 
                     b.Property<DateTime>("SentTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -490,6 +439,15 @@ namespace Fvent.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("BanEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BanReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("BanStartDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("CardUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -505,6 +463,13 @@ namespace Fvent.Repository.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("EmailVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("FcmToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsBanned")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
@@ -524,6 +489,10 @@ namespace Fvent.Repository.Migrations
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -560,25 +529,6 @@ namespace Fvent.Repository.Migrations
                     b.ToTable("VerificationTokens");
                 });
 
-            modelBuilder.Entity("Fvent.BO.Entities.Comment", b =>
-                {
-                    b.HasOne("Fvent.BO.Entities.Event", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Fvent.BO.Entities.User", "User")
-                        .WithMany("Comments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Event");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Fvent.BO.Entities.Event", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.EventType", "EventType")
@@ -613,25 +563,6 @@ namespace Fvent.Repository.Migrations
                         .IsRequired();
 
                     b.Navigation("Event");
-                });
-
-            modelBuilder.Entity("Fvent.BO.Entities.EventFollower", b =>
-                {
-                    b.HasOne("Fvent.BO.Entities.Event", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Fvent.BO.Entities.User", "User")
-                        .WithMany("Followers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Event");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Fvent.BO.Entities.EventMedia", b =>
@@ -714,8 +645,8 @@ namespace Fvent.Repository.Migrations
                         .IsRequired();
 
                     b.HasOne("Fvent.BO.Entities.User", "User")
-                        .WithOne()
-                        .HasForeignKey("Fvent.BO.Entities.FormSubmit", "UserId")
+                        .WithMany("FormSubmits")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -783,9 +714,7 @@ namespace Fvent.Repository.Migrations
 
             modelBuilder.Entity("Fvent.BO.Entities.User", b =>
                 {
-                    b.Navigation("Comments");
-
-                    b.Navigation("Followers");
+                    b.Navigation("FormSubmits");
 
                     b.Navigation("Notifications");
 

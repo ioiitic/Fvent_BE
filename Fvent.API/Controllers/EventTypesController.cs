@@ -1,5 +1,6 @@
 ﻿using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fvent.API.Controllers
@@ -54,6 +55,7 @@ namespace Fvent.API.Controllers
         /// <param name="req"></param>
         /// <returns></returns>
         [HttpPut("{eventTypeId}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateEventType([FromRoute] Guid eventTypeId, [FromBody] UpdateEventTypeReq req)
         {
             var res = await eventTypeService.UpdateEventType(eventTypeId, req.eventTypeName);
@@ -67,6 +69,7 @@ namespace Fvent.API.Controllers
         /// <param name="eventTypeId"></param>
         /// <returns></returns>
         [HttpDelete("{eventTypeId}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteEventType([FromRoute] Guid eventTypeId)
         {
             await eventTypeService.DeleteEventType(eventTypeId);

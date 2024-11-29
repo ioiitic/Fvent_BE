@@ -8,5 +8,6 @@ namespace Fvent.Service.Request
 {
     public record CreateNotificationReq(Guid userId, 
                                         Guid eventId, 
+                                        string title,
                                         string message);
 }

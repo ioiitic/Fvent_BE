@@ -10,8 +10,7 @@ namespace Fvent.API.Controllers;
 [ApiController]
 [Route("api/users")]
 public class UsersController(IUserService userService, IEventService eventService,
-                             INotificationService notificationService, 
-                             IFollowerService eventFollowerService) : ControllerBase
+                             INotificationService notificationService) : ControllerBase
 {
 
     #region User
@@ -20,10 +19,24 @@ public class UsersController(IUserService userService, IEventService eventServic
     /// </summary>
     /// <returns></returns>
     [HttpGet()]
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin, moderator")]
     public async Task<IActionResult> GetList([FromQuery] GetListUsersReq req)
     {
         var res = await userService.GetList(req);
+
+        return Ok(res);
+    }
+
+    /// <summary>
+    /// Add moderator account
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("addModerator")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> AddModerator([FromBody] CreateModeratReq req)
+    {
+        var res = await userService.RegisterModerator(req);
 
         return Ok(res);
     }
@@ -125,6 +138,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpPut("{userId}/approve")]
+    [Authorize(Roles = "moderator")]
     public async Task<IActionResult> ApproveUser([FromRoute] Guid userId, [FromQuery] bool isApproved, [FromBody] ApproveUserRequest req)
     {
         var res = await userService.ApproveUser(userId, isApproved, req.ProcessNote);
@@ -142,7 +156,8 @@ public class UsersController(IUserService userService, IEventService eventServic
     [HttpGet]
     [Authorize]
     [Route("participant")]
-    public async Task<IActionResult> GetEventRegisters([FromQuery] bool isCompleted)
+    [Authorize(Roles = "student")]
+    public async Task<IActionResult> GetEventRegisters([FromQuery] int? inMonth, [FromQuery] int? inYear, [FromQuery] bool isCompleted)
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
@@ -150,7 +165,7 @@ public class UsersController(IUserService userService, IEventService eventServic
         {
             return Unauthorized("Invalid or missing user ID.");
         }
-        var res = await eventService.GetRegisteredEvents(userId, isCompleted);
+        var res = await eventService.GetRegisteredEvents(userId, inMonth, inYear, isCompleted);
 
         return Ok(res);
     }
@@ -173,7 +188,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordReq request)
     {
-        await userService.RequestPasswordResetAsync(request.email);
+        await userService.RequestPasswordResetAsync(request.Email);
         return Ok("Password reset link has been sent.");
     }
 
@@ -230,12 +245,21 @@ public class UsersController(IUserService userService, IEventService eventServic
         return Ok();
     }
 
-    [HttpGet("followed-events")]
-    public async Task<IActionResult> GetFollowedEvents(Guid userId)
-    {
-        var res = await eventFollowerService.GetFollowedEvents(userId);
 
-        return Ok(res);
+    [HttpGet("DateTimeNow")]
+    public async Task<IActionResult> GetDateTimeNow()
+    {
+        var res = DateTime.UtcNow;
+        var subRes = DateTime.Now;
+
+        var result = new
+        {
+            UtcNow = res,
+            LocalNow = subRes
+        };
+
+        return Ok(result);
     }
+
     #endregion
 }

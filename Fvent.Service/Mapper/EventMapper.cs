@@ -22,8 +22,9 @@ public static class EventMapper
             "",
             EventStatus.Draft,
             organizerId,
+            "",
             src.EventTypeId,
-            DateTime.UtcNow);
+            DateTime.Now);
 
     public static EventRes ToResponse(
         this Event src)
@@ -40,17 +41,30 @@ public static class EventMapper
             src.ProcessNote,
             src.OrganizerId,
             src.Organizer!.Username,
+            src.EventType!.EventTypeId,
             src.EventType!.EventTypeName,
             src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.Status.ToString(),
             null,
+            null,
+            null,
+            null,
+            src.EventFile.FileUrl,
             src.Tags.Select(t => t.Tag).ToList(),
             null);
 
+    public static EventBannerRes ToBannerResponse(
+        this Event src)
+        => new(
+            src.EventId,
+            src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default");
     public static EventRes ToResponse(
         this Event src,
-        bool isRegistered)
+        bool isRegistered,
+        bool isReviewed,
+        bool isOverlap,
+        bool canReview)
         => new(
             src.EventId,
             src.EventName,
@@ -64,16 +78,21 @@ public static class EventMapper
             src.ProcessNote,
             src.OrganizerId,
             src.Organizer!.Username,
+            src.EventType!.EventTypeId,
             src.EventType!.EventTypeName,
             src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.Status.ToString(),
             isRegistered,
+            isReviewed,
+            isOverlap,
+            canReview,
+            src.EventFile.FileUrl,
             src.Tags.Select(t => t.Tag).ToList(),
             src.Form?.FormDetails?.Select(d => d.ToResponse()).ToList());
 
-    public static EventRateRes ToResponse(this double src)
-        => new(src);
+    public static EventRateRes ToResponse(this double src, int total )
+        => new(src, total);
 
     public static FormDetailsRes ToResponse(this FormDetail src)
         => new(src.Name, src.Type, src.Options);

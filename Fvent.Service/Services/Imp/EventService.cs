@@ -1,4 +1,6 @@
-﻿using Fvent.BO.Common;
+﻿using Azure;
+using FirebaseAdmin.Messaging;
+using Fvent.BO.Common;
 using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.BO.Exceptions;
@@ -6,14 +8,17 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
-using Fvent.Service.Specifications;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Linq.Expressions;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
+using static Fvent.Service.Specifications.ReviewSpec;
+using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp;
 
@@ -52,11 +57,11 @@ public class EventService(IUnitOfWork uOW) : IEventService
             };
 
             _event.Form = form;
-           
-            
         }
+
         await uOW.Events.AddAsync(_event);
         await uOW.SaveChangesAsync();
+
         foreach (var item in req.EventTags)
         {
             EventTag tag = new EventTag(_event.EventId, (string)item);
@@ -67,9 +72,9 @@ public class EventService(IUnitOfWork uOW) : IEventService
         EventMedia poster = new(_event.EventId, (int)MediaType.Poster, req.PosterImg);
         EventMedia thumbnail = new(_event.EventId, (int)MediaType.Thumbnail, req.ThumbnailImg);
 
-        if(req.proposal is not null)
+        if(req.Proposal is not null)
         {
-            EventFile eventFile = new(req.proposal, _event.EventId);
+            EventFile eventFile = new(req.Proposal, _event.EventId);
             await uOW.EventFile.AddAsync(eventFile);
         }
        
@@ -77,6 +82,110 @@ public class EventService(IUnitOfWork uOW) : IEventService
         await uOW.EventMedia.AddAsync(thumbnail); 
 
         await uOW.SaveChangesAsync();
+
+        return _event.EventId.ToResponse();
+    }
+
+    public async Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req)
+    {
+        var serviceKeyPath = Path.Combine(AppContext.BaseDirectory, "firebase-service-key.json");
+        var firebaseService = new FirebaseService(serviceKeyPath);
+        var spec = new GetEventSpec(id);
+        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(Event));
+
+        if (req.CreateFormDetailsReq is not null)
+        {
+            var formDetails = req.CreateFormDetailsReq.Select(f => new FormDetail(f.name, f.type, f.options));
+            var form = new Form
+            {
+                FormDetails = formDetails.ToList(),
+            };
+
+            _event.Form = form;
+        }
+
+        await uOW.SaveChangesAsync();
+        if (req.EventTags is not null)
+        {
+            _event.Tags = _event.Tags ?? [];
+            _event.Tags.ForEach(tag => uOW.EventTag.Delete(tag));
+            foreach (var item in req.EventTags)
+            {
+                EventTag tag = new EventTag(_event.EventId, (string)item);
+                _event.Tags.Add(tag);
+            }
+        }
+
+        await uOW.SaveChangesAsync();
+        if (req.PosterImg is not null)
+        {
+            EventMedia poster = new(_event.EventId, (int)MediaType.Poster, req.PosterImg);
+
+            _event.EventMedias = _event.EventMedias ?? [];
+            _event.EventMedias.ForEach(media => uOW.EventMedia.Delete(media));
+            _event.EventMedias.Add(poster);
+        }
+        await uOW.SaveChangesAsync();
+        if (req.ThumbnailImg is not null)
+        {
+            EventMedia thumbnail = new(_event.EventId, (int)MediaType.Thumbnail, req.ThumbnailImg);
+
+            _event.EventMedias = _event.EventMedias ?? [];
+            _event.EventMedias.ForEach(media => uOW.EventMedia.Delete(media));
+            _event.EventMedias.Add(thumbnail);
+        }
+        await uOW.SaveChangesAsync();
+        if (req.Proposal is not null)
+        {
+            EventFile eventFile = new(req.Proposal, _event.EventId);
+
+            _event.EventFile = eventFile;
+        }
+
+        await uOW.SaveChangesAsync();
+        _event.Update(req.EventName, req.Description, req.StartTime, req.EndTime, req.Location, req.LinkEvent,
+                      req.PasswordMeeting, req.MaxAttendees, req.EventTypeId);
+
+        await uOW.SaveChangesAsync();
+        if (uOW.IsUpdate(_event))
+        {
+            _event.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await uOW.SaveChangesAsync();
+
+        // Step 4: Notify users (track unique users with HashSet)
+        var notifiedUsers = new HashSet<Guid>();
+
+        // Step 6: Notify users who have registered for the event
+        var participantSpec = new GetEventParticipantsSpec(id);
+
+        var participants = await uOW.EventRegistration.GetListAsync(participantSpec);
+        var registeredUsers = participants.Select(p => p.UserId).ToList();
+        var fcmTokens = participants.Select(p => p.User!.FcmToken).ToList();
+
+        foreach (var userId in registeredUsers)
+        {
+            if (notifiedUsers.Add(userId)) // Only notify if userId is not already in the set
+            {
+                // Create notification for the participant
+                var notificationReq = new CreateNotificationReq(userId,
+                                                _event.EventId,
+                                                "Đã có một sự thay đổi bất ngờ!!!",
+                                                $"Sự kiện '{_event.EventName}' bạn đăng kí tham gia có cập nhật mới.");
+
+                await CreateNotification(notificationReq);
+            }
+        }
+
+
+
+        // Send a single notification to the user
+        await firebaseService.SendBulkNotificationsAsync(fcmTokens,
+                                                        "Đã có một sự thay đổi bất ngờ!!!",
+                                                        $"Sự kiện '{_event.EventName}' bạn đăng kí tham gia có cập nhật mới."
+        );
 
         return _event.EventId.ToResponse();
     }
@@ -112,7 +221,36 @@ public class EventService(IUnitOfWork uOW) : IEventService
         );
     }
 
+    public async Task<PageResult<EventRes>> GetListEventsForAdmin(GetEventsRequest req)
+    {
+        var spec = new GetEventAdminSpec(req.SearchKeyword, req.InMonth, req.InYear, req.EventTypes, req.EventTag, req.Status, req.OrderBy, req.IsDescending, req.PageNumber, req.PageSize);
 
+        // Get paginated list of events
+        var _events = await uOW.Events.GetPageAsync(spec);
+
+        // Map each event to EventRes with the ToResponse extension method
+        var eventResponses = _events.Items.Select(eventEntity => eventEntity.ToResponse()).ToList();
+
+        return new PageResult<EventRes>(
+            eventResponses,
+            _events.PageNumber,
+            _events.PageSize,
+            _events.Count,
+            _events.TotalItems,
+            _events.TotalPages
+        );
+    }
+
+    public async Task<List<EventBannerRes>> GetEventBanners()
+    {
+        var spec = new GetEventSpec();
+        var events = await uOW.Events.GetListAsync(spec);
+
+        var eventBanners = events.Take(6).Select(t => t.ToBannerResponse()).ToList();
+
+        return eventBanners;
+        
+    }
 
     /// <summary>
     /// Get Event Detail
@@ -122,150 +260,123 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <exception cref="NotFoundException"></exception>
     public async Task<EventRes> GetEvent(Guid eventId, Guid? userId)
     {
+        // Flags for user-specific event details
         bool isRegistered = false;
-        var spec = new GetEventSpec(eventId);
+        bool isReviewed = false;
+        bool isOverlap = false;
+        bool canReview = false;
 
-        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
+        // Fetch the event details
+        var specEvent = new GetEventSpec(eventId);
+        var _event = await uOW.Events.FindFirstOrDefaultAsync(specEvent)
             ?? throw new NotFoundException(typeof(Event));
 
         if (userId.HasValue)
         {
-            var subSpec = new GetEventRegistrationSpec(eventId, userId.Value);
-            var _eventTag = await uOW.EventRegistration.GetListAsync(subSpec);
+            // User-specific queries
+            var userIdValue = userId.Value;
 
-            if (!_eventTag.IsNullOrEmpty())
+            var specRegis = new GetEventRegistrationSpec(eventId, userIdValue);
+            var specReview = new GetReviewSpec(eventId, userId);
+            var specOverlap = new GetEventRegistrationSpec(userIdValue, _event.EventId, _event.StartTime, _event.EndTime);
+
+            // Run queries concurrently
+            var taskEventReview = uOW.Reviews.GetListAsync(specReview);
+            var taskEventOverlap = uOW.EventRegistration.GetListAsync(specOverlap);
+            var taskEventRegis = uOW.EventRegistration.FindFirstOrDefaultAsync(specRegis);
+
+            await Task.WhenAll(taskEventReview, taskEventOverlap, taskEventRegis);
+
+            var eventReview = taskEventReview.Result;
+            var eventOverlap = taskEventOverlap.Result;
+            var eventRegis = taskEventRegis.Result;
+
+            // Set flags based on results
+            isReviewed = !eventReview.IsNullOrEmpty();
+            isOverlap = !eventOverlap.IsNullOrEmpty();
+            isRegistered = eventRegis is not null;
+
+            // Logic to determine if the user can review
+            if (_event.EndTime <= DateTime.Now && _event.EndTime >= DateTime.Now.AddDays(-2) &&
+                eventRegis?.IsCheckIn == true)
             {
-                isRegistered = true;
+                canReview = true;
             }
         }
 
-        return _event.ToResponse(isRegistered);
+        // Return the event response
+        return _event.ToResponse(isRegistered, isReviewed, isOverlap, canReview);
     }
 
-
-    /// <summary>
-    /// Update an Available Event
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
-    public async Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req)
-    {
-        // Step 1: Find the event
-        var spec = new GetEventSpec(id);
-        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
-            ?? throw new NotFoundException(typeof(Event));
-
-        // Step 2: Update the event with the new details
-        _event.Update(req.EventName,
-            req.Description,
-            req.StartTime,
-            req.EndTime,
-            req.Location,
-            req.MaxAttendees,
-            req.ProcessNote,
-            req.Status,
-            organizerId,
-            req.EventTypeId);
-
-        if (uOW.IsUpdate(_event))
-        {
-            _event.UpdatedAt = DateTime.UtcNow;
-        }
-
-        // Step 3: Save changes to the event
-        await uOW.SaveChangesAsync();
-
-        // Step 4: Notify users (track unique users with HashSet)
-        var notifiedUsers = new HashSet<Guid>();
-
-        // Step 5: Notify users who follow the event
-        var followSpec = new GetUserFollowsEventSpec(id); 
-
-        var followedEvents = await uOW.EventFollower.GetListAsync(followSpec);
-        var followedUsers = followedEvents.Select(f => f.UserId).ToList();
-
-        foreach (var userId in followedUsers)
-        {
-            if (notifiedUsers.Add(userId)) // Only notify if userId is not already in the set
-            {
-                // Create notification for the follower
-                var notificationReq = new CreateNotificationReq(userId,
-                                                _event.EventId,
-                                                $"The event '{_event.EventName}' has been updated.");
-                await CreateNotification(notificationReq); 
-            }
-        }
-
-        // Step 6: Notify users who have registered for the event
-        var participantSpec = new GetEventParticipantsSpec(id);
-
-        var participants = await uOW.EventRegistration.GetListAsync(participantSpec);
-        var registeredUsers = participants.Select(p => p.UserId).ToList();
-
-        foreach (var userId in registeredUsers)
-        {
-            if (notifiedUsers.Add(userId)) // Only notify if userId is not already in the set
-            {
-                // Create notification for the participant
-                var notificationReq = new CreateNotificationReq(userId,
-                                                _event.EventId,
-                                                $"The event '{_event.EventName}' has been updated.");
-                await CreateNotification(notificationReq); 
-            }
-        }
-
-        return _event.EventId.ToResponse();
-    }
-
-    public async Task<IdRes> SubmitEvent(Guid id)
+    public async Task<IdRes> SubmitEvent(Guid id, Guid organizerId)
     {
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
-        _event.Status = EventStatus.UnderReview;
+
+        if (_event.OrganizerId != organizerId)
+            throw new Exception("Not have permission for submit Event");
+
+        if(_event.Status == EventStatus.Draft || _event.Status == EventStatus.Rejected)
+            _event.Status = EventStatus.UnderReview;
         
         await uOW.SaveChangesAsync();
 
         return _event.EventId.ToResponse();
     }
 
-    public async Task<IdRes> ApproveEvent(Guid id, bool isApproved, string processNote)
+    public async Task<IdRes> ApproveEvent(Guid id, bool isApproved,Guid userId, string processNote)
     {
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
-        if (isApproved)
-        {
-            _event.Status = EventStatus.Upcoming;
-        }
-        else
-        {
-            _event.Status = EventStatus.Rejected;
-        }
 
-        _event.ProcessNote = processNote;   
+        var specSub = new GetUserSpec(userId);
+        var _moderator = await uOW.Users.FindFirstOrDefaultAsync(specSub);
+        
+        if(_event.Status == EventStatus.UnderReview)
+        {
+            if (isApproved)
+            {
+                _event.Status = EventStatus.Upcoming;
+            }
+            else
+            {
+                _event.Status = EventStatus.Rejected;
+            }
+            _event.ProcessNote = processNote;
+            _event.ReviewBy = _moderator!.Username;
+        }
 
         await uOW.SaveChangesAsync();
 
         return _event.EventId.ToResponse();
     }
 
-    public async Task CheckinEvent(Guid eventId, Guid userId)
+    public async Task CheckinEvent(Guid eventId, Guid userId, bool isOrganzier)
     {
         var spec = new GetEventRegistrationSpec(eventId, userId);
         var _event = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(EventRegistration));
-        _event.IsCheckIn = true;
-
+        if (isOrganzier)
+        {
+            if(_event.IsCheckIn == true)
+            {
+                _event.IsCheckIn = false;
+            }
+            else _event.IsCheckIn = true;
+        }
+        else
+        {
+            _event.IsCheckIn = true;
+        }
         await uOW.SaveChangesAsync();
     }
 
 
     public async Task<IList<EventRes>> GetListEventsByOrganizer(GetEventByOrganizerReq req)
     {
-        var spec = new GetEventByOrganizerSpec(req.OrganizerId, req.Status);
+        var spec = new GetEventByOrganizerSpec(req.OrganizerId, req.searchKeyword, req.Status);
 
         var _events = await uOW.Events.GetListAsync(spec);
 
@@ -274,13 +385,14 @@ public class EventService(IUnitOfWork uOW) : IEventService
     #endregion
 
     #region Event-User
-    public async Task<IList<EventRes>> GetRegisteredEvents(Guid userId, bool isCompleted)
+    public async Task<IList<EventRes>> GetRegisteredEvents(Guid userId,int? inMonth,int? inYear, bool isCompleted)
     {
-        var spec = new GetRegisteredEventsSpec(userId, isCompleted);
+        var spec = new GetRegisteredEventsSpec(userId, inMonth, inYear, isCompleted);
         var events = await uOW.Events.GetListAsync(spec);
 
         return events.Select(e => e.ToResponse()).ToList();
     }
+
 
     public async Task<IList<UserRes>> GetRegisteredUsers(Guid eventId)
     {
@@ -288,9 +400,15 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var events = await uOW.Events.GetListAsync(spec);
 
         var users = events.SelectMany(e => e.Registrations!)
-            .Select(r => r.User);
+                          .Select(r =>
+                           {
+                               var userResponse = r.User!.ToResponse<UserRes>();
+                               userResponse = userResponse with { IsCheckin = r.IsCheckIn }; 
+                               return userResponse;
+                           })
+                          .ToList();
 
-        return users.Select(u => u.ToResponse<UserRes>()).ToList();
+        return users;
     }
     #endregion
 
