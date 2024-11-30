@@ -24,7 +24,7 @@ public static class EventMapper
             organizerId,
             "",
             src.EventTypeId,
-            DateTime.Now);
+            DateTime.Now.AddHours(13));
 
     public static EventRes ToResponse(
         this Event src)

@@ -118,7 +118,7 @@ public static class UserSpec
     {
         public GetUserByStudentIdSpec(string studentId)
         {
-            Filter(u => u.StudentId == studentId && u.Verified == VerifiedStatus.Verified);
+            Filter(u => u.StudentId == studentId && u.Verified == VerifiedStatus.Verified && u.StudentId != "");
         }
     }
 }

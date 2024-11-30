@@ -139,7 +139,7 @@ public class NotificationService(IUnitOfWork uOW, ExpoNotificationService expoNo
 
         foreach (var notification in notifications)
         {
-            await DeleteNotification(notification.NotificationId);
+            uOW.Notification.Delete(notification);
         }
 
         await uOW.SaveChangesAsync();

@@ -27,7 +27,7 @@ public static class UserMapper
             src.PhoneNumber,
             "", 
             (int)userRole,
-            DateTime.Now
+            DateTime.Now.AddHours(13)
         );
     }
 
@@ -44,7 +44,7 @@ public static class UserMapper
             "",
             "",
             (int)UserRole.Moderator,
-            DateTime.Now
+            DateTime.Now.AddHours(13)
         );
     }
 
