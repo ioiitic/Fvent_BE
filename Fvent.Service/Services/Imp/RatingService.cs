@@ -21,6 +21,8 @@ public class RatingService(IUnitOfWork uOW) : IRatingService
             res = reviews.Sum(r => r.Rating) * 1.0 / reviews.Count();
         }
 
-        return res.ToResponse();
+        int total = reviews.Count();
+
+        return res.ToResponse(total);
     }
 }

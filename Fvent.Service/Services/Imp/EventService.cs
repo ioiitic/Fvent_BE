@@ -1,4 +1,5 @@
 ﻿using Azure;
+using FirebaseAdmin.Messaging;
 using Fvent.BO.Common;
 using Fvent.BO.Entities;
 using Fvent.BO.Enums;
@@ -8,10 +9,16 @@ using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 using LinqKit;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Linq.Expressions;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
+using static Fvent.Service.Specifications.EventTagSpec;
+using static Fvent.Service.Specifications.ReviewSpec;
+using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp;
 
@@ -81,6 +88,8 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
     public async Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req)
     {
+        var serviceKeyPath = Path.Combine(AppContext.BaseDirectory, "firebase-service-key.json");
+        var firebaseService = new FirebaseService(serviceKeyPath);
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
@@ -154,6 +163,7 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         var participants = await uOW.EventRegistration.GetListAsync(participantSpec);
         var registeredUsers = participants.Select(p => p.UserId).ToList();
+        var fcmTokens = participants.Select(p => p.User!.FcmToken).ToList();
 
         foreach (var userId in registeredUsers)
         {
@@ -162,10 +172,20 @@ public class EventService(IUnitOfWork uOW) : IEventService
                 // Create notification for the participant
                 var notificationReq = new CreateNotificationReq(userId,
                                                 _event.EventId,
-                                                $"The event '{_event.EventName}' has been updated.");
+                                                "Đã có một sự thay đổi bất ngờ!!!",
+                                                $"Sự kiện '{_event.EventName}' bạn đăng kí tham gia có cập nhật mới.");
+
                 await CreateNotification(notificationReq);
             }
         }
+
+
+
+        // Send a single notification to the user
+        await firebaseService.SendBulkNotificationsAsync(fcmTokens,
+                                                        "Đã có một sự thay đổi bất ngờ!!!",
+                                                        $"Sự kiện '{_event.EventName}' bạn đăng kí tham gia có cập nhật mới."
+        );
 
         return _event.EventId.ToResponse();
     }
@@ -201,7 +221,36 @@ public class EventService(IUnitOfWork uOW) : IEventService
         );
     }
 
+    public async Task<PageResult<EventRes>> GetListEventsForAdmin(GetEventsRequest req)
+    {
+        var spec = new GetEventAdminSpec(req.SearchKeyword, req.InMonth, req.InYear, req.EventTypes, req.EventTag, req.Status, req.OrderBy, req.IsDescending, req.PageNumber, req.PageSize);
 
+        // Get paginated list of events
+        var _events = await uOW.Events.GetPageAsync(spec);
+
+        // Map each event to EventRes with the ToResponse extension method
+        var eventResponses = _events.Items.Select(eventEntity => eventEntity.ToResponse()).ToList();
+
+        return new PageResult<EventRes>(
+            eventResponses,
+            _events.PageNumber,
+            _events.PageSize,
+            _events.Count,
+            _events.TotalItems,
+            _events.TotalPages
+        );
+    }
+
+    public async Task<List<EventBannerRes>> GetEventBanners()
+    {
+        var spec = new GetEventSpec();
+        var events = await uOW.Events.GetListAsync(spec);
+
+        var eventBanners = events.Take(6).Select(t => t.ToBannerResponse()).ToList();
+
+        return eventBanners;
+        
+    }
 
     /// <summary>
     /// Get Event Detail
@@ -211,55 +260,93 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <exception cref="NotFoundException"></exception>
     public async Task<EventRes> GetEvent(Guid eventId, Guid? userId)
     {
+        // Flags for user-specific event details
         bool isRegistered = false;
-        var spec = new GetEventSpec(eventId);
+        bool isReviewed = false;
+        bool isOverlap = false;
+        bool canReview = false;
 
-        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
+        // Fetch the event details
+        var specEvent = new GetEventSpec(eventId);
+        var _event = await uOW.Events.FindFirstOrDefaultAsync(specEvent)
             ?? throw new NotFoundException(typeof(Event));
 
         if (userId.HasValue)
         {
-            var subSpec = new GetEventRegistrationSpec(eventId, userId.Value);
-            var _eventTag = await uOW.EventRegistration.GetListAsync(subSpec);
+            // User-specific queries
+            var userIdValue = userId.Value;
 
-            if (!_eventTag.IsNullOrEmpty())
+            var specRegis = new GetEventRegistrationSpec(eventId, userIdValue);
+            var specReview = new GetReviewSpec(eventId, userId);
+            var specOverlap = new GetEventRegistrationSpec(userIdValue, _event.EventId, _event.StartTime, _event.EndTime);
+
+            // Run queries concurrently
+            var taskEventReview = uOW.Reviews.GetListAsync(specReview);
+            var taskEventOverlap = uOW.EventRegistration.GetListAsync(specOverlap);
+            var taskEventRegis = uOW.EventRegistration.FindFirstOrDefaultAsync(specRegis);
+
+            await Task.WhenAll(taskEventReview, taskEventOverlap, taskEventRegis);
+
+            var eventReview = taskEventReview.Result;
+            var eventOverlap = taskEventOverlap.Result;
+            var eventRegis = taskEventRegis.Result;
+
+            // Set flags based on results
+            isReviewed = !eventReview.IsNullOrEmpty();
+            isOverlap = !eventOverlap.IsNullOrEmpty();
+            isRegistered = eventRegis is not null;
+
+            // Logic to determine if the user can review
+            if (_event.EndTime <= DateTime.Now && _event.EndTime >= DateTime.Now.AddDays(-2) &&
+                eventRegis?.IsCheckIn == true)
             {
-                isRegistered = true;
+                canReview = true;
             }
         }
 
-        return _event.ToResponse(isRegistered);
+        // Return the event response
+        return _event.ToResponse(isRegistered, isReviewed, isOverlap, canReview);
     }
 
-
-
-    public async Task<IdRes> SubmitEvent(Guid id)
+    public async Task<IdRes> SubmitEvent(Guid id, Guid organizerId)
     {
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
-        _event.Status = EventStatus.UnderReview;
+
+        if (_event.OrganizerId != organizerId)
+            throw new Exception("Not have permission for submit Event");
+
+        if(_event.Status == EventStatus.Draft || _event.Status == EventStatus.Rejected)
+            _event.Status = EventStatus.UnderReview;
         
         await uOW.SaveChangesAsync();
 
         return _event.EventId.ToResponse();
     }
 
-    public async Task<IdRes> ApproveEvent(Guid id, bool isApproved, string processNote)
+    public async Task<IdRes> ApproveEvent(Guid id, bool isApproved,Guid userId, string processNote)
     {
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
-        if (isApproved)
-        {
-            _event.Status = EventStatus.Upcoming;
-        }
-        else
-        {
-            _event.Status = EventStatus.Rejected;
-        }
 
-        _event.ProcessNote = processNote;   
+        var specSub = new GetUserSpec(userId);
+        var _moderator = await uOW.Users.FindFirstOrDefaultAsync(specSub);
+        
+        if(_event.Status == EventStatus.UnderReview)
+        {
+            if (isApproved)
+            {
+                _event.Status = EventStatus.Upcoming;
+            }
+            else
+            {
+                _event.Status = EventStatus.Rejected;
+            }
+            _event.ProcessNote = processNote;
+            _event.ReviewBy = _moderator!.Username;
+        }
 
         await uOW.SaveChangesAsync();
 
@@ -288,13 +375,14 @@ public class EventService(IUnitOfWork uOW) : IEventService
     #endregion
 
     #region Event-User
-    public async Task<IList<EventRes>> GetRegisteredEvents(Guid userId, bool isCompleted)
+    public async Task<IList<EventRes>> GetRegisteredEvents(Guid userId,int? inMonth,int? inYear, bool isCompleted)
     {
-        var spec = new GetRegisteredEventsSpec(userId, isCompleted);
+        var spec = new GetRegisteredEventsSpec(userId, inMonth, inYear, isCompleted);
         var events = await uOW.Events.GetListAsync(spec);
 
         return events.Select(e => e.ToResponse()).ToList();
     }
+
 
     public async Task<IList<UserRes>> GetRegisteredUsers(Guid eventId)
     {
@@ -302,9 +390,15 @@ public class EventService(IUnitOfWork uOW) : IEventService
         var events = await uOW.Events.GetListAsync(spec);
 
         var users = events.SelectMany(e => e.Registrations!)
-            .Select(r => r.User);
+                          .Select(r =>
+                           {
+                               var userResponse = r.User!.ToResponse<UserRes>();
+                               userResponse = userResponse with { IsCheckin = r.IsCheckIn }; 
+                               return userResponse;
+                           })
+                          .ToList();
 
-        return users.Select(u => u.ToResponse<UserRes>()).ToList();
+        return users;
     }
     #endregion
 

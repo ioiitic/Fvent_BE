@@ -6,6 +6,7 @@ using Fvent.Service.Result;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.FormSpec;
+using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp
 {
@@ -25,16 +26,18 @@ namespace Fvent.Service.Services.Imp
         {
             var spec = new GetEventRegistrationSpec(eventId, userId);
             var regis = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
-                ?? throw new NotFoundException(typeof(User));
+                ?? throw new NotFoundException(typeof(EventRegistration));
 
             uOW.EventRegistration.Delete(regis);
 
-            var specForm = new GetFormSubmitSpec(eventId, userId);
-            var res = await uOW.FormSubmit.FindFirstOrDefaultAsync(specForm)
-                ?? throw new NotFoundException(typeof(FormSubmit));
+            var specSub = new GetFormSubmitSpec(eventId, userId);
+            var formsubmit = await uOW.FormSubmit.FindFirstOrDefaultAsync(specSub);
 
-            uOW.FormSubmit.Delete(res);
-            await uOW.SaveChangesAsync();
+            if (formsubmit != null)
+            {
+                uOW.FormSubmit.Delete(formsubmit);
+            }
+
 
             await uOW.SaveChangesAsync();
         }

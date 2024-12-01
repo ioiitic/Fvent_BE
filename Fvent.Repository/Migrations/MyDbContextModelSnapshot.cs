@@ -111,6 +111,9 @@ namespace Fvent.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ReviewBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
 
@@ -301,9 +304,15 @@ namespace Fvent.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("EventTypeName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.HasKey("EventTypeId");
 
@@ -369,8 +378,7 @@ namespace Fvent.Repository.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("FormSubmits");
                 });
@@ -385,7 +393,6 @@ namespace Fvent.Repository.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Message")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ReadStatus")
@@ -393,6 +400,9 @@ namespace Fvent.Repository.Migrations
 
                     b.Property<DateTime>("SentTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -490,6 +500,15 @@ namespace Fvent.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("BanEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BanReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("BanStartDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("CardUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -506,6 +525,12 @@ namespace Fvent.Repository.Migrations
 
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("bit");
+                    b.Property<string>("FcmToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -524,6 +549,10 @@ namespace Fvent.Repository.Migrations
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -714,8 +743,8 @@ namespace Fvent.Repository.Migrations
                         .IsRequired();
 
                     b.HasOne("Fvent.BO.Entities.User", "User")
-                        .WithOne()
-                        .HasForeignKey("Fvent.BO.Entities.FormSubmit", "UserId")
+                        .WithMany("FormSubmits")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -786,6 +815,8 @@ namespace Fvent.Repository.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Followers");
+
+                    b.Navigation("FormSubmits");
 
                     b.Navigation("Notifications");
 

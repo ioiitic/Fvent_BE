@@ -50,6 +50,9 @@ public class MyDbContext : DbContext
         modelBuilder.Entity<Event>()
             .HasQueryFilter(u => !u.IsDeleted);
 
+        modelBuilder.Entity<EventType>()
+            .HasQueryFilter(u => !u.IsDeleted);
+
         modelBuilder.Entity<Comment>()
             .HasOne(c => c.User)
             .WithMany(u => u.Comments)
@@ -85,7 +88,7 @@ public class MyDbContext : DbContext
 
         modelBuilder.Entity<FormSubmit>()
                     .HasOne(c => c.User)
-                    .WithOne()
+                    .WithMany(u => u.FormSubmits)
                     .OnDelete(DeleteBehavior.Restrict);
     }
 }

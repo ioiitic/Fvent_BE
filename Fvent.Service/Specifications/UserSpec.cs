@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Entities;
+using Fvent.BO.Enums;
 using Fvent.Repository.Common;
 
 namespace Fvent.Service.Specifications;
@@ -64,6 +65,18 @@ public static class UserSpec
 
             Include(u => u.Role!);
         }
+
+        public GetUserSpec(string email, string role)
+        {
+            if (!Enum.TryParse<UserRole>(role, true, out var userRole))
+            {
+                throw new ArgumentException("Invalid role specified");
+            }
+
+            Filter(u => u.Email == email && u.RoleId == (int) userRole);
+
+            Include(u => u.Role!);
+        }
     }
 
     public class AuthenUserSpec : Specification<User>
@@ -95,6 +108,8 @@ public static class UserSpec
         public CheckRefreshTokenSpec(string token)
         {
             Filter(t => t.Token == token);
+            Include(t => t.User!);
+            Include("User.Role");
         }
     }
   
