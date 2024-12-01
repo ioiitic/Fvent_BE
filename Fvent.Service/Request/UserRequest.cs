@@ -1,4 +1,6 @@
-﻿namespace Fvent.Service.Request;
+﻿using Fvent.BO.Enums;
+
+namespace Fvent.Service.Request;
 
 public record AuthReq(string Email, string Password, string? FcmToken);
 
@@ -6,9 +8,10 @@ public record RefreshTokenReq(string Token);
 
 public record GetListUsersReq(string? Username, string? Email, string? RoleName, string? Verified, string? OrderBy,
                               bool IsDescending = false, int PageNumber = 1, int PageSize = 9);
+public record GetRegisteredUsersReq(string? SearchKeyword, int PageNumber = 1, int PageSize = 9);
 
 public record CreateUserReq(string Username, string Email, string Password, string StudentId, 
-                            string PhoneNumber, string Role);
+                            string PhoneNumber, UserRole Role);
 
 public record CreateModeratReq(string Username, string Email, string Password);
 

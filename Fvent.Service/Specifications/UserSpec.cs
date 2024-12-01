@@ -50,6 +50,7 @@ public static class UserSpec
             Filter(u => u.UserId == id);
 
             Include(u => u.Role!);
+            Include(u => u.VerificationToken!);
         }
 
         public GetUserSpec(string email)
@@ -57,6 +58,7 @@ public static class UserSpec
             Filter(u => u.Email == email);
 
             Include(u => u.Role!);
+            Include(u => u.VerificationToken!);
         }
 
         public GetUserSpec(string email, string role)
@@ -82,6 +84,7 @@ public static class UserSpec
             Include(u => u.RefreshTokens!);
         }
     }
+
     public class GetVerificationTokenSpec : Specification<VerificationToken>
     {
         public GetVerificationTokenSpec(Guid userId, string token)
@@ -118,7 +121,7 @@ public static class UserSpec
     {
         public GetUserByStudentIdSpec(string studentId)
         {
-            Filter(u => u.StudentId == studentId && u.Verified == VerifiedStatus.Verified);
+            Filter(u => u.StudentId == studentId && u.Verified == VerifiedStatus.Verified && u.StudentId != "");
         }
     }
 }

@@ -6,31 +6,34 @@ namespace Fvent.Service.Services;
 
 public interface IUserService
 {
-    #region Authen
-    Task<AuthResponse> Authen(AuthReq req, string ipAddress);
-    Task<AuthResponse> Refresh(RefreshTokenReq req, string ipAddress);
-    Task<IdRes> Register(CreateUserReq req);
+    #region Auth
+    Task<AuthRes> Authen(AuthReq req, string ipAddress);
+    Task<AuthRes> Refresh(RefreshTokenReq req, string ipAddress);
     #endregion
 
     #region User
     Task<PageResult<GetListUserRes>> GetList(GetListUsersReq req);
     Task<UserRes> Get(Guid id);
-    Task<UserRes> GetByEmail(string email);
     Task<IdRes> Update(Guid id, UpdateUserReq req);
+    Task Delete(Guid id);
     #endregion
 
-    #region Verify
+    #region User Account
+    Task<IdRes> Register(CreateUserReq req);
     Task<IdRes> AddCardId(Guid id, string cardUrl);
     Task<IdRes> ApproveUser(Guid id, bool isApproved, string processNote);
+    Task<IdRes> RegisterModerator(CreateModeratReq req);
     #endregion
 
     #region Email
     Task VerifyEmailAsync(Guid userId, string token);
-    Task<IdRes> ResendVerificationEmail(string userEmail, string role);
     Task RequestPasswordResetAsync(string email);
-    #endregion
-    Task<IdRes> RegisterModerator(CreateModeratReq req);
     Task ResetPasswordAsync(Guid userId, string token, string newPassword);
     Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword);
-    Task Delete(Guid id);
+    Task<IdRes> ResendVerificationEmail(string userEmail, string role);
+    #endregion
+
+    #region Report
+    Task<UserReportRes> GetReport(Guid userId);
+    #endregion
 }

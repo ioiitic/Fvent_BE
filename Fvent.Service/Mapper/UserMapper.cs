@@ -10,12 +10,6 @@ public static class UserMapper
 {
     public static User ToUser(this CreateUserReq src)
     {
-        // Try to parse the role from the string to the UserRole enum
-        if (!Enum.TryParse<UserRole>(src.Role, true, out var userRole))
-        {
-            throw new ArgumentException("Invalid role specified"); // Handle invalid role
-        }
-
         return new User(
             src.Username,
             DefaultImage.DefaultAvatar,
@@ -26,8 +20,10 @@ public static class UserMapper
             "",
             src.PhoneNumber,
             "", 
-            (int)userRole,
-            DateTime.Now
+            (int)src.Role,
+            DateTime.Now.AddHours(13),
+            false,
+            VerifiedStatus.Unverified
         );
     }
 
@@ -44,11 +40,13 @@ public static class UserMapper
             "",
             "",
             (int)UserRole.Moderator,
-            DateTime.Now
+            DateTime.Now.AddHours(13),
+            true,
+            VerifiedStatus.Verified
         );
     }
 
-    public static TEntity ToResponse<TEntity>(this User src, bool isHaveUnreadNoti = false) where TEntity : class
+    public static TEntity ToResponse<TEntity>(this User src, bool isHaveUnreadNoti = false, int? noOfEvent = null) where TEntity : class
     {
         var result = typeof(TEntity) switch
         {
@@ -63,6 +61,9 @@ public static class UserMapper
                 new GetListUserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.StudentId, src.CardUrl,
                                    src.Verified, src.Role!.RoleName, src.CreatedAt, src.UpdatedAt, src.IsDeleted,
                                    src.DeletedAt) as TEntity,
+
+            Type t when t == typeof(OrganizerReportInfo) =>
+                new OrganizerReportInfo(src.UserId, src.Username, src.AvatarUrl, noOfEvent??0) as TEntity,
 
             _ => throw new InvalidOperationException($"Unsupported type: {typeof(TEntity).Name}")
         };

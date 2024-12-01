@@ -108,7 +108,7 @@ namespace Fvent.Service.Services.Imp
             var jsonDoc = JsonDocument.Parse(serviceAccountJson);
 
             _projectId = jsonDoc.RootElement.TryGetProperty("project_id", out var projectId)
-                ? projectId.GetString()
+                ? projectId.GetString()!
                 : throw new Exception("Project ID not found in the service account file.");
 
             //Console.WriteLine($"Project ID: {_projectId}");

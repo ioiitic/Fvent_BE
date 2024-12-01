@@ -1,6 +1,8 @@
-﻿using Fvent.BO.Exceptions;
+﻿using Fvent.BO.Entities;
+using Fvent.BO.Exceptions;
 using Fvent.Service.Request;
 using Fvent.Service.Services;
+using Fvent.Service.Services.Imp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -79,12 +81,20 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     /// <summary>
     /// Get list events belong to organizer
     /// </summary>
-    /// <param name="organizerId"></param>
+    /// <param name="req"></param>
     /// <returns></returns>
-    [HttpGet("organizer")]
+    [HttpGet("organizerPublic")]
     public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] GetEventByOrganizerReq req)
     {
         var res = await eventService.GetListEventsByOrganizer(req);
+
+        return Ok(res);
+    }
+
+    [HttpGet("organizerPrivate")]
+    public async Task<IActionResult> GetListEventsOfOrganizer([FromQuery] GetEventOfOrganizerReq req)
+    {
+        var res = await eventService.GetListEventsOfOrganizer(req);
 
         return Ok(res);
     }
@@ -254,7 +264,6 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     }
     #endregion
 
-
     #region Event Registration
     /// <summary>
     /// Register an event
@@ -307,9 +316,16 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     /// <returns></returns>
     [HttpGet("{eventId}/participants")]
     [Authorize(Roles = "organizer")]
-    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
+    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId, [FromQuery] GetRegisteredUsersReq req)
     {
-        var res = await eventService.GetRegisteredUsers(eventId);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.GetRegisteredUsers(eventId, req, userId);
 
         return Ok(res);
     }
@@ -408,6 +424,34 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
 
         var res = await formService.GetFormSubmit(eventId, userId);
+
+        return Ok(res);
+    }
+    #endregion
+
+    #region Report
+    [HttpGet("report")]
+    public async Task<IActionResult> Report(DateTime startDate, DateTime endDate)
+    {
+        var res = await eventService.Report(startDate, endDate);
+
+        return Ok(res);
+    }
+
+    [HttpGet("report-for-organizer")]
+    public async Task<IActionResult> ReportForOrganizer(DateTime startDate, DateTime endDate)
+    {
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+        var res = await eventService.ReportForOrganizer(Guid.Parse(userId), startDate, endDate);
+
+        return Ok(res);
+    }
+
+    [HttpGet("{eventId}/report")]
+    public async Task<IActionResult> ReportByEvent(Guid eventId)
+    {
+        var res = await eventService.ReportByEvent(eventId);
 
         return Ok(res);
     }

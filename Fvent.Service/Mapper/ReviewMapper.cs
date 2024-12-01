@@ -14,7 +14,7 @@ public static class ReviewMapper
             src.Comment,
             eventId,
             userId,
-            DateTime.Now);
+            DateTime.Now.AddHours(13));
 
     public static ReviewRes ToReponse(
         this EventReview src,

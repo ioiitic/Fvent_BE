@@ -15,6 +15,6 @@ public class EventRegistration
     {
         EventId = eventId;
         UserId = userId;
-        RegistrationTime = DateTime.UtcNow;
+        RegistrationTime = DateTime.Now.AddHours(13);
     }
 }

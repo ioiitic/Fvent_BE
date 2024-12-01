@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Common;
+using Fvent.BO.Enums;
 
 namespace Fvent.BO.Entities;
 
@@ -24,6 +25,7 @@ public class User : ISoftDelete
 
     public int RoleId { get; set; }
     public Role? Role { get; set; }
+    public VerificationToken? VerificationToken { get; set; }
     public IList<EventRegistration>? Registrations { get; set; }
     public IList<EventReview>? Reviews { get; set; }
     public IList<Notification>? Notifications { get; set; }
@@ -35,8 +37,9 @@ public class User : ISoftDelete
     public bool IsDeleted { get; set; } = false;
     public DateTime? DeletedAt { get; set; }
 
-    public User(string username, string avatarUrl, string email, string studentId, string password, string processNote, string fcmToken,
-                string phoneNumber, string cardUrl, int roleId, DateTime createdAt)
+    public User(string username, string avatarUrl, string email, string studentId, string password, string processNote,
+                string fcmToken, string phoneNumber, string cardUrl, int roleId, DateTime createdAt, bool emailVerified,
+                VerifiedStatus verified)
     {
         Username = username;
         AvatarUrl = avatarUrl;
@@ -49,6 +52,8 @@ public class User : ISoftDelete
         CardUrl = cardUrl;
         RoleId = roleId;
         CreatedAt = createdAt;
+        EmailVerified = emailVerified;
+        Verified = verified;
     }
 
     public void Update(string username, string avatarUrl, string phoneNumber, string studentId)
@@ -57,5 +62,14 @@ public class User : ISoftDelete
         AvatarUrl = avatarUrl;
         PhoneNumber = phoneNumber;
         StudentId = studentId;
+    }
+
+    public void Update(string username, string password, string phoneNumber, string studentId, UserRole role)
+    {
+        Username = username;
+        Password = password;
+        PhoneNumber = phoneNumber;
+        StudentId = studentId;
+        RoleId = (int)role;
     }
 }

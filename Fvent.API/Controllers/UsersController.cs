@@ -28,20 +28,6 @@ public class UsersController(IUserService userService, IEventService eventServic
     }
 
     /// <summary>
-    /// Add moderator account
-    /// </summary>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    [HttpPost("addModerator")]
-    [Authorize(Roles = "admin")]
-    public async Task<IActionResult> AddModerator([FromBody] CreateModeratReq req)
-    {
-        var res = await userService.RegisterModerator(req);
-
-        return Ok(res);
-    }
-
-    /// <summary>
     /// Get own info
     /// </summary>
     /// <returns></returns>
@@ -145,10 +131,23 @@ public class UsersController(IUserService userService, IEventService eventServic
 
         return Ok(res);
     }
+
+    /// <summary>
+    /// Add moderator account
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("addModerator")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> AddModerator([FromBody] CreateModeratReq req)
+    {
+        var res = await userService.RegisterModerator(req);
+
+        return Ok(res);
+    }
     #endregion
 
-    #region User Registration
-    // TODO: Them field get theo thang, nam
+    #region User Event Registration
     /// <summary>
     /// Get all events that user registered
     /// </summary>
@@ -261,5 +260,17 @@ public class UsersController(IUserService userService, IEventService eventServic
         return Ok(result);
     }
 
+    #endregion
+
+    #region Report
+    [HttpGet("report")]
+    public async Task<IActionResult> Report()
+    {
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+        var res = await userService.GetReport(Guid.Parse(userId));
+
+        return Ok(res);
+    }
     #endregion
 }

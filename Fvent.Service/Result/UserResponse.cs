@@ -6,4 +6,7 @@ public record GetListUserRes(Guid UserId, string Username, string AvatarUrl, str
 
 public record UserRes(Guid UserId, string Username, string AvatarUrl, string Email, string PhoneNumber, string StudentId, string CardUrl, string VerifyStatus,string ProcessNote, bool? IsCheckin, bool? IsHaveUnreadNoti, string? RoleName);
 
-public record AuthResponse(string Token, string RefreshToken);
+public record AuthRes(string Token, string RefreshToken);
+
+public record UserReportRes(int NoOfEvents, int NoOfOrganizers, IList<OrganizerReportInfo> Organizers);
+public record OrganizerReportInfo(Guid UserId, string Username, string AvatarUrl, int NoOfEvents);
