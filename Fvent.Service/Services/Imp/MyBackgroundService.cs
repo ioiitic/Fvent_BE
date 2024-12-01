@@ -32,7 +32,7 @@ public class MyBackgroundService : BackgroundService
             await CleanupExpiredTokensAsync(uOW);
 
             // Wait for the next iteration
-            await Task.Delay(300000); // 5 minutes
+            await Task.Delay(30000);
         }
     }
 
@@ -87,6 +87,7 @@ public class MyBackgroundService : BackgroundService
 
                 var notification = notificationReq.ToNotification();
                 await uOW.Notification.AddAsync(notification);
+                await uOW.SaveChangesAsync();
             }
 
             // Send bulk notifications via Firebase
@@ -108,11 +109,11 @@ public class MyBackgroundService : BackgroundService
         {
             if (_event.Status == EventStatus.Upcoming || _event.Status == EventStatus.InProgress)
             {
-                if (_event.EndTime >= DateTime.Now && _event.StartTime <= DateTime.Now)
+                if (_event.EndTime >= DateTime.Now.AddHours(13) && _event.StartTime <= DateTime.Now.AddHours(13))
                 {
                     _event.Update(EventStatus.InProgress);
                 }
-                else if (_event.EndTime < DateTime.Now)
+                else if (_event.EndTime < DateTime.Now.AddHours(13))
                 {
                     _event.Update(EventStatus.Completed);
 
@@ -148,6 +149,7 @@ public class MyBackgroundService : BackgroundService
 
                             var notification = notificationReq.ToNotification();
                             await uOW.Notification.AddAsync(notification);
+                            await uOW.SaveChangesAsync();
                         }
 
                         await firebaseService.SendBulkNotificationsAsync(
@@ -166,11 +168,12 @@ public class MyBackgroundService : BackgroundService
                             var notificationReq = new CreateNotificationReq(
                                 user.UserId,
                                 _event.EventId,
-                                "Bạn đã bỏ lỡ sự kiện!!!",
+                                "Bạn đã bỏ lỡ một sự kiện!!!",
                                 $"Bạn đã không check-in vào sự kiện '{_event.EventName}'. Hãy chắc chắn không bỏ lỡ lần tới!");
 
                             var notification = notificationReq.ToNotification();
                             await uOW.Notification.AddAsync(notification);
+                            await uOW.SaveChangesAsync();
                         }
 
                         await firebaseService.SendBulkNotificationsAsync(
@@ -191,14 +194,14 @@ public class MyBackgroundService : BackgroundService
         var verificationTokens = await uOW.VerificationToken.GetAllAsync();
         foreach (var verification in verificationTokens)
         {
-            if (verification.ExpiryDate < DateTime.Now)
+            if (verification.ExpiryDate < DateTime.Now.AddHours(13))
                 uOW.VerificationToken.Delete(verification);
         }
 
         var refreshTokens = await uOW.RefreshToken.GetAllAsync();
         foreach (var refresh in refreshTokens)
         {
-            if (refresh.Expires < DateTime.Now)
+            if (refresh.Expires < DateTime.Now.AddHours(13))
                 uOW.RefreshToken.Delete(refresh);
         }
 

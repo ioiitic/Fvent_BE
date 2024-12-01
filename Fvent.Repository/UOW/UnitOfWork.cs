@@ -9,12 +9,10 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
 {
     private readonly MyDbContext _context = context;
     private readonly IEventRepo _eventRepo = new EventRepo(context);
-    private readonly IEventFollowerRepo _eventFollowerRepo = new EventFollowerRepo(context);
     private readonly IReviewRepo _reviewRepo = new ReviewRepo(context);
     private readonly IUserRepo _userRepo = new UserRepo(context);
     private readonly IEventRegistrationRepo _eventRegistrationRepo = new EventRegistrationRepo(context);
     private readonly IEventTagRepo _eventTagRepo = new EventTagRepo(context);
-    private readonly ICommentRepo _commentRepo = new CommentRepo(context);
     private readonly INotificationRepo _notificationRepo = new NotificationRepo(context);   
     private readonly IVerificationTokenRepo _verificationTokenRepo = new VerificationTokenRepo(context);
     private readonly IEventTypeRepo _eventTypeRepo = new EventTypeRepo(context);
@@ -26,7 +24,6 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
     private readonly IFormSubmitRepo _formSubmitRepo = new FormSubmitRepo(context);
 
     public IEventRepo Events => _eventRepo;
-    public IEventFollowerRepo EventFollower => _eventFollowerRepo;
 
     public IReviewRepo Reviews => _reviewRepo;
 
@@ -34,7 +31,6 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
 
     public IEventRegistrationRepo EventRegistration => _eventRegistrationRepo;
     public IEventTagRepo EventTag => _eventTagRepo;
-    public ICommentRepo Comment => _commentRepo;
     public INotificationRepo Notification => _notificationRepo;
     public IVerificationTokenRepo VerificationToken => _verificationTokenRepo;
     public IEventTypeRepo EventType => _eventTypeRepo;

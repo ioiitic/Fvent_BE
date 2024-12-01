@@ -24,7 +24,7 @@ public static class EventMapper
             organizerId,
             "",
             src.EventTypeId,
-            DateTime.Now);
+            DateTime.Now.AddHours(13));
 
     public static EventRes ToResponse(
         this Event src)
@@ -41,6 +41,7 @@ public static class EventMapper
             src.ProcessNote,
             src.OrganizerId,
             src.Organizer!.Username,
+            src.EventType!.EventTypeId,
             src.EventType!.EventTypeName,
             src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
@@ -77,6 +78,7 @@ public static class EventMapper
             src.ProcessNote,
             src.OrganizerId,
             src.Organizer!.Username,
+            src.EventType!.EventTypeId,
             src.EventType!.EventTypeName,
             src.EventMedias.Where(j => j.MediaType == 1).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",
             src.EventMedias.Where(j => j.MediaType == 0).Select(u => u.MediaUrl).FirstOrDefault() ?? "Default",

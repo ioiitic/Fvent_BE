@@ -1,6 +1,7 @@
 ﻿using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.Repository.Common;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Fvent.Service.Specifications;
 
@@ -30,15 +31,7 @@ public static class UserSpec
                 Filter(e => e.Verified == verifiedStatus);
             }
 
-            if (orderBy is not null)
-            {
-                switch (orderBy)
-                {
-                    case "email":
-                        OrderBy(u => u.Email, isDescending);
-                        break;
-                }
-            }
+            OrderBy(u => u.Verified, true);
             AddPagination(pageNumber, pageSize);
 
             Include(u => u.Role!);
@@ -120,6 +113,13 @@ public static class UserSpec
             Filter(t => t.Token == token);
 
             Include("User.Role");
+        }
+    }
+    public class GetUserByStudentIdSpec : Specification<User>
+    {
+        public GetUserByStudentIdSpec(string studentId)
+        {
+            Filter(u => u.StudentId == studentId && u.Verified == VerifiedStatus.Verified && u.StudentId != "");
         }
     }
 }

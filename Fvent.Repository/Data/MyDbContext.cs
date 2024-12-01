@@ -17,9 +17,7 @@ public class MyDbContext : DbContext
     public DbSet<EventType> EventTypes { get; set; }
     public DbSet<EventRegistration> EventRegistrations { get; set; }
     public DbSet<EventReview> EventReviews { get; set; }
-    public DbSet<Comment> Comments { get; set; }
     public DbSet<EventMedia> EventMedia { get; set; }
-    public DbSet<EventFollower> EventFollowers { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<VerificationToken> VerificationTokens { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
@@ -52,18 +50,6 @@ public class MyDbContext : DbContext
 
         modelBuilder.Entity<EventType>()
             .HasQueryFilter(u => !u.IsDeleted);
-
-        modelBuilder.Entity<Comment>()
-            .HasOne(c => c.User)
-            .WithMany(u => u.Comments)
-            .HasForeignKey(c => c.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<EventFollower>()
-            .HasOne(c => c.User)
-            .WithMany(u => u.Followers)
-            .HasForeignKey(c => c.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<EventRegistration>()
             .HasOne(c => c.User)

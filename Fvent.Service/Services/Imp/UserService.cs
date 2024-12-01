@@ -177,6 +177,13 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var spec = new GetUserSpec(id);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
+        
+        // Check for unique StudentId
+        var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(req.StudentId));
+        if (existingStudent != null && existingStudent.UserId != user.UserId)
+        {
+            throw new Exception($"Student ID {req.StudentId} is already in use");
+        }
 
         user.Update(req.Username,
             req.AvatarUrl,
@@ -237,6 +244,90 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     #endregion
 
+    public async Task<IdRes> Register(CreateUserReq req)
+    {
+        var spec = new GetUserSpec(req.Email, req.Role).SetIgnoreQueryFilters(true);
+        var existingUser = await uOW.Users.FindFirstOrDefaultAsync(spec);
+
+        Guid userId;
+
+        if (existingUser != null)
+        {
+            if (existingUser.EmailVerified)
+            {
+                throw new Exception("This email has been used");
+            }
+
+            // Step 2: Generate or replace a reset token
+            var storedToken = await uOW.VerificationToken.FindFirstOrDefaultAsync(new GetVerificationTokenSpec(existingUser.UserId));
+
+            if (storedToken != null)
+            {
+                uOW.VerificationToken.Delete(storedToken); // Remove the existing token before generating a new one
+            }
+
+            // Update existing user details
+            existingUser.Username = req.Username;
+            existingUser.Password = req.Password;
+            existingUser.PhoneNumber = req.PhoneNumber;
+            // Check for unique StudentId
+            var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(req.StudentId));
+            if (existingStudent != null)
+            {
+                throw new Exception($"Student ID {req.StudentId} is already in use");
+            }
+
+            existingUser.StudentId = req.StudentId;
+
+            userId = existingUser.UserId;
+        }
+        else
+        {
+            // Create a new user
+            var newUser = req.ToUser();
+            newUser.EmailVerified = false;
+            newUser.Verified = VerifiedStatus.Unverified;
+
+            // Check if the email matches @fpt.edu.vn pattern
+            if (req.Email.EndsWith("@fpt.edu.vn", StringComparison.OrdinalIgnoreCase))
+            {
+                // Extract the 8-character Student ID
+                var studentId = req.Email.Split('@')[0];
+                studentId = studentId.Length >= 8 ? studentId[^8..].ToUpper() : studentId.ToUpper();
+
+                // Assign VerifiedStatus.Verified and set StudentId
+                newUser.Verified = VerifiedStatus.Verified;
+                newUser.StudentId = studentId;
+            }
+
+            // Check for unique StudentId
+            var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(newUser.StudentId));
+            if (existingStudent != null)
+            {
+                throw new Exception($"Student ID {newUser.StudentId} is already in use");
+            }
+
+            await uOW.Users.AddAsync(newUser);
+            userId = newUser.UserId;
+        }
+
+        await uOW.SaveChangesAsync();
+
+        // Generate and save verification token
+        var token = Guid.NewGuid().ToString();
+        var verificationLink = GenerateVerificationLink(userId, token);
+
+        var verificationToken = new VerificationToken(userId, token);
+        await uOW.VerificationToken.AddAsync(verificationToken);
+        await uOW.SaveChangesAsync();
+
+        // Send verification email
+        var emailBody = EmailTemplates.EmailVerificationTemplate.Replace("{verificationLink}", verificationLink);
+        await emailService.SendEmailAsync(req.Email, "Xác Nhận Email", emailBody);
+
+        return userId.ToResponse();
+    }
+
 
 
     public async Task<IdRes> ResendVerificationEmail(string userEmail, string role)
@@ -289,6 +380,13 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var spec = new GetUserSpec(id);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
+
+        // Check for unique StudentId
+        var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(user.StudentId));
+        if (existingStudent != null)
+        {
+            throw new Exception($"Student ID {user.StudentId} is already in use");
+        }
 
         user.CardUrl = cardUrl;
         user.Verified = VerifiedStatus.UnderVerify;
@@ -451,7 +549,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     private string GenerateVerificationLink(Guid userId, string token)
     {
-        return $"https://localhost:3000/xac-thuc-email?userId={userId}&token={token}";
+        return $"https://fvent.vercel.app/xac-thuc-email?userId={userId}&token={token}";
         //return $"https://fvent.somee.com/api/users/verify-email?userId={userId}&token={token}";
     }
 

@@ -22,7 +22,7 @@
             Title = title;
             Message = message;
             ReadStatus = status;
-            SentTime = DateTime.Now;
+            SentTime = DateTime.Now.AddHours(13);
         }
     }
 }

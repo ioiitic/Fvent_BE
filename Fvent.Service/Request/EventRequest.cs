@@ -19,3 +19,5 @@ public record GetEventsRequest(string? SearchKeyword, int? InMonth, int? InYear,
                                int PageNumber = 1, int PageSize = 9);
 public record ApproveEventRequest(string ProcessNote);
 public record GetEventByOrganizerReq(Guid OrganizerId, string? Status);
+public record GetEventOfOrganizerReq(Guid userId, string? SearchKeyword, int? InMonth, int? InYear, List<string>? EventTypes,
+                                    string? EventTag, string? Status, int PageNumber = 1, int PageSize = 9);

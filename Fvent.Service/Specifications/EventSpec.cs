@@ -266,15 +266,18 @@ public static class EventSpec
 
     public class GetEventByOrganizerSpec : Specification<Event>
     {
-        public GetEventByOrganizerSpec(Guid Id, string? status)
+        public GetEventByOrganizerSpec(Guid userId, string? status)
         {
-            Filter(e => e.OrganizerId == Id);
+            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress || e.Status == EventStatus.Completed);
+
+            Filter(e => e.OrganizerId == userId);
 
             // Filter by event status if provided
             if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
             {
                 Filter(e => e.Status == eventStatus);
             }
+            OrderBy(u => u.StartTime, true);
 
             Include(e => e.Tags!);
             Include(u => u.Organizer!);
@@ -282,17 +285,76 @@ public static class EventSpec
             Include(e => e.EventMedias!);
             Include(e => e.EventFile!);
         }
-    }
-    public class GetUserFollowsEventSpec : Specification<EventFollower>
-    {
-        public GetUserFollowsEventSpec(Guid eventId)
-        {
-            Filter(f => f.EventId == eventId);
 
-            // Include the related Event entity
-            Include(f => f.Event!);
-            Include(f => f.Event!.Organizer!);
-            Include(f => f.Event!.EventType!);
+        public GetEventByOrganizerSpec(Guid userId, string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag,
+                                        string? status,  int pageNumber, int pageSize)
+        {
+            Filter(e => e.OrganizerId == userId);
+            // Filter by search keyword (for event name or description)
+            if (!string.IsNullOrEmpty(searchKeyword))
+            {
+                if (!string.IsNullOrEmpty(searchKeyword))
+                {
+                    Filter(e => EF.Functions.Collate(e.EventName, "SQL_Latin1_General_CP1_CI_AI").Contains(searchKeyword) ||
+                                EF.Functions.Collate(e.Organizer!.Username, "SQL_Latin1_General_CP1_CI_AI").Contains(searchKeyword) ||
+                                e.Tags!.Any(tag => EF.Functions.Collate(tag.Tag, "SQL_Latin1_General_CP1_CI_AI").Contains(searchKeyword)));
+                }
+
+            }
+
+            // Filter by month for StartTime and EndTime
+            if (inMonth.HasValue)
+            {
+                var month = inMonth.Value;
+                var year = inYear ?? DateTime.UtcNow.Year;
+
+                Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
+            }
+            else if (!inMonth.HasValue && inYear.HasValue)
+            {
+                var year = inYear.Value;
+                Filter(e => (e.StartTime.Year == year ||  e.EndTime.Year == year));
+            }
+
+            // Filter by multiple event types if provided
+            if (eventTypes != null && eventTypes.Any())
+            {
+                Filter(e => eventTypes.Contains(e.EventType!.EventTypeName));
+            }
+
+            // Filter by event tag (assuming each event has an IList<EventTag> called Tags)
+            if (!string.IsNullOrEmpty(eventTag))
+            {
+                Filter(e => e.Tags!.Any(tag => tag.Tag == eventTag));
+            }
+
+            // Filter by event status if provided
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<EventStatus>(status, true, out var eventStatus))
+            {
+                Filter(e => e.Status == eventStatus);
+
+                if (eventStatus == EventStatus.Completed)
+                {
+                    OrderBy(u => u.EndTime, true);
+                }
+                else
+                {
+                    OrderBy(u => u.StartTime, false);
+                }
+            }
+            else
+            {
+                OrderBy(u => u.StartTime, true);
+            }
+
+            AddPagination(pageNumber, pageSize);
+
+            // Include related entities
+            Include(e => e.Organizer!);
+            Include(e => e.EventType!);
+            Include(e => e.EventMedias!);
+            Include(e => e.Tags!);
+            Include(e => e.EventFile!);
         }
     }
 }

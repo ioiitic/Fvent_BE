@@ -11,8 +11,7 @@ namespace Fvent.API.Controllers;
 
 [Route("api/events")]
 [ApiController]
-public class EventsController(IEventService eventService, ICommentService commentService,
-                              IFollowerService followerService, IRatingService ratingService,
+public class EventsController(IEventService eventService, IRatingService ratingService,
                               IRegistationService registationService, IReviewService reviewService,
                               IFormService formService) : ControllerBase
 {
@@ -84,10 +83,18 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// </summary>
     /// <param name="organizerId"></param>
     /// <returns></returns>
-    [HttpGet("organizer")]
+    [HttpGet("organizerPublic")]
     public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] GetEventByOrganizerReq req)
     {
         var res = await eventService.GetListEventsByOrganizer(req);
+
+        return Ok(res);
+    }
+
+    [HttpGet("organizerPrivate")]
+    public async Task<IActionResult> GetListEventsOfOrganizer([FromQuery] GetEventOfOrganizerReq req)
+    {
+        var res = await eventService.GetListEventsOfOrganizer(req);
 
         return Ok(res);
     }
@@ -216,7 +223,24 @@ public class EventsController(IEventService eventService, ICommentService commen
 
         try
         {
-            await eventService.CheckinEvent(eventId, userId);
+            await eventService.CheckinEvent(eventId, userId, false);
+            return Ok("Check-in successful");
+        }
+        catch (NotFoundException)
+        {
+            return NotFound("Please register for the event first.");
+        }
+    }
+
+    [HttpPut("{eventId}/checkin-organizer")]
+    [Authorize(Roles = "organizer")]
+    public async Task<IActionResult> CheckinEventByOrganizer([FromRoute] Guid eventId, [FromQuery] Guid userId)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        try
+        {
+            await eventService.CheckinEvent(eventId, userId, true);
             return Ok("Check-in successful");
         }
         catch (NotFoundException)
@@ -235,65 +259,6 @@ public class EventsController(IEventService eventService, ICommentService commen
     public async Task<IActionResult> DeleteEvent([FromRoute] Guid eventId)
     {
         await eventService.DeleteEvent(eventId);
-
-        return Ok();
-    }
-    #endregion
-
-    #region Event Comment
-    /// <summary>
-    /// Get comments of an event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <returns></returns>
-    [HttpGet("{eventId}/comments")]
-    public async Task<IActionResult> GetComments(Guid eventId)
-    {
-        var res = await commentService.GetListComments(eventId);
-
-        return Ok(res);
-    }
-
-    /// <summary>
-    /// Comment on an event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    [HttpPost("{eventId}/comments")]
-    public async Task<IActionResult> CreateComment(Guid eventId, [FromBody] CreateCommentReq req)
-    {
-        var res = await commentService.CreateComment(eventId, req);
-
-        return Ok(res);
-    }
-    #endregion
-
-    #region Event Following
-    /// <summary>
-    /// Follow an event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <param name="userId"></param>
-    /// <returns></returns>
-    [HttpPost("{eventId}/follow")]
-    public async Task<IActionResult> FollowEvent(Guid eventId, [FromBody] IdReq userId)
-    {
-        var res = await followerService.FollowEvent(eventId, userId.Id);
-
-        return Ok(res);
-    }
-
-    /// <summary>
-    /// Unfollow an event
-    /// </summary>
-    /// <param name="eventId"></param>
-    /// <param name="userId"></param>
-    /// <returns></returns>
-    [HttpDelete("{eventId}/unfollow")]
-    public async Task<IActionResult> UnfollowEvent(Guid eventId, [FromBody] IdReq userId)
-    {
-        await followerService.UnfollowEvent(eventId, userId.Id);
 
         return Ok();
     }
@@ -352,9 +317,16 @@ public class EventsController(IEventService eventService, ICommentService commen
     /// <returns></returns>
     [HttpGet("{eventId}/participants")]
     [Authorize(Roles = "organizer")]
-    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId)
+    public async Task<IActionResult> GetParticipantsForEvent([FromRoute] Guid eventId, [FromQuery] GetRegisteredUsersReq req)
     {
-        var res = await eventService.GetRegisteredUsers(eventId);
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        var res = await eventService.GetRegisteredUsers(eventId, req, userId);
 
         return Ok(res);
     }
