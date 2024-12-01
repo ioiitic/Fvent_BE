@@ -6,10 +6,9 @@ namespace Fvent.Service.Services;
 
 public interface IUserService
 {
-    #region Authen
+    #region Auth
     Task<AuthRes> Authen(AuthReq req, string ipAddress);
     Task<AuthRes> Refresh(RefreshTokenReq req, string ipAddress);
-    Task<IdRes> Register(CreateUserReq req);
     #endregion
 
     #region User
@@ -17,6 +16,10 @@ public interface IUserService
     Task<UserRes> Get(Guid id);
     Task<UserRes> GetByEmail(string email);
     Task<IdRes> Update(Guid id, UpdateUserReq req);
+    #endregion
+
+    #region User Account
+    Task<IdRes> Register(CreateUserReq req);
     #endregion
 
     #region Verify

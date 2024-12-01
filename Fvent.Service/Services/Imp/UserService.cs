@@ -6,7 +6,6 @@ using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
-using LinqKit;
 using Microsoft.Extensions.Configuration;
 using static Fvent.Service.Specifications.NotificationSpec;
 using static Fvent.Service.Specifications.UserSpec;
@@ -26,7 +25,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         // Generate jwt token and refresh token
         var token = JS.GenerateToken(user.UserId, user.Email, user.Role!, configuration);
-        var rfsToken = await CreateRefreshToken(user, ipAddress);
+        var rfsToken = CreateRefreshToken(user, ipAddress);
 
         if(req.FcmToken is not null)
         {
@@ -62,26 +61,101 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         // Generate JWT token and refresh token
         var token = JS.GenerateToken(user.UserId, user.Email, user.Role ?? throw new Exception("User role is missing"), configuration);
-        var newRefreshToken = await CreateRefreshToken(user, ipAddress);
+        var newRefreshToken = CreateRefreshToken(user, ipAddress);
+
+        await uOW.SaveChangesAsync();
 
         return new AuthRes(token, newRefreshToken.Token);
     }
 
-
-    private async Task<RefreshToken> CreateRefreshToken(User user, string ipAddress)
+    private RefreshToken CreateRefreshToken(User user, string ipAddress)
     {
         var rfsToken = JS.GenerateRefreshToken(ipAddress);
         var rfsSpec = new CheckRefreshTokenSpec(rfsToken.Token);
-        while ((await uOW.RefreshToken.FindFirstOrDefaultAsync(rfsSpec)) != null)
+
+        foreach (var rt in user.RefreshTokens!)
         {
-            rfsToken = JS.GenerateRefreshToken(ipAddress);
+            uOW.RefreshToken.Delete(rt);
         }
 
         // Replace refresh token
         user.RefreshTokens!.Add(rfsToken);
-        await uOW.SaveChangesAsync();
 
         return rfsToken;
+    }
+    #endregion
+
+    #region User Account
+    public async Task<IdRes> Register(CreateUserReq req)
+    {
+        var spec = new GetUserSpec(req.Email, req.Role).SetIgnoreQueryFilters(true);
+        var existingUser = await uOW.Users.FindFirstOrDefaultAsync(spec);
+
+        Guid userId;
+
+        if (existingUser != null)
+        {
+            if (existingUser.EmailVerified)
+            {
+                throw new Exception("This email has been used");
+            }
+            // Step 2: Generate or replace a reset token
+            var storedToken = await uOW.VerificationToken.FindFirstOrDefaultAsync(new GetVerificationTokenSpec(existingUser.UserId));
+
+            if (storedToken != null)
+            {
+                uOW.VerificationToken.Delete(storedToken); // Remove the existing token before generating a new one
+            }
+            // Update existing user details
+            existingUser.Username = req.Username;
+            existingUser.Password = req.Password;
+            existingUser.PhoneNumber = req.PhoneNumber;
+            existingUser.StudentId = req.StudentId;
+            if (!Enum.TryParse<UserRole>(req.Role, true, out var userRole))
+            {
+                throw new ArgumentException("Invalid role specified"); // Handle invalid role
+            }
+
+            userId = existingUser.UserId;
+        }
+        else
+        {
+            // Create a new user
+            var newUser = req.ToUser();
+            newUser.EmailVerified = false;
+            newUser.Verified = VerifiedStatus.Unverified;
+
+            // Check if the email matches @fpt.edu.vn pattern
+            if (req.Email.EndsWith("@fpt.edu.vn", StringComparison.OrdinalIgnoreCase))
+            {
+                // Extract the 8-character Student ID
+                var studentId = req.Email.Split('@')[0];
+                studentId = studentId.Length >= 8 ? studentId[^8..].ToUpper() : studentId.ToUpper();
+
+                // Assign VerifiedStatus.Verified and set StudentId
+                newUser.Verified = VerifiedStatus.Verified;
+                newUser.StudentId = studentId;
+            }
+
+            await uOW.Users.AddAsync(newUser);
+            userId = newUser.UserId;
+        }
+
+        await uOW.SaveChangesAsync();
+
+        // Generate and save verification token
+        var token = Guid.NewGuid().ToString();
+        var verificationLink = GenerateVerificationLink(userId, token);
+
+        var verificationToken = new VerificationToken(userId, token);
+        await uOW.VerificationToken.AddAsync(verificationToken);
+        await uOW.SaveChangesAsync();
+
+        // Send verification email
+        var emailBody = EmailTemplates.EmailVerificationTemplate.Replace("{verificationLink}", verificationLink);
+        await emailService.SendEmailAsync(req.Email, "Xác Nhận Email", emailBody);
+
+        return userId.ToResponse();
     }
     #endregion
 
@@ -163,72 +237,6 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     #endregion
 
-    public async Task<IdRes> Register(CreateUserReq req)
-    {
-        var spec = new GetUserSpec(req.Email, req.Role).SetIgnoreQueryFilters(true);
-        var existingUser = await uOW.Users.FindFirstOrDefaultAsync(spec);
-
-        Guid userId;
-
-        if (existingUser != null)
-        {
-            if (existingUser.EmailVerified)
-            {
-                throw new Exception("This email has been used");
-            }
-            // Step 2: Generate or replace a reset token
-            var storedToken = await uOW.VerificationToken.FindFirstOrDefaultAsync(new GetVerificationTokenSpec(existingUser.UserId));
-
-            if (storedToken != null)
-            {
-                uOW.VerificationToken.Delete(storedToken); // Remove the existing token before generating a new one
-            }
-            // Update existing user details
-            existingUser.Username = req.Username;
-            existingUser.Password = req.Password;
-            existingUser.PhoneNumber = req.PhoneNumber;
-
-            userId = existingUser.UserId;
-        }
-        else
-        {
-            // Create a new user
-            var newUser = req.ToUser();
-            newUser.EmailVerified = false;
-            newUser.Verified = VerifiedStatus.Unverified;
-
-            // Check if the email matches @fpt.edu.vn pattern
-            if (req.Email.EndsWith("@fpt.edu.vn", StringComparison.OrdinalIgnoreCase))
-            {
-                // Extract the 8-character Student ID
-                var studentId = req.Email.Split('@')[0];
-                studentId = studentId.Length >= 8 ? studentId[^8..].ToUpper() : studentId.ToUpper();
-
-                // Assign VerifiedStatus.Verified and set StudentId
-                newUser.Verified = VerifiedStatus.Verified;
-                newUser.StudentId = studentId;
-            }
-
-            await uOW.Users.AddAsync(newUser);
-            userId = newUser.UserId;
-        }
-
-        await uOW.SaveChangesAsync();
-
-        // Generate and save verification token
-        var token = Guid.NewGuid().ToString();
-        var verificationLink = GenerateVerificationLink(userId, token);
-
-        var verificationToken = new VerificationToken(userId, token);
-        await uOW.VerificationToken.AddAsync(verificationToken);
-        await uOW.SaveChangesAsync();
-
-        // Send verification email
-        var emailBody = EmailTemplates.EmailVerificationTemplate.Replace("{verificationLink}", verificationLink);
-        await emailService.SendEmailAsync(req.Email, "Xác Nhận Email", emailBody);
-
-        return userId.ToResponse();
-    }
 
 
     public async Task<IdRes> ResendVerificationEmail(string userEmail, string role)
@@ -422,7 +430,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     {
         var user = await _Get(id);
 
-        return user.ToResponse<UserRes>();
+        return user.ToResponse<UserRes>(isHaveUnreadNoti: true);
     }
     private async Task<User> _Get(Guid id)
     {
@@ -436,7 +444,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var isHaveUnreadNoti = await uOW.Notification.FindFirstOrDefaultAsync(specSub) != null;
 
         // Map user entity to response object, passing isHaveNoti
-        return user.ToResponse<UserRes>(isHaveUnreadNoti);
+        return user;
     }
 
 
@@ -445,18 +453,18 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     {
         return $"https://localhost:3000/xac-thuc-email?userId={userId}&token={token}";
         //return $"https://fvent.somee.com/api/users/verify-email?userId={userId}&token={token}";
-
     }
+
     private string GenerateResetLink(Guid userId, string token)
     {
         //return $"https://localhost:7289/api/users/reset-password?userId={userId}&token={token}";
         return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
-    }
+    } 
 
     #region Report
     public async Task<UserReportRes> GetReport(Guid userId)
     {
-        var events = await eventService.GetRegisteredEvents(userId, true);
+        var events = await eventService.GetRegisteredEvents(userId, null, null, true);
 
         var noOfEvents = events.Count();
         var organizersList = events
@@ -474,7 +482,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         foreach (var organizer in organizersList)
         {
             var user = await _Get(organizer.OrganizerId);
-            organizers.Add(user.ToResponse<OrganizerReportInfo>(organizer.EventCount));
+            organizers.Add(user.ToResponse<OrganizerReportInfo>(noOfEvent: organizer.EventCount));
         }
 
         return new UserReportRes(noOfEvents, organizersList.Count(), organizers);

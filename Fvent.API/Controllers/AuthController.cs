@@ -20,10 +20,7 @@ public class AuthController(IUserService userService) : ControllerBase
     {
         // get source ip address for the current request
         string ipAddress;
-        if (Request.Headers.ContainsKey("X-Forwarded-For"))
-            ipAddress = Request.Headers["X-Forwarded-For"]!;
-        else
-            ipAddress = HttpContext.Connection.RemoteIpAddress!.MapToIPv4().ToString();
+        ipAddress = HttpContext.Connection.RemoteIpAddress!.MapToIPv4().ToString();
 
         var res = await userService.Authen(req, ipAddress);
 
