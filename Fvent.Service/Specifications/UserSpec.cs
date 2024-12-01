@@ -50,6 +50,7 @@ public static class UserSpec
             Filter(u => u.UserId == id);
 
             Include(u => u.Role!);
+            Include(u => u.VerificationToken!);
         }
 
         public GetUserSpec(string email)

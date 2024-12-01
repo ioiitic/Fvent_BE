@@ -14,28 +14,25 @@ public interface IUserService
     #region User
     Task<PageResult<GetListUserRes>> GetList(GetListUsersReq req);
     Task<UserRes> Get(Guid id);
-    Task<UserRes> GetByEmail(string email);
     Task<IdRes> Update(Guid id, UpdateUserReq req);
+    Task Delete(Guid id);
     #endregion
 
     #region User Account
     Task<IdRes> Register(CreateUserReq req);
-    #endregion
-
-    #region Verify
     Task<IdRes> AddCardId(Guid id, string cardUrl);
     Task<IdRes> ApproveUser(Guid id, bool isApproved, string processNote);
+    Task<IdRes> RegisterModerator(CreateModeratReq req);
     #endregion
 
     #region Email
     Task VerifyEmailAsync(Guid userId, string token);
-    Task<IdRes> ResendVerificationEmail(string userEmail, string role);
     Task RequestPasswordResetAsync(string email);
-    #endregion
-    Task<IdRes> RegisterModerator(CreateModeratReq req);
     Task ResetPasswordAsync(Guid userId, string token, string newPassword);
     Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword);
-    Task Delete(Guid id);
+    Task<IdRes> ResendVerificationEmail(string userEmail, string role);
+    #endregion
+
     #region Report
     Task<UserReportRes> GetReport(Guid userId);
     #endregion

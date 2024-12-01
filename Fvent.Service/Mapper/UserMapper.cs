@@ -10,12 +10,6 @@ public static class UserMapper
 {
     public static User ToUser(this CreateUserReq src)
     {
-        // Try to parse the role from the string to the UserRole enum
-        if (!Enum.TryParse<UserRole>(src.Role, true, out var userRole))
-        {
-            throw new ArgumentException("Invalid role specified"); // Handle invalid role
-        }
-
         return new User(
             src.Username,
             DefaultImage.DefaultAvatar,
@@ -26,8 +20,10 @@ public static class UserMapper
             "",
             src.PhoneNumber,
             "", 
-            (int)userRole,
-            DateTime.Now.AddHours(13)
+            (int)src.Role,
+            DateTime.Now.AddHours(13),
+            false,
+            VerifiedStatus.Unverified
         );
     }
 
@@ -44,7 +40,9 @@ public static class UserMapper
             "",
             "",
             (int)UserRole.Moderator,
-            DateTime.Now.AddHours(13)
+            DateTime.Now.AddHours(13),
+            true,
+            VerifiedStatus.Verified
         );
     }
 

@@ -286,8 +286,9 @@ public static class EventSpec
             Include(e => e.EventFile!);
         }
 
-        public GetEventByOrganizerSpec(Guid userId, string? searchKeyword, int? inMonth, int? inYear, List<string>? eventTypes, string? eventTag,
-                                        string? status,  int pageNumber, int pageSize)
+        public GetEventByOrganizerSpec(Guid userId, string? searchKeyword, int? inMonth, int? inYear,
+                                       List<string>? eventTypes, string? eventTag, string? status, int pageNumber,
+                                       int pageSize)
         {
             Filter(e => e.OrganizerId == userId);
             // Filter by search keyword (for event name or description)
@@ -355,6 +356,38 @@ public static class EventSpec
             Include(e => e.EventMedias!);
             Include(e => e.Tags!);
             Include(e => e.EventFile!);
+        }
+    }
+    public class GetEventForReportSpec : Specification<Event>
+    {
+        public GetEventForReportSpec(DateTime? startDate = null, DateTime? endDate = null)
+        {
+            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress || e.Status == EventStatus.Completed);
+
+            if (startDate is not null && endDate is not null)
+            {
+                Filter(e => e.EndTime <= endDate && e.EndTime >= startDate);
+
+                Include("Registrations.User");
+            }
+
+            OrderBy(u => u.StartTime, true);
+        }
+
+        public GetEventForReportSpec(Guid userId, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress || e.Status == EventStatus.Completed);
+
+            Filter(e => e.OrganizerId == userId);
+
+            if (startDate is not null && endDate is not null)
+            {
+                Filter(e => e.EndTime <= endDate && e.EndTime >= startDate);
+
+                Include("Registrations.User");
+            }
+
+            OrderBy(u => u.StartTime, true);
         }
     }
 }

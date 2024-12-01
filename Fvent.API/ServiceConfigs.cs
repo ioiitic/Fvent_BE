@@ -2,6 +2,7 @@
 using Fvent.API.Filters;
 using Fvent.API.Policy;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace Fvent.API;
 
@@ -19,9 +20,13 @@ public static class ServiceConfigs
         });
 
         services.AddControllers(options =>
-        {
-            options.Filters.Add<GlobalExceptionFilter>();
-        });
+                {
+                    options.Filters.Add<GlobalExceptionFilter>();
+                })
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
 
         services.AddEndpointsApiExplorer(); 
         services.AddSwaggerGen(c =>

@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Linq;
 using System.Linq.Expressions;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
@@ -399,8 +400,8 @@ public class EventService(IUnitOfWork uOW) : IEventService
     /// <returns></returns>
     public async Task<PageResult<EventRes>> GetListEventsOfOrganizer(GetEventOfOrganizerReq req)
     {
-        var spec = new GetEventByOrganizerSpec(req.userId, req.SearchKeyword, req.InMonth, req.InYear, req.EventTypes, req.EventTag, req.Status,
-                                               req.PageNumber, req.PageSize);
+        var spec = new GetEventByOrganizerSpec(req.UserId, req.SearchKeyword, req.InMonth, req.InYear, req.EventTypes,
+                                               req.EventTag, req.Status, req.PageNumber, req.PageSize);
 
         // Get paginated list of events
         var _events = await uOW.Events.GetPageAsync(spec);
@@ -491,9 +492,82 @@ public class EventService(IUnitOfWork uOW) : IEventService
     }
 
     #region Report
-    public Task<EventReportRes> Report()
+    public async Task<EventReportRes> Report(DateTime startDate, DateTime endDate)
     {
-        throw new NotImplementedException();
+        var spec = new GetEventForReportSpec(startDate, endDate);
+
+        var events = await uOW.Events.GetListAsync(spec);
+
+        var noOfEvents = events.Count();
+        var lstRegistered = events.Aggregate(new List<EventRegistration>(), (r, e) =>
+        {
+            e.Registrations.ForEach(r => r.Event = e);
+            r.AddRange(e.Registrations!);
+            return r;
+        });
+
+        var noOfUserAttended = lstRegistered.Where(r => r.IsCheckIn).GroupBy(r => r.UserId)
+            .Select(g => new UserReportInfo(g.Key,
+                                            g.Select(r => r.User!.Username).First(),
+                                            g.Select(r => r.User!.AvatarUrl).First(),
+                                            g.Select(r => r.EventId).Distinct().Count()));
+        var noOfUserNotAttended = lstRegistered.Where(r => !r.IsCheckIn).GroupBy(r => r.UserId)
+            .Select(g => new UserReportInfo(g.Key,
+                                            g.Select(r => r.User!.Username).First(),
+                                            g.Select(r => r.User!.AvatarUrl).First(),
+                                            g.Select(r => r.EventId).Distinct().Count()));
+        var test = lstRegistered.GroupBy(r => new { r.Event!.EndTime.Month, r.Event.EndTime.Year });
+
+        var eventDetails = events.GroupBy(r => new { r.EndTime.Month, r.EndTime.Year })
+            .Select(e => new EventReportDetailRes(e.Select(r => r.EventId).Distinct().Count(),
+                                                  e.Key.Month,
+                                                  e.Key.Year));
+
+        var registrationDetail = lstRegistered.GroupBy(r => new { r.RegistrationTime.Month, r.RegistrationTime.Year })
+            .Select(g => new RegistrationReportDetailInfo(g.Select(r => r.UserId).Count(), g.Key.Month, g.Key.Year));
+
+        return new EventReportRes(noOfEvents, lstRegistered.Count, noOfUserAttended.Count(), noOfUserNotAttended.Count(),
+                                  eventDetails.ToList(), noOfUserAttended.ToList(), noOfUserNotAttended.ToList(),
+                                  registrationDetail.ToList());
+    }
+
+    public async Task<EventReportRes> ReportForOrganizer(Guid userId, DateTime startDate, DateTime endDate)
+    {
+        var spec = new GetEventForReportSpec(userId, startDate, endDate);
+
+        var events = await uOW.Events.GetListAsync(spec);
+
+        var noOfEvents = events.Count();
+        var lstRegistered = events.Aggregate(new List<EventRegistration>(), (r, e) =>
+        {
+            e.Registrations.ForEach(r => r.Event = e);
+            r.AddRange(e.Registrations!);
+            return r;
+        });
+
+        var noOfUserAttended = lstRegistered.Where(r => r.IsCheckIn).GroupBy(r => r.UserId)
+            .Select(g => new UserReportInfo(g.Key,
+                                            g.Select(r => r.User!.Username).First(),
+                                            g.Select(r => r.User!.AvatarUrl).First(),
+                                            g.Select(r => r.EventId).Distinct().Count()));
+        var noOfUserNotAttended = lstRegistered.Where(r => !r.IsCheckIn).GroupBy(r => r.UserId)
+            .Select(g => new UserReportInfo(g.Key,
+                                            g.Select(r => r.User!.Username).First(),
+                                            g.Select(r => r.User!.AvatarUrl).First(),
+                                            g.Select(r => r.EventId).Distinct().Count()));
+        var test = lstRegistered.GroupBy(r => new { r.Event!.EndTime.Month, r.Event.EndTime.Year });
+
+        var eventDetails = events.GroupBy(r => new { r.EndTime.Month, r.EndTime.Year })
+            .Select(e => new EventReportDetailRes(e.Select(r => r.EventId).Distinct().Count(),
+                                                  e.Key.Month,
+                                                  e.Key.Year));
+
+        var registrationDetail = lstRegistered.GroupBy(r => new { r.RegistrationTime.Month, r.RegistrationTime.Year })
+            .Select(g => new RegistrationReportDetailInfo(g.Select(r => r.UserId).Count(),g.Key.Month, g.Key.Year));
+
+        return new EventReportRes(noOfEvents, lstRegistered.Count, noOfUserAttended.Count(), noOfUserNotAttended.Count(),
+                                  eventDetails.ToList(), noOfUserAttended.ToList(), noOfUserNotAttended.ToList(),
+                                  registrationDetail.ToList());
     }
 
     public Task<EventReportDetailRes> ReportByEvent(Guid eventId)

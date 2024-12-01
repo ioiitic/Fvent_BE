@@ -81,7 +81,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     /// <summary>
     /// Get list events belong to organizer
     /// </summary>
-    /// <param name="organizerId"></param>
+    /// <param name="req"></param>
     /// <returns></returns>
     [HttpGet("organizerPublic")]
     public async Task<IActionResult> GetListEventsByOrganizer([FromQuery] GetEventByOrganizerReq req)
@@ -264,7 +264,6 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     }
     #endregion
 
-
     #region Event Registration
     /// <summary>
     /// Register an event
@@ -432,9 +431,19 @@ public class EventsController(IEventService eventService, IRatingService ratingS
 
     #region Report
     [HttpGet("report")]
-    public async Task<IActionResult> Report()
+    public async Task<IActionResult> Report(DateTime startDate, DateTime endDate)
     {
-        var res = await eventService.Report();
+        var res = await eventService.Report(startDate, endDate);
+
+        return Ok(res);
+    }
+
+    [HttpGet("report-for-organizer")]
+    public async Task<IActionResult> ReportForOrganizer(DateTime startDate, DateTime endDate)
+    {
+        var userId = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value!;
+
+        var res = await eventService.ReportForOrganizer(Guid.Parse(userId), startDate, endDate);
 
         return Ok(res);
     }

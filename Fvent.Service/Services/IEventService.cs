@@ -23,7 +23,8 @@ public interface IEventService
     Task<IList<EventRes>> GetRegisteredEvents(Guid userId, int? inMonth, int? inYear, bool isCompleted);
 
     #region Report
-    Task<EventReportRes> Report();
+    Task<EventReportRes> Report(DateTime startDate, DateTime endDate);
+    Task<EventReportRes> ReportForOrganizer(Guid userId, DateTime startDate, DateTime endDate);
     Task<EventReportDetailRes> ReportByEvent(Guid eventId);
     #endregion
 }
