@@ -83,7 +83,11 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     {
         var user = await _Get(id);
 
-        return user.ToResponse<UserRes>(isHaveUnreadNoti: true);
+        // Check if user has notifications
+        var specSub = new GetUnreadNotificationByUserSpec(id);
+        var isHaveUnreadNoti = await uOW.Notification.FindFirstOrDefaultAsync(specSub) != null;
+
+        return user.ToResponse<UserRes>(isHaveUnreadNoti);
     }
 
     public async Task<IdRes> Update(Guid id, UpdateUserReq req)
@@ -297,7 +301,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         }
 
         var token = Guid.NewGuid().ToString();
-        var resetToken = new VerificationToken(user.UserId, token, DateTime.Now.AddHours(1));
+        var resetToken = new VerificationToken(user.UserId, token, DateTime.Now.AddHours(14));
 
         // Step 3: Store token in the database
         await uOW.VerificationToken.AddAsync(resetToken);
@@ -320,7 +324,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             ?? throw new NotFoundException(typeof(VerificationToken));
 
         // Step 2: Check if token is expired
-        if (resetToken.ExpiryDate < DateTime.Now)
+        if (resetToken.ExpiryDate < DateTime.Now.AddHours(13))
         {
             throw new InvalidOperationException("Reset token has expired.");
         }
@@ -461,8 +465,8 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     private string GenerateResetLink(Guid userId, string token)
     {
-        //return $"https://localhost:7289/api/users/reset-password?userId={userId}&token={token}";
-        return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
+        return $"https://fvent.vercel.app/dat-lai-mat-khau?userId={userId}&token={token}";
+        //return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
     }
     #endregion
 }

@@ -47,6 +47,13 @@ public class EventService(IUnitOfWork uOW) : IEventService
     #region CRUD Event
     public async Task<IdRes> CreateEvent(CreateEventReq req, Guid organizerId)
     {
+        var spec = new GetUserSpec(organizerId);
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec);
+        if (user.Verified != VerifiedStatus.Verified)
+        {
+            throw new Exception("This account not have permission.");
+        }
+
         var _event = req.ToEvent(organizerId);
         
         if(req.CreateFormDetailsReq is not null)

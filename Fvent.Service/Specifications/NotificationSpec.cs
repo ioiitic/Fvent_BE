@@ -30,6 +30,7 @@ public static class NotificationSpec
         public GetNotificationByUserSpec(Guid id)
         {
             Filter(u => u.UserId == id);
+            OrderBy(u => u.SentTime, true);
 
             Include(u => u.User!);
             Include(u => u.Event!);

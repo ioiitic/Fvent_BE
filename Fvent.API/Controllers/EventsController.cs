@@ -92,6 +92,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     }
 
     [HttpGet("organizerPrivate")]
+    [Authorize(Roles = "organizer")]
     public async Task<IActionResult> GetListEventsOfOrganizer([FromQuery] GetEventOfOrganizerReq req)
     {
         var res = await eventService.GetListEventsOfOrganizer(req);
