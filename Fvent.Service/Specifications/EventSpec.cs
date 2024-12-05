@@ -198,13 +198,16 @@ public static class EventSpec
 
             if (isCompleted)
             {
-                Filter(e => e.Status == EventStatus.Completed);
+                Filter(e => e.Registrations!.Any(r =>  r.IsCheckIn));
+                OrderBy(u => u.StartTime, true);
             }
             else
             {
+                Filter(e => e.Registrations!.Any(r => !r.IsCheckIn));
                 Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress);
+                OrderBy(u => u.StartTime, false);
             }
-            OrderBy(u => u.StartTime, true);
+            
             Include("Registrations.User.Role");
             Include(e => e.Organizer!);
             Include(e => e.EventType!);

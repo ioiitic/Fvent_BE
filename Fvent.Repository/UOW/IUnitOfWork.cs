@@ -18,6 +18,7 @@ public interface IUnitOfWork
     IEventFileRepo EventFile { get; }
     IFormRepo Form { get; }
     IFormSubmitRepo FormSubmit { get; }
+    ILocationRepo Location { get; }
 
     bool IsUpdate<TEntity>(TEntity entity) where TEntity : class;
     Task SaveChangesAsync();

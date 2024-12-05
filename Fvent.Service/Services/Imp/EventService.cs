@@ -18,12 +18,13 @@ using System.Linq.Expressions;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
 using static Fvent.Service.Specifications.EventTagSpec;
+using static Fvent.Service.Specifications.FormSpec;
 using static Fvent.Service.Specifications.ReviewSpec;
 using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp;
 
-public class EventService(IUnitOfWork uOW) : IEventService
+public class EventService(IUnitOfWork uOW, IRegistationService _regisService, IEmailService emailService) : IEventService
 {
     #region Student
     public async Task<PageResult<EventRes>> GetListRecommend(Guid userId)
@@ -209,6 +210,67 @@ public class EventService(IUnitOfWork uOW) : IEventService
         await uOW.SaveChangesAsync();
     }
 
+    public async Task CancelEvent(Guid eventId, Guid organizerId)
+    {
+        var spec = new GetEventSpec(eventId);
+        var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(Event));
+        //Check event Owner
+        if(_event.OrganizerId != organizerId)
+        {
+            throw new Exception("This event is not belong to you!");
+        }
+
+        // Enforce the "cancel before 2 days of start date" rule
+        if (_event.StartTime <= DateTime.Now.AddDays(2))
+        {
+            throw new Exception("You can only cancel this event at least 2 days before the start date.");
+        }
+
+        // Retrieve and materialize participants
+        var specSub = new GetEventParticipantsSpec(eventId);
+        var participants = await uOW.EventRegistration.GetListAsync(specSub); // Already materialized
+
+        if (participants.Any())
+        {
+            // Unregister all participants
+            foreach (var participant in participants.ToList()) // Ensure materialization here
+            {
+                // Delete participant registration
+                var regis = participant;
+                uOW.EventRegistration.Delete(regis);
+
+                // Find and delete FormSubmit if exists
+                var formsubmit = await uOW.FormSubmit.FindFirstOrDefaultAsync(new GetFormSubmitSpec(eventId, participant.UserId));
+                if (formsubmit != null)
+                {
+                    uOW.FormSubmit.Delete(formsubmit);
+                }
+
+                // Update event max attendees
+                if (_event.MaxAttendees != null)
+                {
+                    _event.MaxAttendees += 1;
+                }
+
+                // Send email notification
+                var emailBody = EmailTemplates.ApologyForEventCancellationTemplate
+                    .Replace("{userName}", participant.User.Username)
+                    .Replace("{eventName}", _event.EventName)
+                    .Replace("{eventStartDate}", _event.StartTime.ToString("dd/MM/yyyy HH:mm"));
+
+                await emailService.SendEmailAsync(participant.User!.Email, "Sự kiện bạn đăng kí đã bị hủy!", emailBody);
+            }
+        }
+
+        // Update event status to Cancelled
+        _event.Status = EventStatus.Cancelled;
+
+        await uOW.SaveChangesAsync();
+
+    }
+
+
     public async Task<PageResult<EventRes>> GetListEvents(GetEventsRequest req)
     {
         var spec = new GetEventSpec(req.SearchKeyword, req.InMonth, req.InYear, req.EventTypes, req.EventTag,req.Status, 
@@ -228,6 +290,12 @@ public class EventService(IUnitOfWork uOW) : IEventService
             _events.TotalItems,
             _events.TotalPages
         );
+    }
+
+    public async Task<IList<Location>> GetListLocation()
+    {
+        var locations = await uOW.Location.GetAllAsync();
+        return locations.ToList();
     }
 
     public async Task<PageResult<EventRes>> GetListEventsForAdmin(GetEventsRequest req)
@@ -454,7 +522,6 @@ public class EventService(IUnitOfWork uOW) : IEventService
 
         // Extract all users from registrations
         var allUsers = events.SelectMany(e => e.Registrations!)
-
                              .Select(r =>
                              {
                                  var userResponse = r.User!.ToResponse<UserRes>();

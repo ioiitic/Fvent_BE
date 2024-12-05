@@ -322,6 +322,21 @@ namespace Fvent.Repository.Migrations
                     b.ToTable("FormSubmits");
                 });
 
+            modelBuilder.Entity("Fvent.BO.Entities.Location", b =>
+                {
+                    b.Property<Guid>("LocationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LocationName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("LocationId");
+
+                    b.ToTable("Locations");
+                });
+
             modelBuilder.Entity("Fvent.BO.Entities.Notification", b =>
                 {
                     b.Property<Guid>("NotificationId")
@@ -475,6 +490,9 @@ namespace Fvent.Repository.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<int>("MissedCheckInsCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -514,7 +532,6 @@ namespace Fvent.Repository.Migrations
             modelBuilder.Entity("VerificationToken", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("ExpiryDate")
@@ -696,6 +713,15 @@ namespace Fvent.Repository.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("VerificationToken", b =>
+                {
+                    b.HasOne("Fvent.BO.Entities.User", null)
+                        .WithOne("VerificationToken")
+                        .HasForeignKey("VerificationToken", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Fvent.BO.Entities.Event", b =>
                 {
                     b.Navigation("EventFile");
@@ -723,6 +749,8 @@ namespace Fvent.Repository.Migrations
                     b.Navigation("Registrations");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("VerificationToken");
                 });
 #pragma warning restore 612, 618
         }

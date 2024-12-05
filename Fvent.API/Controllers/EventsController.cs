@@ -29,6 +29,14 @@ public class EventsController(IEventService eventService, IRatingService ratingS
         return Ok(res);
     }
 
+    [HttpGet("location")]
+    public async Task<IActionResult> GetListLocation()
+    {
+        var res = await eventService.GetListLocation();
+
+        return Ok(res);
+    }
+
     /// <summary>
     /// Get list events
     /// </summary>
@@ -161,6 +169,26 @@ public class EventsController(IEventService eventService, IRatingService ratingS
         var res = await eventService.UpdateEvent(eventId, organizerId, req);
 
         return Ok(res);
+    }
+    /// <summary>
+    /// Cancel event before its start
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpPut("{eventId}/cancelEvent")]
+    [Authorize(Roles = "organizer")]
+    public async Task<IActionResult> CancelEvent([FromRoute] Guid eventId)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        await eventService.CancelEvent(eventId, organizerId);
+
+        return Ok();
     }
 
     /// <summary>

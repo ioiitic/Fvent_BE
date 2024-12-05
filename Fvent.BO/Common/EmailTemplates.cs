@@ -274,6 +274,88 @@ public class EmailTemplates
 </body>
 </html>
 ";
+    public static readonly string ApologyForEventCancellationTemplate = $@"
+<!DOCTYPE html>
+<html lang='vi'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Xin Lỗi Vì Hủy Sự Kiện</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{
+            background-color: #ffffff;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }}
+        .header {{
+            background-color: #FF5733;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 24px;
+        }}
+        .content {{
+            padding: 20px;
+            color: #333333;
+            line-height: 1.6;
+        }}
+        .content h2 {{
+            color: #FF5733;
+        }}
+        .btn {{
+            display: inline-block;
+            background-color: #FF5733;
+            color: white;
+            padding: 12px 25px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 20px;
+        }}
+        .footer {{
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Xin Lỗi Vì Hủy Sự Kiện</h1>
+        </div>
+        <div class='content'>
+            <h2>Xin chào {{userName}},</h2>
+            <p>Chúng tôi rất tiếc phải thông báo rằng sự kiện <strong>{{eventName}}</strong>, dự kiến diễn ra vào ngày <strong>{{eventStartDate}}</strong>, đã bị hủy.</p>
+            <p>Chúng tôi hiểu rằng quyết định này có thể đã gây ra sự bất tiện cho bạn và rất mong nhận được sự thông cảm của bạn. Quyết định hủy sự kiện được đưa ra dựa trên các yếu tố không mong muốn, và chúng tôi đang cố gắng hết sức để tránh những trường hợp tương tự trong tương lai.</p>
+            <p>Nếu bạn cần hỗ trợ thêm hoặc có bất kỳ thắc mắc nào, xin vui lòng liên hệ với chúng tôi qua email hoặc nhấn vào nút bên dưới để được hỗ trợ ngay lập tức.</p>
+            <p>Một lần nữa, chúng tôi chân thành xin lỗi vì sự bất tiện này và cảm ơn sự ủng hộ của bạn.</p>
+            <a href='{{supportLink}}' class='btn'>Liên Hệ Hỗ Trợ</a>
+        </div>
+        <div class='footer'>
+            <p>Email này được gửi từ Fvent. Nếu bạn có bất kỳ thắc mắc nào, vui lòng <a href='mailto:thiendn.work@gmail.com'>liên hệ với chúng tôi</a>.</p>
+        </div>
+    </div>
+</body>
+</html>
+";
+
 
 }
 
