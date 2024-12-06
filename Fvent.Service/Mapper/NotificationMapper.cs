@@ -16,7 +16,18 @@ namespace Fvent.Service.Mapper
         {
             return new Notification(
                 src.userId,
-                src.eventId,
+                src.eventId ,
+                src.title,
+                src.message,
+                ReadStatus.Unread
+            );
+        }
+
+        public static Notification ToNotification(this SendNotificationReq src, Guid userId)
+        {
+            return new Notification(
+                userId,
+                null,
                 src.title,
                 src.message,
                 ReadStatus.Unread

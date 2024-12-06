@@ -343,7 +343,7 @@ namespace Fvent.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("EventId")
+                    b.Property<Guid?>("EventId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Message")
@@ -676,9 +676,7 @@ namespace Fvent.Repository.Migrations
                 {
                     b.HasOne("Fvent.BO.Entities.Event", "Event")
                         .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("EventId");
 
                     b.HasOne("Fvent.BO.Entities.User", "User")
                         .WithMany("Notifications")
