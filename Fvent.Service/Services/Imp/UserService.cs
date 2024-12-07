@@ -14,7 +14,7 @@ using static Fvent.Service.Specifications.EventSpec;
 
 namespace Fvent.Service.Services.Imp;
 
-public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService, IEventService eventService) : IUserService
+public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService) : IUserService
 {
     #region Authen
     public async Task<AuthRes> Authen(AuthReq req, string ipAddress)
