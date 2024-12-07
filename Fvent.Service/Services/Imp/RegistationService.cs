@@ -18,6 +18,10 @@ namespace Fvent.Service.Services.Imp
             var spec = new GetEventSpec(eventId);
             var events = await uOW.Events.FindFirstOrDefaultAsync(spec);
 
+            var specSub = new GetEventRegistrationSpec(eventId, userId);
+            var regis = await uOW.EventRegistration.FindFirstOrDefaultAsync(specSub);
+            if(regis is not null) throw new Exception("This event has been register");
+
             EventRegistration _eventRegis = new EventRegistration(eventId, userId);
 
             await uOW.EventRegistration.AddAsync(_eventRegis);

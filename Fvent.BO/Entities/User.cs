@@ -17,6 +17,7 @@ public class User : ISoftDelete
     public VerifiedStatus Verified { get; set; }
     public string ProcessNote { get; set; } = "";
     public string FcmToken { get; set; }
+    public int MissedCheckInsCount { get; set; } = 0;
 
     public bool IsBanned { get; set; } = false;
     public DateTime? BanStartDate { get; set; }
@@ -48,6 +49,7 @@ public class User : ISoftDelete
         StudentId = studentId;
         ProcessNote = processNote;
         FcmToken = fcmToken;
+        MissedCheckInsCount = 0;
         PhoneNumber = phoneNumber;
         CardUrl = cardUrl;
         RoleId = roleId;

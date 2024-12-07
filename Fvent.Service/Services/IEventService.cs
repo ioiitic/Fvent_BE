@@ -1,4 +1,5 @@
 ﻿using Fvent.BO.Common;
+using Fvent.BO.Entities;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 
@@ -19,8 +20,10 @@ public interface IEventService
     Task<IdRes> ApproveEvent(Guid id, bool isApproved,Guid userId, string processNote);
     Task CheckinEvent(Guid eventId, Guid userId, bool isOrganizer);
     Task DeleteEvent(Guid id);
+    Task CancelEvent(Guid eventId, Guid organizerId);
     Task<PageResult<UserRes>> GetRegisteredUsers(Guid eventId, GetRegisteredUsersReq req, Guid userId);
     Task<IList<EventRes>> GetRegisteredEvents(Guid userId, int? inMonth, int? inYear, bool isCompleted);
+    Task<IList<Location>> GetListLocation();
 
     #region Report
     Task<EventReportRes> Report(DateTime startDate, DateTime endDate);

@@ -194,17 +194,18 @@ public static class EventSpec
                 Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
 
-            Filter(e => e.Registrations!.Any(r => r.UserId == userId));
-
             if (isCompleted)
             {
-                Filter(e => e.Status == EventStatus.Completed);
+                Filter(e => e.Registrations!.Any(r => r.UserId == userId &&  r.IsCheckIn));
+                OrderBy(u => u.StartTime, true);
             }
             else
             {
+                Filter(e => e.Registrations!.Any(r => r.UserId == userId && !r.IsCheckIn));
                 Filter(e => e.Status == EventStatus.Upcoming || e.Status == EventStatus.InProgress);
+                OrderBy(u => u.StartTime, false);
             }
-            OrderBy(u => u.StartTime, true);
+            
             Include("Registrations.User.Role");
             Include(e => e.Organizer!);
             Include(e => e.EventType!);

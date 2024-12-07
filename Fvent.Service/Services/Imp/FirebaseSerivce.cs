@@ -1,89 +1,4 @@
-﻿//using FirebaseAdmin;
-//using FirebaseAdmin.Messaging;
-//using Google.Apis.Auth.OAuth2;
-
-//namespace Fvent.Service.Services.Imp;
-
-//public class FirebaseService 
-//{
-//    private static FirebaseApp? _firebaseApp;
-
-//    public FirebaseService(string serviceAccountPath)
-//    {
-//        if (!File.Exists(serviceAccountPath))
-//        {
-//            throw new FileNotFoundException("Firebase service key file not found.", serviceAccountPath);
-//        }
-
-//        if (_firebaseApp == null)
-//        {
-//            _firebaseApp = FirebaseApp.Create(new AppOptions()
-//            {
-//                Credential = GoogleCredential.FromFile("firebase-service-key.json")
-//            });
-//        }
-//    }
-
-//    public async Task SendNotificationAsync(string token, string title, string body)
-//    {
-//        if (string.IsNullOrEmpty(token)) throw new ArgumentException("FCM token cannot be null or empty.", nameof(token));
-
-//        var myToken = "dCSrvBZNSBed77kPoRDYyM:APA91bFMljCFw7o5CDwz72Gxfi5hHNR2TNeBalvviM1m_JGsWNuzzaDV9UPKpmpacfKcKocVGsnSwKFM8QxcIo8D8a9SSeJbjibrlXmkpmY9BudPdjVuA5A";
-//        var message = new Message
-//        {
-//            Data = new Dictionary<string, string>()
-//            {
-//                {"mydata", "1337" },
-//            },
-//            Token = myToken,
-//            Notification = new Notification
-//            {
-//                Title = title ?? "nT toi choi",
-//                Body = body ?? "so chua nhoc"
-//            }
-//        };
-
-//        try
-//        {
-//            await FirebaseMessaging.DefaultInstance.SendAsync(message);
-//        }
-//        catch (Exception ex)
-//        {
-//            // Log error appropriately
-//            Console.WriteLine($"Failed to send notification: {ex.Message}");
-//        }
-//    }
-
-//    public async Task SendBulkNotificationsAsync(IEnumerable<string> tokens, string title, string body)
-//    {
-//        var validTokens = tokens.Where(token => !string.IsNullOrEmpty(token)).ToList();
-
-//        if (!validTokens.Any()) return;
-
-//        var message = new MulticastMessage
-//        {
-//            Tokens = validTokens,
-//            Notification = new Notification
-//            {
-//                Title = title,
-//                Body = body
-//            }
-//        };
-
-//        try
-//        {
-//            var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
-//            Console.WriteLine($"Successfully sent {response.SuccessCount} notifications, {response.FailureCount} failures.");
-//        }
-//        catch (Exception ex)
-//        {
-//            // Log error appropriately
-//            Console.WriteLine($"Failed to send bulk notifications: {ex.Message}");
-//        }
-//    }
-//}
-
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using Google.Apis.Auth.OAuth2;
@@ -185,21 +100,20 @@ namespace Fvent.Service.Services.Imp
         /// </summary>
         public async Task SendBulkNotificationsAsync(IEnumerable<string> tokens, string title, string body)
         {
-            var validTokens = tokens.Where(token => !string.IsNullOrEmpty(token)).ToList();
+            // Ensure the tokens are unique
+            var validTokens = tokens.Where(token => !string.IsNullOrEmpty(token)).Distinct().ToList();
             if (!validTokens.Any())
             {
                 Console.WriteLine("No valid FCM tokens provided.");
                 return;
             }
 
-            foreach (var token in validTokens)
-            {
-                // Reuse the single notification method for each token
-                await SendNotificationAsync(token, title, body);
-            }
+            var tasks = validTokens.Select(token => SendNotificationAsync(token, title, body));
+            await Task.WhenAll(tasks);
 
             Console.WriteLine("Bulk notifications sent successfully!");
         }
+
     }
 }
 

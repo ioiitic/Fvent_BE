@@ -31,6 +31,7 @@ public static class ReviewSpec
         public GetReviewByEventSpec(Guid id)
         {
             Filter(u => u.EventId == id);
+            OrderBy(u => u.CreatedAt, true);
 
             Include(u => u.User!);
             Include(u => u.Event!);

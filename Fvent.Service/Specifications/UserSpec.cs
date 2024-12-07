@@ -75,7 +75,19 @@ public static class UserSpec
         }
     }
 
-    public class AuthenUserSpec : Specification<User>
+    public class GetUserByRoleSpec : Specification<User>
+    {
+        public GetUserByRoleSpec(string role)
+        {
+            if (!Enum.TryParse<UserRole>(role, true, out var userRole))
+            {
+                throw new ArgumentException("Invalid role specified");
+            }
+            Filter(u => u.RoleId == (int)userRole);
+        }
+    }
+
+        public class AuthenUserSpec : Specification<User>
     {
         public AuthenUserSpec(string email, string password)
         {

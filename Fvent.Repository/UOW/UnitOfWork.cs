@@ -22,6 +22,7 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
     private readonly IEventFileRepo _eventFileRepo = new EventFileRepo(context);
     private readonly IFormRepo _formRepo = new FormRepo(context);
     private readonly IFormSubmitRepo _formSubmitRepo = new FormSubmitRepo(context);
+    private readonly ILocationRepo _locationRepo = new LocationRepo(context);
 
     public IEventRepo Events => _eventRepo;
 
@@ -40,6 +41,7 @@ public class UnitOfWork(MyDbContext context) : IUnitOfWork
     public IEventFileRepo EventFile => _eventFileRepo;
     public IFormRepo Form => _formRepo;
     public IFormSubmitRepo FormSubmit => _formSubmitRepo;
+    public ILocationRepo Location => _locationRepo;
 
     public bool IsUpdate<TEntity>(TEntity entity) where TEntity : class
         => _context.Entry(entity).State == EntityState.Modified;

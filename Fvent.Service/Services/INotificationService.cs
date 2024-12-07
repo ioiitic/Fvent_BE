@@ -10,6 +10,7 @@ public interface INotificationService
     Task<IdRes> CreateNotification(CreateNotificationReq req);
     Task<IdRes> ReadNotification(Guid id);
     Task ClearNotification(Guid userId);
+    Task SendNotification(SendNotificationReq req);
     Task DeleteNotification(Guid id);
 }
 

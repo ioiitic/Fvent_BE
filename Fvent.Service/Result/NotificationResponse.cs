@@ -8,7 +8,7 @@ namespace Fvent.Service.Result
 {
     public record NotificationRes(Guid notiId,
                                   Guid userId,
-                                  Guid eventId,
+                                  Guid? eventId,
                                   string title,
                                   string message,
                                   string readStatus,
