@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using static Fvent.Service.Specifications.NotificationSpec;
 using static Fvent.Service.Specifications.UserSpec;
 using JS = Fvent.Service.Utils.JwtService;
+using HS = Fvent.Service.Utils.HashService;
 
 namespace Fvent.Service.Services.Imp;
 
