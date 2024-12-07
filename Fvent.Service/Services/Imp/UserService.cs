@@ -9,10 +9,12 @@ using Microsoft.Extensions.Configuration;
 using static Fvent.Service.Specifications.NotificationSpec;
 using static Fvent.Service.Specifications.UserSpec;
 using JS = Fvent.Service.Utils.JwtService;
+using HS = Fvent.Service.Utils.HashService;
+using static Fvent.Service.Specifications.EventSpec;
 
 namespace Fvent.Service.Services.Imp;
 
-public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService, IEventService eventService) : IUserService
+public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailService emailService) : IUserService
 {
     #region Authen
     public async Task<AuthRes> Authen(AuthReq req, string ipAddress)
@@ -83,7 +85,11 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     {
         var user = await _Get(id);
 
-        return user.ToResponse<UserRes>(isHaveUnreadNoti: true);
+        // Check if user has notifications
+        var specSub = new GetUnreadNotificationByUserSpec(id);
+        var isHaveUnreadNoti = await uOW.Notification.FindFirstOrDefaultAsync(specSub) != null;
+
+        return user.ToResponse<UserRes>(isHaveUnreadNoti);
     }
 
     public async Task<IdRes> Update(Guid id, UpdateUserReq req)
@@ -219,22 +225,22 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     public async Task<IdRes> ApproveUser(Guid id, bool isApproved, string processNote)
     {
         var spec = new GetUserSpec(id);
-        var _user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
+
         if (isApproved)
         {
-            _user.Verified = VerifiedStatus.Verified;
+            user.Verified = VerifiedStatus.Verified;
         }
         else
         {
-            _user.Verified = VerifiedStatus.Rejected;
+            user.Verified = VerifiedStatus.Rejected;
         }
-
-        _user.ProcessNote = processNote;
+        user.ProcessNote = processNote;
 
         await uOW.SaveChangesAsync();
 
-        return _user.UserId.ToResponse();
+        return user.UserId.ToResponse();
     }
 
     public async Task<IdRes> RegisterModerator(CreateModeratReq req)
@@ -297,7 +303,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         }
 
         var token = Guid.NewGuid().ToString();
-        var resetToken = new VerificationToken(user.UserId, token, DateTime.Now.AddHours(1));
+        var resetToken = new VerificationToken(user.UserId, token, DateTime.Now.AddHours(14));
 
         // Step 3: Store token in the database
         await uOW.VerificationToken.AddAsync(resetToken);
@@ -320,7 +326,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             ?? throw new NotFoundException(typeof(VerificationToken));
 
         // Step 2: Check if token is expired
-        if (resetToken.ExpiryDate < DateTime.Now)
+        if (resetToken.ExpiryDate < DateTime.Now.AddHours(13))
         {
             throw new InvalidOperationException("Reset token has expired.");
         }
@@ -402,7 +408,8 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     #region Report
     public async Task<UserReportRes> GetReport(Guid userId)
     {
-        var events = await eventService.GetRegisteredEvents(userId, null, null, true);
+        var spec = new GetRegisteredEventsSpec(userId);
+        var events = await uOW.Events.GetListAsync(spec);
 
         var noOfEvents = events.Count();
         var organizersList = events
@@ -411,7 +418,8 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             .Select(e => new
             {   
                 OrganizerId = e.Key,
-                EventCount = e.Count()
+                EventCount = e.Count(),
+                CheckInCount = e.Count(ed => ed.Registrations!.Any(r => r.EventId == ed.EventId && r.IsCheckIn))
             })
             .OrderByDescending(o => o.EventCount)
             .Take(5);   
@@ -420,10 +428,10 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         foreach (var organizer in organizersList)
         {
             var user = await _Get(organizer.OrganizerId);
-            organizers.Add(user.ToResponse<OrganizerReportInfo>(noOfEvent: organizer.EventCount));
+            organizers.Add(user.ToResponse<OrganizerReportInfo>(noOfEvent: organizer.EventCount, noOfCheckIn: organizer.CheckInCount));
         }
 
-        return new UserReportRes(noOfEvents, organizersList.Count(), organizers);
+        return new UserReportRes(noOfEvents, organizersList.Count(), organizers.Sum(o => o.NoOfCheckIn), organizers);
     }
     #endregion
 
@@ -461,8 +469,8 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     private string GenerateResetLink(Guid userId, string token)
     {
-        //return $"https://localhost:7289/api/users/reset-password?userId={userId}&token={token}";
-        return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
+        return $"https://fvent.vercel.app/dat-lai-mat-khau?userId={userId}&token={token}";
+        //return $"https://fvent.somee.com/api/users/reset-password?userId={userId}&token={token}";
     }
     #endregion
 }

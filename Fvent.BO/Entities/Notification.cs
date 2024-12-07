@@ -4,7 +4,7 @@
     {
         public Guid NotificationId { get; set; }
         public Guid UserId { get; set; }
-        public Guid EventId { get; set; }
+        public Guid? EventId { get; set; }
         public string? Title { get; set; }
         public string? Message { get; set; }
         public ReadStatus ReadStatus { get; set; }
@@ -15,7 +15,7 @@
 
         public Notification() { }
 
-        public Notification(Guid userId, Guid eventId, string title, string message, ReadStatus status)
+        public Notification(Guid userId, Guid? eventId, string title, string message, ReadStatus status)
         {
             UserId = userId;
             EventId = eventId;

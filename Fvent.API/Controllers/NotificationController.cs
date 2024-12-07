@@ -36,6 +36,19 @@ public class NotificationController(INotificationService notificationService) : 
     }
 
     /// <summary>
+    /// Send a notification
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    [HttpPost("sendNotification")]
+    public async Task<IActionResult> SendNoti([FromBody] SendNotificationReq req)
+    {
+        await notificationService.SendNotification(req);
+
+        return Ok();
+    }
+
+    /// <summary>
     /// Update a notification status when user read it
     /// </summary>
     /// <param name="notiId"></param>

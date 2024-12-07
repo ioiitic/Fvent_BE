@@ -1,5 +1,6 @@
 ﻿using FirebaseAdmin.Messaging;
 using Fvent.BO.Entities;
+using Fvent.BO.Enums;
 using Fvent.BO.Exceptions;
 using Fvent.Repository.UOW;
 using Fvent.Service.Mapper;
@@ -12,7 +13,7 @@ using static Fvent.Service.Specifications.UserSpec;
 
 namespace Fvent.Service.Services.Imp;
 
-public class NotificationService(IUnitOfWork uOW, ExpoNotificationService expoNotificationService) : INotificationService
+public class NotificationService(IUnitOfWork uOW) : INotificationService
 {
     //public async Task<IdRes> CreateNotification(CreateNotificationReq req)
     //{
@@ -100,11 +101,42 @@ public class NotificationService(IUnitOfWork uOW, ExpoNotificationService expoNo
         }
 
         // Return the event ID as the response
-        return notification.EventId.ToResponse();
+        return notification.NotificationId.ToResponse();
     }
 
+    public async Task SendNotification(SendNotificationReq req)
+    {
+
+        var specUser = new GetUserByRoleSpec(req.role);
+        var _users = await uOW.Users.GetListAsync(specUser);
+
+        var fcmTokens = _users.Select(r => r.FcmToken).ToList();
+
+        var userIds = _users.Select(r => r.UserId).ToList();
 
 
+        foreach (var userId in userIds)
+        {
+            var notification = req.ToNotification(userId);
+            await uOW.Notification.AddAsync(notification);
+            await uOW.SaveChangesAsync();
+        }    
+
+        try
+        {
+            // Initialize FirebaseService with dynamic path to the service account key
+            var serviceKeyPath = Path.Combine(AppContext.BaseDirectory, "firebase-service-key.json");
+            var firebaseService = new FirebaseService(serviceKeyPath);
+
+            await firebaseService.SendBulkNotificationsAsync(fcmTokens,
+                                                             req.title,
+                                                             req.message);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending notification: {ex.Message}");
+        }
+    }
 
     public async Task DeleteNotification(Guid id)
     {

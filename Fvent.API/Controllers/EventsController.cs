@@ -29,6 +29,14 @@ public class EventsController(IEventService eventService, IRatingService ratingS
         return Ok(res);
     }
 
+    [HttpGet("location")]
+    public async Task<IActionResult> GetListLocation()
+    {
+        var res = await eventService.GetListLocation();
+
+        return Ok(res);
+    }
+
     /// <summary>
     /// Get list events
     /// </summary>
@@ -46,7 +54,6 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     /// <summary>
     /// Get list event's banners
     /// </summary>
-    /// <param name="request"></param>
     /// <returns></returns>
     [HttpGet("banners")]
     public async Task<IActionResult> GetListEventBanners()
@@ -91,7 +98,13 @@ public class EventsController(IEventService eventService, IRatingService ratingS
         return Ok(res);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     [HttpGet("organizerPrivate")]
+    [Authorize(Roles = "organizer")]
     public async Task<IActionResult> GetListEventsOfOrganizer([FromQuery] GetEventOfOrganizerReq req)
     {
         var res = await eventService.GetListEventsOfOrganizer(req);
@@ -130,12 +143,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
-        {
-            return Unauthorized("Invalid or missing user ID.");
-        }
-
-        var res = await eventService.CreateEvent(req, organizerId);
+        var res = await eventService.CreateEvent(req, Guid.Parse(userIdClaim!));
 
         return Ok(res);
     }
@@ -163,6 +171,27 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     }
 
     /// <summary>
+    /// Cancel event before its start
+    /// </summary>
+    /// <param name="eventId"></param>
+    /// <returns></returns>
+    [HttpPut("{eventId}/cancelEvent")]
+    [Authorize(Roles = "organizer")]
+    public async Task<IActionResult> CancelEvent([FromRoute] Guid eventId)
+    {
+        var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
+        {
+            return Unauthorized("Invalid or missing user ID.");
+        }
+
+        await eventService.CancelEvent(eventId, organizerId);
+
+        return Ok();
+    }
+
+    /// <summary>
     /// Organizer publish event for review
     /// </summary>
     /// <param name="eventId"></param>
@@ -173,11 +202,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
-        {
-            return Unauthorized("Invalid or missing user ID.");
-        }
-        var res = await eventService.SubmitEvent(eventId, organizerId);
+        var res = await eventService.SubmitEvent(eventId, Guid.Parse(userIdClaim!));
 
         return Ok(res);
     }

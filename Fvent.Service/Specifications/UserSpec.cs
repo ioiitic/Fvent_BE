@@ -1,6 +1,7 @@
 ﻿using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.Repository.Common;
+using Microsoft.EntityFrameworkCore;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Fvent.Service.Specifications;
@@ -74,11 +75,23 @@ public static class UserSpec
         }
     }
 
-    public class AuthenUserSpec : Specification<User>
+    public class GetUserByRoleSpec : Specification<User>
     {
-        public AuthenUserSpec(string Email, string Password)
+        public GetUserByRoleSpec(string role)
         {
-            Filter(u => u.Email.Equals(Email) && u.Password.Equals(Password));
+            if (!Enum.TryParse<UserRole>(role, true, out var userRole))
+            {
+                throw new ArgumentException("Invalid role specified");
+            }
+            Filter(u => u.RoleId == (int)userRole);
+        }
+    }
+
+        public class AuthenUserSpec : Specification<User>
+    {
+        public AuthenUserSpec(string email, string password)
+        {
+            Filter(u => u.Email.Equals(email) && EF.Functions.Collate(u.Password, "SQL_Latin1_General_CP1_CS_AS") == password);
 
             Include(u => u.Role!);
             Include(u => u.RefreshTokens!);

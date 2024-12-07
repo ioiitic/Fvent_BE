@@ -24,6 +24,7 @@ public class MyDbContext : DbContext
     public DbSet<Form> Forms { get; set; }
     public DbSet<FormDetail> FormDetails { get; set; }
     public DbSet<FormSubmit> FormSubmits { get; set; }
+    public DbSet<Location> Locations { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

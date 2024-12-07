@@ -50,6 +50,7 @@ public static class EventMapper
             null,
             null,
             null,
+            null,
             src.EventFile.FileUrl,
             src.Tags.Select(t => t.Tag).ToList(),
             null);
@@ -64,7 +65,8 @@ public static class EventMapper
         bool isRegistered,
         bool isReviewed,
         bool isOverlap,
-        bool canReview)
+        bool canReview,
+        bool isCheckIn)
         => new(
             src.EventId,
             src.EventName,
@@ -86,6 +88,7 @@ public static class EventMapper
             isRegistered,
             isReviewed,
             isOverlap,
+            isCheckIn,
             canReview,
             src.EventFile.FileUrl,
             src.Tags.Select(t => t.Tag).ToList(),
