@@ -46,7 +46,7 @@ public static class UserMapper
         );
     }
 
-    public static TEntity ToResponse<TEntity>(this User src, bool isHaveUnreadNoti = false, int? noOfEvent = null) where TEntity : class
+    public static TEntity ToResponse<TEntity>(this User src, bool isHaveUnreadNoti = false, int? noOfEvent = null, int? noOfCheckIn = null) where TEntity : class
     {
         var result = typeof(TEntity) switch
         {
@@ -63,7 +63,7 @@ public static class UserMapper
                                    src.DeletedAt) as TEntity,
 
             Type t when t == typeof(OrganizerReportInfo) =>
-                new OrganizerReportInfo(src.UserId, src.Username, src.AvatarUrl, noOfEvent??0) as TEntity,
+                new OrganizerReportInfo(src.UserId, src.Username, src.AvatarUrl, noOfEvent??0, noOfCheckIn??0) as TEntity,
 
             _ => throw new InvalidOperationException($"Unsupported type: {typeof(TEntity).Name}")
         };

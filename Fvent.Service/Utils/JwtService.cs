@@ -21,7 +21,7 @@ public static class JwtService
             {
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim(ClaimTypes.Email, email),
-                new Claim(ClaimTypes.Role, role.RoleName)
+                new Claim(ClaimTypes.Role, role.RoleName),
             }),
             Expires = DateTime.UtcNow.AddHours(3),
             SigningCredentials = new SigningCredentials(

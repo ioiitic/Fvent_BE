@@ -10,6 +10,7 @@ using static Fvent.Service.Specifications.NotificationSpec;
 using static Fvent.Service.Specifications.UserSpec;
 using JS = Fvent.Service.Utils.JwtService;
 using HS = Fvent.Service.Utils.HashService;
+using static Fvent.Service.Specifications.EventSpec;
 
 namespace Fvent.Service.Services.Imp;
 
@@ -224,22 +225,22 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     public async Task<IdRes> ApproveUser(Guid id, bool isApproved, string processNote)
     {
         var spec = new GetUserSpec(id);
-        var _user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
+
         if (isApproved)
         {
-            _user.Verified = VerifiedStatus.Verified;
+            user.Verified = VerifiedStatus.Verified;
         }
         else
         {
-            _user.Verified = VerifiedStatus.Rejected;
+            user.Verified = VerifiedStatus.Rejected;
         }
-
-        _user.ProcessNote = processNote;
+        user.ProcessNote = processNote;
 
         await uOW.SaveChangesAsync();
 
-        return _user.UserId.ToResponse();
+        return user.UserId.ToResponse();
     }
 
     public async Task<IdRes> RegisterModerator(CreateModeratReq req)
@@ -407,7 +408,8 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     #region Report
     public async Task<UserReportRes> GetReport(Guid userId)
     {
-        var events = await eventService.GetRegisteredEvents(userId, null, null, true);
+        var spec = new GetRegisteredEventsSpec(userId);
+        var events = await uOW.Events.GetListAsync(spec);
 
         var noOfEvents = events.Count();
         var organizersList = events
@@ -416,7 +418,8 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             .Select(e => new
             {   
                 OrganizerId = e.Key,
-                EventCount = e.Count()
+                EventCount = e.Count(),
+                CheckInCount = e.Count(ed => ed.Registrations!.Any(r => r.EventId == ed.EventId && r.IsCheckIn))
             })
             .OrderByDescending(o => o.EventCount)
             .Take(5);   
@@ -425,10 +428,10 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         foreach (var organizer in organizersList)
         {
             var user = await _Get(organizer.OrganizerId);
-            organizers.Add(user.ToResponse<OrganizerReportInfo>(noOfEvent: organizer.EventCount));
+            organizers.Add(user.ToResponse<OrganizerReportInfo>(noOfEvent: organizer.EventCount, noOfCheckIn: organizer.CheckInCount));
         }
 
-        return new UserReportRes(noOfEvents, organizersList.Count(), organizers);
+        return new UserReportRes(noOfEvents, organizersList.Count(), organizers.Sum(o => o.NoOfCheckIn), organizers);
     }
     #endregion
 

@@ -7,6 +7,7 @@ public class FormSubmit
     public Guid UserId { get; set; }
     public Guid EventId { get; set; }
     public string Data { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public User? User { get; set; }
     public Event? Event { get; set; }
@@ -17,5 +18,6 @@ public class FormSubmit
         UserId = userId;
         EventId = eventId;
         Data = data;
+        CreatedAt = DateTime.Now.AddHours(13);
     }
 }

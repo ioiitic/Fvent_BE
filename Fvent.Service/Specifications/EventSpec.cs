@@ -185,18 +185,17 @@ public static class EventSpec
     {
         public GetRegisteredEventsSpec(Guid userId, int? inMonth, int? inYear, bool isCompleted)
         {
-            // Filter by month for StartTime and EndTime
             if (inMonth.HasValue)
             {
                 var month = inMonth.Value;
-                var year = inYear ?? DateTime.UtcNow.Year;
+                var year = inYear ?? DateTime.UtcNow.AddHours(13).Year;
 
                 Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
 
             if (isCompleted)
             {
-                Filter(e => e.Registrations!.Any(r => r.UserId == userId &&  r.IsCheckIn));
+                Filter(e => e.Registrations!.Any(r => r.UserId == userId && r.IsCheckIn));
                 OrderBy(u => u.StartTime, true);
             }
             else
@@ -214,6 +213,17 @@ public static class EventSpec
             Include(e => e.EventFile!);
         }
 
+        public GetRegisteredEventsSpec(Guid userId)
+        {
+            Filter(e => e.Registrations!.Any(r => r.UserId == userId && r.IsCheckIn));
+
+            Include("Registrations.User.Role");
+            Include(e => e.Organizer!);
+            Include(e => e.EventType!);
+            Include(e => e.Tags!);
+            Include(e => e.EventMedias!);
+            Include(e => e.EventFile!);
+        }
     }
 
     public class GetRegisteredUsersSpec : Specification<Event>
