@@ -54,7 +54,6 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     /// <summary>
     /// Get list event's banners
     /// </summary>
-    /// <param name="request"></param>
     /// <returns></returns>
     [HttpGet("banners")]
     public async Task<IActionResult> GetListEventBanners()
@@ -99,6 +98,11 @@ public class EventsController(IEventService eventService, IRatingService ratingS
         return Ok(res);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     [HttpGet("organizerPrivate")]
     [Authorize(Roles = "organizer")]
     public async Task<IActionResult> GetListEventsOfOrganizer([FromQuery] GetEventOfOrganizerReq req)
@@ -139,12 +143,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
-        {
-            return Unauthorized("Invalid or missing user ID.");
-        }
-
-        var res = await eventService.CreateEvent(req, organizerId);
+        var res = await eventService.CreateEvent(req, Guid.Parse(userIdClaim!));
 
         return Ok(res);
     }
@@ -170,6 +169,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
 
         return Ok(res);
     }
+
     /// <summary>
     /// Cancel event before its start
     /// </summary>
@@ -202,11 +202,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
-        {
-            return Unauthorized("Invalid or missing user ID.");
-        }
-        var res = await eventService.SubmitEvent(eventId, organizerId);
+        var res = await eventService.SubmitEvent(eventId, Guid.Parse(userIdClaim!));
 
         return Ok(res);
     }

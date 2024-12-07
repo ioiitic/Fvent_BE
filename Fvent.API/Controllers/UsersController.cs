@@ -120,6 +120,7 @@ public class UsersController(IUserService userService, IEventService eventServic
     /// <summary>
     /// For Moderator approve User
     /// </summary>
+    /// <param name="userId"></param>
     /// <param name="isApproved"></param>
     /// <param name="req"></param>
     /// <returns></returns>
@@ -243,23 +244,6 @@ public class UsersController(IUserService userService, IEventService eventServic
 
         return Ok();
     }
-
-
-    [HttpGet("DateTimeNow")]
-    public async Task<IActionResult> GetDateTimeNow()
-    {
-        var res = DateTime.UtcNow;
-        var subRes = DateTime.Now;
-
-        var result = new
-        {
-            UtcNow = res,
-            LocalNow = subRes
-        };
-
-        return Ok(result);
-    }
-
     #endregion
 
     #region Report

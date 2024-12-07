@@ -8,5 +8,5 @@ public record UserRes(Guid UserId, string Username, string AvatarUrl, string Ema
 
 public record AuthRes(string Token, string RefreshToken);
 
-public record UserReportRes(int NoOfEvents, int NoOfOrganizers, IList<OrganizerReportInfo> Organizers);
-public record OrganizerReportInfo(Guid UserId, string Username, string AvatarUrl, int NoOfEvents);
+public record UserReportRes(int NoOfEvents, int NoOfOrganizers, int NoOfCheckIn, IList<OrganizerReportInfo> Organizers);
+public record OrganizerReportInfo(Guid UserId, string Username, string AvatarUrl, int NoOfEvents, int NoOfCheckIn);
