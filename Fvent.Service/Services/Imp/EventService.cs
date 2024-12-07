@@ -1,6 +1,4 @@
-﻿using Azure;
-using FirebaseAdmin.Messaging;
-using Fvent.BO.Common;
+﻿using Fvent.BO.Common;
 using Fvent.BO.Entities;
 using Fvent.BO.Enums;
 using Fvent.BO.Exceptions;
@@ -9,15 +7,10 @@ using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 using LinqKit;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
-using System.Linq;
-using System.Linq.Expressions;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
-using static Fvent.Service.Specifications.EventTagSpec;
 using static Fvent.Service.Specifications.FormSpec;
 using static Fvent.Service.Specifications.ReviewSpec;
 using static Fvent.Service.Specifications.UserSpec;
@@ -168,11 +161,10 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
         var eventTags = userEvents.SelectMany(e => e.Tags!.Select(t => t.Tag)).Distinct();
 
         var eventSpec = new GetListRecommend(eventTypes, eventTags);
-
         var events = await uOW.Events.GetListAsync(eventSpec);
-        events = events.Where(e => !userEvents.Any(ue => ue!.EventId == e.EventId));
 
         var res = events.Select(e => e.ToResponse()).ToList();
+        res = res.Where(r => userEvents.Any(ue => !(ue!.EventId == r.EventId))).ToList();
 
         return new PageResult<EventRes>(res, 1, 1, 1, 1, 1);
     }
