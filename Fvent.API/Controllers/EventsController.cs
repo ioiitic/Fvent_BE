@@ -160,12 +160,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
-        {
-            return Unauthorized("Invalid or missing user ID.");
-        }
-
-        var res = await eventService.UpdateEvent(eventId, organizerId, req);
+        var res = await eventService.UpdateEvent(eventId, Guid.Parse(userIdClaim!), req);
 
         return Ok(res);
     }
@@ -181,12 +176,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var organizerId))
-        {
-            return Unauthorized("Invalid or missing user ID.");
-        }
-
-        await eventService.CancelEvent(eventId, organizerId);
+        await eventService.CancelEvent(eventId, Guid.Parse(userIdClaim!));
 
         return Ok();
     }
@@ -220,12 +210,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized("Invalid or missing user ID.");
-        }
-
-        var res = await eventService.ApproveEvent(eventId, isApproved, userId, processNote.ProcessNote);
+        var res = await eventService.ApproveEvent(eventId, isApproved, Guid.Parse(userIdClaim!), processNote.ProcessNote);
 
         return Ok(res);
     }
@@ -241,20 +226,8 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized("Invalid or missing user ID.");
-        }
-
-        try
-        {
-            await eventService.CheckinEvent(eventId, userId, false);
-            return Ok("Check-in successful");
-        }
-        catch (NotFoundException)
-        {
-            return NotFound("Please register for the event first.");
-        }
+        await eventService.CheckinEvent(eventId, Guid.Parse(userIdClaim!), false);
+        return Ok("Check-in successful");
     }
 
     [HttpPut("{eventId}/checkin-organizer")]
@@ -294,7 +267,6 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     /// Register an event
     /// </summary>
     /// <param name="eventId"></param>
-    /// <param name="userId"></param>
     /// <returns></returns>
     [HttpPost("{eventId}/register")]
     [Authorize(Roles = "student")]
@@ -302,12 +274,7 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     {
         var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized("Invalid or missing user ID.");
-        }
-
-        var res = await registationService.RegisterFreeEvent(eventId, userId);
+        var res = await registationService.RegisterFreeEvent(eventId, Guid.Parse(userIdClaim!));
 
         return Ok(res);
     }
@@ -316,7 +283,6 @@ public class EventsController(IEventService eventService, IRatingService ratingS
     /// Unregister an event
     /// </summary>
     /// <param name="eventId"></param>
-    /// <param name="userId"></param>
     /// <returns></returns>
     [HttpDelete("{eventId}/unregister")]
     [Authorize(Roles = "student")]

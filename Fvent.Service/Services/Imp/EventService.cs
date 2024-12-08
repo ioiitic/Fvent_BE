@@ -231,9 +231,13 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
     {
         var serviceKeyPath = Path.Combine(AppContext.BaseDirectory, "firebase-service-key.json");
         var firebaseService = new FirebaseService(serviceKeyPath);
+
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
+
+        if (_event.OrganizerId != organizerId)
+            throw new UnauthorizedAccessException("Not have permission for submit Event");
 
         if (req.CreateFormDetailsReq is not null)
         {
@@ -246,7 +250,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             _event.Form = form;
         }
 
-        await uOW.SaveChangesAsync();
+        //await uOW.SaveChangesAsync();
         if (req.EventTags is not null)
         {
             _event.Tags = _event.Tags ?? [];
@@ -258,7 +262,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             }
         }
 
-        await uOW.SaveChangesAsync();
+        //await uOW.SaveChangesAsync();
         if (req.PosterImg is not null)
         {
             EventMedia poster = new(_event.EventId, (int)MediaType.Poster, req.PosterImg);
@@ -267,7 +271,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             _event.EventMedias.ForEach(media => uOW.EventMedia.Delete(media));
             _event.EventMedias.Add(poster);
         }
-        await uOW.SaveChangesAsync();
+        //await uOW.SaveChangesAsync();
         if (req.ThumbnailImg is not null)
         {
             EventMedia thumbnail = new(_event.EventId, (int)MediaType.Thumbnail, req.ThumbnailImg);
@@ -276,7 +280,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             _event.EventMedias.ForEach(media => uOW.EventMedia.Delete(media));
             _event.EventMedias.Add(thumbnail);
         }
-        await uOW.SaveChangesAsync();
+        //await uOW.SaveChangesAsync();
         if (req.Proposal is not null)
         {
             EventFile eventFile = new(req.Proposal, _event.EventId);
@@ -284,11 +288,11 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             _event.EventFile = eventFile;
         }
 
-        await uOW.SaveChangesAsync();
+        //await uOW.SaveChangesAsync();
         _event.Update(req.EventName, req.Description, req.StartTime, req.EndTime, req.Location, req.LinkEvent,
                       req.PasswordMeeting, req.MaxAttendees, req.EventTypeId);
 
-        await uOW.SaveChangesAsync();
+        //await uOW.SaveChangesAsync();
         if (uOW.IsUpdate(_event))
         {
             _event.UpdatedAt = DateTime.UtcNow;
@@ -337,7 +341,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
 
         if (_event.OrganizerId != organizerId)
             throw new UnauthorizedAccessException("Not have permission for submit Event");
-
+        
         if (_event.Status == EventStatus.Draft || _event.Status == EventStatus.Rejected)
             _event.Status = EventStatus.UnderReview;
 
@@ -360,12 +364,11 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
         // Enforce the "cancel before 2 days of start date" rule
         if (_event.StartTime <= DateTime.Now.AddDays(2))
         {
-            throw new Exception("You can only cancel this event at least 2 days before the start date.");
+            throw new ValidationException("You can only cancel this event at least 2 days before the start date.");
         }
 
         // Retrieve and materialize participants
-        var specSub = new GetEventParticipantsSpec(eventId);
-        var participants = await uOW.EventRegistration.GetListAsync(specSub); // Already materialized
+        var participants = _event.Registrations!; // Already materialized
 
         if (participants.Any())
         {
@@ -376,13 +379,6 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
                 var regis = participant;
                 uOW.EventRegistration.Delete(regis);
 
-                // Find and delete FormSubmit if exists
-                var formsubmit = await uOW.FormSubmit.FindFirstOrDefaultAsync(new GetFormSubmitSpec(eventId, participant.UserId));
-                if (formsubmit != null)
-                {
-                    uOW.FormSubmit.Delete(formsubmit);
-                }
-
                 // Update event max attendees
                 if (_event.MaxAttendees != null)
                 {
@@ -391,11 +387,22 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
 
                 // Send email notification
                 var emailBody = EmailTemplates.ApologyForEventCancellationTemplate
-                    .Replace("{userName}", participant.User.Username)
+                    .Replace("{userName}", participant.User!.Username)
                     .Replace("{eventName}", _event.EventName)
                     .Replace("{eventStartDate}", _event.StartTime.ToString("dd/MM/yyyy HH:mm"));
 
                 await emailService.SendEmailAsync(participant.User!.Email, "Sự kiện bạn đăng kí đã bị hủy!", emailBody);
+            }
+        }
+
+        var formSubmits = _event.FormSubmits!;
+
+        if (formSubmits.Any())
+        {
+            foreach (var formSubmit in formSubmits.ToList())
+            {
+                var _formsubmit = formSubmit;
+                uOW.FormSubmit.Delete(_formsubmit);
             }
         }
 
@@ -440,12 +447,12 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
         var _event = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(EventRegistration));
 
-        var specSub = new GetEventSpec(eventId);
-        var checkEvent = await uOW.Events.FindFirstOrDefaultAsync(specSub)
+        var checkEvent = _event.Event
             ?? throw new NotFoundException(typeof(Event));
+
         if (checkEvent.Status != EventStatus.InProgress)
         {
-            throw new Exception("Sự kiện đang chưa đến hạn/quá hạn checkin");
+            throw new ValidationException("Sự kiện đang chưa đến hạn/quá hạn checkin");
         }
         if (isOrganzier)
         {
