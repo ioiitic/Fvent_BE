@@ -422,7 +422,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                 CheckInCount = e.Count(ed => ed.Registrations!.Any(r => r.EventId == ed.EventId && r.IsCheckIn))
             })
             .OrderByDescending(o => o.EventCount)
-            .Take(5);   
+            .Take(5);
 
         var organizers = new List<OrganizerReportInfo>();
         foreach (var organizer in organizersList)
