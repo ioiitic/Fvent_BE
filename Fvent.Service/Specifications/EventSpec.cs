@@ -90,6 +90,8 @@ public static class EventSpec
             Include(u => u.Organizer!);
             Include(u => u.EventType!);
             Include(u => u.EventMedias!);
+            Include("Registrations.User.Role");
+            Include(u => u.FormSubmits!);
             Include(e => e.Tags!);
             Include(e => e.EventFile!);
             Include(e => e.Form!.FormDetails!);
@@ -215,7 +217,7 @@ public static class EventSpec
 
         public GetRegisteredEventsSpec(Guid userId)
         {
-            Filter(e => e.Registrations!.Any(r => r.UserId == userId && r.IsCheckIn));
+            Filter(e => e.Registrations!.Any(r => r.UserId == userId));
 
             Include("Registrations.User.Role");
             Include(e => e.Organizer!);

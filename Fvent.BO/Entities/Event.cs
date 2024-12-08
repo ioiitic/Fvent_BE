@@ -25,6 +25,7 @@ public class Event : ISoftDelete
     public Form? Form { get; set; }
     public IList<EventReview> Reviews { get; set; }
     public IList<EventRegistration>? Registrations { get; set; }
+    public IList<FormSubmit>? FormSubmits { get; set; }
     public IList<EventTag>? Tags { get; set; }
     public IList<EventMedia>? EventMedias { get; set; }
     public EventFile? EventFile { get; set; }

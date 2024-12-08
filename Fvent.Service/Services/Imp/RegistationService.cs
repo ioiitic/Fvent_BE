@@ -16,27 +16,25 @@ namespace Fvent.Service.Services.Imp
         public async Task<IdRes> RegisterFreeEvent(Guid eventId, Guid userId)
         {
             var spec = new GetEventSpec(eventId);
-            var events = await uOW.Events.FindFirstOrDefaultAsync(spec);
+            var events = await uOW.Events.FindFirstOrDefaultAsync(spec)
+                ?? throw new NotFoundException(typeof(Event));
 
-            var specSub = new GetEventRegistrationSpec(eventId, userId);
-            var regis = await uOW.EventRegistration.FindFirstOrDefaultAsync(specSub);
-            if(regis is not null) throw new Exception("This event has been register");
+            var regis = events!.Registrations!.Any(r => r.UserId == userId);
+            if (regis) 
+                throw new ValidationException("This event has been register");
 
-            EventRegistration _eventRegis = new EventRegistration(eventId, userId);
-
-            await uOW.EventRegistration.AddAsync(_eventRegis);
-            await uOW.SaveChangesAsync();
-
-
-            if(events.MaxAttendees != null)
+            EventRegistration _eventRegis = new(eventId, userId);
+            if (events!.MaxAttendees != null)
             {
-                if(events.MaxAttendees == 0)
+                if (events.MaxAttendees == 0)
                 {
-                    throw new Exception("Event has reach limit attendees!");
+                    throw new ValidationException("Event has reach limit attendees!");
                 }
                 events.MaxAttendees = events.MaxAttendees - 1;
             }
+            await uOW.EventRegistration.AddAsync(_eventRegis);
             await uOW.SaveChangesAsync();
+
             return _eventRegis.EventId.ToResponse();
         }
 

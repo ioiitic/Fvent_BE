@@ -1,8 +1,6 @@
-﻿using System.Net.Http;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using Google.Apis.Auth.OAuth2;
-using System.Threading.Tasks;
 
 namespace Fvent.Service.Services.Imp
 {
@@ -25,9 +23,6 @@ namespace Fvent.Service.Services.Imp
             _projectId = jsonDoc.RootElement.TryGetProperty("project_id", out var projectId)
                 ? projectId.GetString()!
                 : throw new Exception("Project ID not found in the service account file.");
-
-            //Console.WriteLine($"Project ID: {_projectId}");
-
         }
 
         /// <summary>
