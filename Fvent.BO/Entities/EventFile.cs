@@ -14,7 +14,7 @@ public class EventFile
         FileUrl = fileUrl;
         EventId = eventId;
         FileType = 0;
-        UploadedAt = DateTime.Now;
+        UploadedAt = DateTime.UtcNow.AddHours(13);
     }
 
     public EventFile(string fileUrl, int fileType, DateTime uploadedAt, Guid eventId)
