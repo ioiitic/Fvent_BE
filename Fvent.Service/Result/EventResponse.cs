@@ -1,7 +1,7 @@
 ﻿namespace Fvent.Service.Result;
 
 public record EventRes(Guid EventId, string EventName, string Description, DateTime StartTime, DateTime EndTime,
-                       string Location, string LinkEvent, string PasswordMeeting, int? MaxAttendees, string ProcessNote,
+                       string Location, string LinkEvent, string PasswordMeeting, int? MaxAttendees, int? SubMaxAttendees, string ProcessNote,
                        Guid OrganizerId, string OrganizerName, Guid EventTypeId, string EventTypeName, string PosterImg,
                        string ThumbnailImg, string Status, bool? IsRegistered, bool? IsReviewed, bool? IsOverlap,
                        bool? IsCheckIn, bool? CanReview, string Proposal, List<string> EventTags,

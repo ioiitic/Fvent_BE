@@ -32,7 +32,8 @@ public static class UserSpec
                 Filter(e => e.Verified == verifiedStatus);
             }
 
-            OrderBy(u => u.Verified, true);
+            OrderBy(u => u.Verified, false);
+            ThenBy(u => u.Email, false);
             AddPagination(pageNumber, pageSize);
 
             Include(u => u.Role!);

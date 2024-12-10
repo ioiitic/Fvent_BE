@@ -7,10 +7,12 @@ using Fvent.Service.Mapper;
 using Fvent.Service.Request;
 using Fvent.Service.Result;
 using LinqKit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using static Fvent.Service.Specifications.EventRegistationSpec;
 using static Fvent.Service.Specifications.EventSpec;
+using static Fvent.Service.Specifications.EventTagSpec;
 using static Fvent.Service.Specifications.FormSpec;
 using static Fvent.Service.Specifications.ReviewSpec;
 using static Fvent.Service.Specifications.UserSpec;
@@ -229,109 +231,93 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
 
     public async Task<IdRes> UpdateEvent(Guid id, Guid organizerId, UpdateEventReq req)
     {
-        var serviceKeyPath = Path.Combine(AppContext.BaseDirectory, "firebase-service-key.json");
-        var firebaseService = new FirebaseService(serviceKeyPath);
-
         var spec = new GetEventSpec(id);
         var _event = await uOW.Events.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(Event));
 
         if (_event.OrganizerId != organizerId)
-            throw new UnauthorizedAccessException("Not have permission for submit Event");
+            throw new UnauthorizedAccessException("You do not have permission to update this event.");
 
+        // Update Form Details
         if (req.CreateFormDetailsReq is not null)
         {
             var formDetails = req.CreateFormDetailsReq.Select(f => new FormDetail(f.Name, f.Type, f.Options));
-            var form = new Form
-            {
-                FormDetails = formDetails.ToList(),
-            };
-
-            _event.Form = form;
+            _event.Form = new Form { FormDetails = formDetails.ToList() };
         }
 
-        //await uOW.SaveChangesAsync();
+        // Update Tags
         if (req.EventTags is not null)
         {
-            _event.Tags = _event.Tags ?? [];
-            _event.Tags.ForEach(tag => uOW.EventTag.Delete(tag));
+            var existingTags = await uOW.EventTag.GetListAsync(new GetEventTagSpec(id));
+            if (existingTags != null)
+            {
+                foreach (var tag in existingTags)
+                {
+                    uOW.EventTag.Delete(tag);
+                }
+            }
             foreach (var item in req.EventTags)
             {
-                EventTag tag = new EventTag(_event.EventId, (string)item);
-                _event.Tags.Add(tag);
+                var tag = new EventTag(_event.EventId, (string)item);
+                await uOW.EventTag.AddAsync(tag);
             }
         }
 
-        //await uOW.SaveChangesAsync();
+        // Update Media
         if (req.PosterImg is not null)
         {
-            EventMedia poster = new(_event.EventId, (int)MediaType.Poster, req.PosterImg);
-
-            _event.EventMedias = _event.EventMedias ?? [];
-            _event.EventMedias.ForEach(media => uOW.EventMedia.Delete(media));
-            _event.EventMedias.Add(poster);
+            var existingPoster = _event.EventMedias?.FirstOrDefault(m => m.MediaType == (int)MediaType.Poster);
+            if (existingPoster != null)
+            {
+                existingPoster.MediaUrl = req.PosterImg;
+            }
+            else
+            {
+                _event.EventMedias.Add(new EventMedia(_event.EventId, (int)MediaType.Poster, req.PosterImg));
+            }
         }
-        //await uOW.SaveChangesAsync();
+
         if (req.ThumbnailImg is not null)
         {
-            EventMedia thumbnail = new(_event.EventId, (int)MediaType.Thumbnail, req.ThumbnailImg);
-
-            _event.EventMedias = _event.EventMedias ?? [];
-            _event.EventMedias.ForEach(media => uOW.EventMedia.Delete(media));
-            _event.EventMedias.Add(thumbnail);
+            var existingThumbnail = _event.EventMedias?.FirstOrDefault(m => m.MediaType == (int)MediaType.Thumbnail);
+            if (existingThumbnail != null)
+            {
+                existingThumbnail.MediaUrl = req.ThumbnailImg;
+            }
+            else
+            {
+                _event.EventMedias.Add(new EventMedia(_event.EventId, (int)MediaType.Thumbnail, req.ThumbnailImg));
+            }
         }
-        //await uOW.SaveChangesAsync();
+
+        // Update Event File
         if (req.Proposal is not null)
         {
-            EventFile eventFile = new(req.Proposal, _event.EventId);
-
-            _event.EventFile = eventFile;
+            _event.EventFile = new EventFile(req.Proposal, _event.EventId);
         }
 
-        //await uOW.SaveChangesAsync();
+        // Update Event Details
         _event.Update(req.EventName, req.Description, req.StartTime, req.EndTime, req.Location, req.LinkEvent,
                       req.PasswordMeeting, req.MaxAttendees, req.EventTypeId);
 
-        //await uOW.SaveChangesAsync();
         if (uOW.IsUpdate(_event))
         {
             _event.UpdatedAt = DateTime.UtcNow;
         }
 
-        await uOW.SaveChangesAsync();
-
-        // Step 4: Notify users (track unique users with HashSet)
-        var notifiedUsers = new HashSet<Guid>();
-
-        // Step 6: Notify users who have registered for the event
-        var participantSpec = new GetEventParticipantsSpec(id);
-
-        var participants = await uOW.EventRegistration.GetListAsync(participantSpec);
-        var registeredUsers = participants.Select(p => p.UserId).ToList();
-        var fcmTokens = participants.Select(p => p.User!.FcmToken).ToList();
-
-        foreach (var userId in registeredUsers)
+        // Save changes with concurrency handling
+        try
         {
-            if (notifiedUsers.Add(userId)) // Only notify if userId is not already in the set
-            {
-                // Create notification for the participant
-                var notificationReq = new CreateNotificationReq(userId,
-                                                _event.EventId,
-                                                "Đã có một sự thay đổi bất ngờ!!!",
-                                                $"Sự kiện '{_event.EventName}' bạn đăng kí tham gia có cập nhật mới.");
-
-                await CreateNotification(notificationReq);
-            }
+            await uOW.SaveChangesAsync();
         }
-
-        // Send a single notification to the user
-        await firebaseService.SendBulkNotificationsAsync(fcmTokens,
-                                                        "Đã có một sự thay đổi bất ngờ!!!",
-                                                        $"Sự kiện '{_event.EventName}' bạn đăng kí tham gia có cập nhật mới."
-        );
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new Exception("The event was modified or deleted by another user.", ex);
+        }
 
         return _event.EventId.ToResponse();
     }
+
 
     public async Task<IdRes> SubmitEvent(Guid id, Guid organizerId)
     {
@@ -343,7 +329,10 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             throw new UnauthorizedAccessException("Not have permission for submit Event");
         
         if (_event.Status == EventStatus.Draft || _event.Status == EventStatus.Rejected)
+        {
             _event.Status = EventStatus.UnderReview;
+            _event.UpdatedAt = DateTime.Now.AddHours(13);
+        }
 
         await uOW.SaveChangesAsync();
 
@@ -368,12 +357,12 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
         }
 
         // Retrieve and materialize participants
-        var participants = _event.Registrations!; // Already materialized
+        var participants = _event.Registrations!; 
 
         if (participants.Any())
         {
             // Unregister all participants
-            foreach (var participant in participants.ToList()) // Ensure materialization here
+            foreach (var participant in participants.ToList()) 
             {
                 // Delete participant registration
                 var regis = participant;
@@ -427,10 +416,29 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             if (isApproved)
             {
                 _event.Status = EventStatus.Upcoming;
+                var notificationReq = new CreateNotificationReq(
+                    userId,
+                    _event.EventId,
+                    "Sự kiện của bạn đã được phê duyệt!", 
+                    $"Sự kiện \"{_event.EventName}\" của bạn đã được phê duyệt. Hãy chuẩn bị thật tốt để tổ chức sự kiện thành công nhé!"
+                );
+                var notification = notificationReq.ToNotification();
+                await uOW.Notification.AddAsync(notification);
             }
             else
             {
                 _event.Status = EventStatus.Rejected;
+
+                var notificationReq = new CreateNotificationReq(
+                    userId,
+                    _event.EventId,
+                    "Sự kiện của bạn đã bị từ chối", 
+                    $"Rất tiếc, sự kiện \"{_event.EventName}\" của bạn đã không được phê duyệt. Vui lòng kiểm tra lại thông tin hoặc liên hệ ban tổ chức để biết thêm chi tiết."
+                );
+
+                var notification = notificationReq.ToNotification();
+                await uOW.Notification.AddAsync(notification);
+
             }
             _event.ProcessNote = processNote;
             _event.ReviewBy = _moderator!.Username;
@@ -459,12 +467,18 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             if (_event.IsCheckIn == true)
             {
                 _event.IsCheckIn = false;
+                _event.CheckinTime = null;
             }
-            else _event.IsCheckIn = true;
+            else
+            {
+                _event.IsCheckIn = true;
+                _event.CheckinTime = DateTime.Now.AddHours(13);
+            }
         }
         else
         {
             _event.IsCheckIn = true;
+            _event.CheckinTime = DateTime.Now.AddHours(13);
         }
         await uOW.SaveChangesAsync();
     }

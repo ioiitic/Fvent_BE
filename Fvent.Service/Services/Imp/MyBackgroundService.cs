@@ -49,28 +49,34 @@ public class MyBackgroundService : BackgroundService
     }
 
     private async Task ProcessReminders(
-        IUnitOfWork uOW,
-        FirebaseService firebaseService,
-        int reminderThresholdMinutes,
-        string notificationTitle,
-        string notificationMessageTemplate)
+    IUnitOfWork uOW,
+    FirebaseService firebaseService,
+    int reminderThresholdMinutes,
+    string notificationTitle,
+    string notificationMessageTemplate)
     {
         var reminderSpec = new GetEventReminderSpec(reminderThresholdMinutes);
-        var events = await uOW.Events.GetListAsync(reminderSpec);
+        var events = (await uOW.Events.GetListAsync(reminderSpec)).ToList(); 
 
         foreach (var _event in events)
         {
-            var spec = new GetRegisteredUsersSpec(_event.EventId);
-            var registeredUsers = await uOW.Events.GetListAsync(spec);
+            // Filter registrations for users who have not yet received the reminder
+            var spec = new GetRegisterUsersSpec(_event.EventId);
+            var registeredUsers = (await uOW.EventRegistration.GetListAsync(spec)).ToList();
+
+            var pendingReminders = registeredUsers
+                .Where(r => (reminderThresholdMinutes == 60 && !r.IsReminderSent60) ||
+                            (reminderThresholdMinutes == 30 && !r.IsReminderSent30))
+                .ToList();
+
+            if (!pendingReminders.Any()) continue; // Skip if no reminders are needed
 
             // Extract tokens and user IDs
-            var fcmTokens = registeredUsers
-                .SelectMany(e => e.Registrations!)
+            var fcmTokens = pendingReminders
                 .Select(r => r.User!.FcmToken)
                 .ToList();
 
-            var userIds = registeredUsers
-                .SelectMany(e => e.Registrations!)
+            var userIds = pendingReminders
                 .Select(r => r.User!.UserId)
                 .ToList();
 
@@ -86,7 +92,11 @@ public class MyBackgroundService : BackgroundService
 
                 var notification = notificationReq.ToNotification();
                 await uOW.Notification.AddAsync(notification);
-                await uOW.SaveChangesAsync();
+
+                // Mark reminder as sent in the database
+                var registration = pendingReminders.First(r => r.UserId == userId);
+                if (reminderThresholdMinutes == 60) registration.IsReminderSent60 = true;
+                if (reminderThresholdMinutes == 30) registration.IsReminderSent30 = true;
             }
 
             // Send bulk notifications via Firebase
@@ -99,6 +109,8 @@ public class MyBackgroundService : BackgroundService
 
         await uOW.SaveChangesAsync();
     }
+
+
 
     private async Task UpdateEventStatusesAsync(IUnitOfWork uOW, FirebaseService firebaseService)
     {
@@ -172,6 +184,15 @@ public class MyBackgroundService : BackgroundService
 
                             var notification = notificationReq.ToNotification();
                             await uOW.Notification.AddAsync(notification);
+
+                            user.MissedCheckInsCount++;
+                            if(user.MissedCheckInsCount >3)
+                            {
+                                user.IsBanned = true;
+                                user.BanStartDate = DateTime.Now.AddHours(13);
+                                user.BanEndDate = DateTime.Now.AddHours(13).AddMonths(1);
+                            }
+
                             await uOW.SaveChangesAsync();
                         }
 

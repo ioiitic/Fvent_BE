@@ -83,6 +83,9 @@ namespace Fvent.Repository.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SubMaxAttendees")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -156,10 +159,19 @@ namespace Fvent.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("CheckinTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("EventId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsCheckIn")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsReminderSent30")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsReminderSent60")
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("RegistrationTime")
@@ -621,7 +633,7 @@ namespace Fvent.Repository.Migrations
             modelBuilder.Entity("Fvent.BO.Entities.EventReview", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.Event", "Event")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -662,7 +674,7 @@ namespace Fvent.Repository.Migrations
             modelBuilder.Entity("Fvent.BO.Entities.FormSubmit", b =>
                 {
                     b.HasOne("Fvent.BO.Entities.Event", "Event")
-                        .WithMany()
+                        .WithMany("FormSubmits")
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -732,7 +744,11 @@ namespace Fvent.Repository.Migrations
 
                     b.Navigation("EventMedias");
 
+                    b.Navigation("FormSubmits");
+
                     b.Navigation("Registrations");
+
+                    b.Navigation("Reviews");
 
                     b.Navigation("Tags");
                 });

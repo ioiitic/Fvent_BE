@@ -231,10 +231,32 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         if (isApproved)
         {
             user.Verified = VerifiedStatus.Verified;
+
+            var notificationReq = new CreateNotificationReq(
+                user.UserId,
+                null, 
+                "Xác minh tài khoản thành công!",
+                $"Chúc mừng! Tài khoản của bạn đã được xác minh thành công. Giờ đây, bạn có thể sử dụng đầy đủ các tính năng của hệ thống. Hãy bắt đầu khám phá ngay nhé!" 
+            );
+
+            var notification = notificationReq.ToNotification();
+            await uOW.Notification.AddAsync(notification);
+
         }
         else
         {
             user.Verified = VerifiedStatus.Rejected;
+
+            var notificationReq = new CreateNotificationReq(
+                user.UserId,
+                null,
+                "Yêu cầu xác minh tài khoản bị từ chối",
+                "Rất tiếc! Yêu cầu xác minh tài khoản của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và gửi yêu cầu xác minh mới nếu cần thiết." 
+            );
+
+            var notification = notificationReq.ToNotification();
+            await uOW.Notification.AddAsync(notification);
+
         }
         user.ProcessNote = processNote;
 
