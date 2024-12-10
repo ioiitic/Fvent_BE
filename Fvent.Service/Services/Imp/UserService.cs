@@ -19,6 +19,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     #region Authen
     public async Task<AuthRes> Authen(AuthReq req, string ipAddress)
     { 
+        req = new AuthReq(req.Email, HS.ToSHA256(req.Password), req.FcmToken);
         // Check user authen
         var spec = new AuthenUserSpec(req.Email, req.Password);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
@@ -133,6 +134,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
     #region User Account
     public async Task<IdRes> Register(CreateUserReq req)
     {
+        req = new CreateUserReq(req.Username, req.Email, HS.ToSHA256(req.Password), req.StudentId, req.PhoneNumber, req.Role);
         var spec = new GetUserSpec(req.Email).SetIgnoreQueryFilters(true);
         var existingUser = await uOW.Users.FindFirstOrDefaultAsync(spec);
 
@@ -231,10 +233,32 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         if (isApproved)
         {
             user.Verified = VerifiedStatus.Verified;
+
+            var notificationReq = new CreateNotificationReq(
+                user.UserId,
+                null, 
+                "Xác minh tài khoản thành công!",
+                $"Chúc mừng! Tài khoản của bạn đã được xác minh thành công. Giờ đây, bạn có thể sử dụng đầy đủ các tính năng của hệ thống. Hãy bắt đầu khám phá ngay nhé!" 
+            );
+
+            var notification = notificationReq.ToNotification();
+            await uOW.Notification.AddAsync(notification);
+
         }
         else
         {
             user.Verified = VerifiedStatus.Rejected;
+
+            var notificationReq = new CreateNotificationReq(
+                user.UserId,
+                null,
+                "Yêu cầu xác minh tài khoản bị từ chối",
+                "Rất tiếc! Yêu cầu xác minh tài khoản của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và gửi yêu cầu xác minh mới nếu cần thiết." 
+            );
+
+            var notification = notificationReq.ToNotification();
+            await uOW.Notification.AddAsync(notification);
+
         }
         user.ProcessNote = processNote;
 

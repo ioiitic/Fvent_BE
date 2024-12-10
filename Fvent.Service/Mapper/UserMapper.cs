@@ -52,13 +52,13 @@ public static class UserMapper
         {
             Type t when t == typeof(UserRes) =>
              new UserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.StudentId, src.CardUrl,
-                         src.Verified.ToString(), src.ProcessNote, null, null, src.Role?.RoleName)
+                         src.Verified.ToString(), src.ProcessNote, null, null, src.MissedCheckInsCount, src.Role?.RoleName)
              {
                  IsHaveUnreadNoti = isHaveUnreadNoti 
              } as TEntity,
 
             Type t when t == typeof(GetListUserRes) =>
-                new GetListUserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.StudentId, src.CardUrl,
+                new GetListUserRes(src.UserId, src.Username, src.AvatarUrl, src.Email, src.PhoneNumber, src.StudentId, src.CardUrl, src.MissedCheckInsCount,
                                    src.Verified, src.Role!.RoleName, src.CreatedAt, src.UpdatedAt, src.IsDeleted,
                                    src.DeletedAt) as TEntity,
 

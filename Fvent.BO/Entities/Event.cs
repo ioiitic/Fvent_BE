@@ -14,6 +14,7 @@ public class Event : ISoftDelete
     public string? PasswordMeeting { get; set; }
     public string Location { get; set; }
     public int? MaxAttendees { get; set; }
+    public int? SubMaxAttendees { get; set; }
     public string ProcessNote { get; set; }
     public EventStatus Status { get; set; }
     public Guid OrganizerId { get; set; }
@@ -47,6 +48,7 @@ public class Event : ISoftDelete
         PasswordMeeting = passwordMeeting;
         Location = location;
         MaxAttendees = maxAttendees;
+        SubMaxAttendees = maxAttendees;
         ProcessNote = processNote;
         OrganizerId = organizerId;
         ReviewBy = reviewBy;

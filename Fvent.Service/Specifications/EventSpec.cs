@@ -32,7 +32,7 @@ public static class EventSpec
             if (inMonth.HasValue)
             {
                 var month = inMonth.Value;
-                var year = inYear ?? DateTime.UtcNow.Year;
+                var year = inYear ?? DateTime.Now.AddHours(13).Year;
 
                 Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
@@ -131,7 +131,7 @@ public static class EventSpec
             if (inMonth.HasValue)
             {
                 var month = inMonth.Value;
-                var year = inYear ?? DateTime.UtcNow.Year;
+                var year = inYear ?? DateTime.Now.AddHours(13).Year;
 
                 Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
@@ -187,10 +187,10 @@ public static class EventSpec
     {
         public GetRegisteredEventsSpec(Guid userId, int? inMonth, int? inYear, bool isCompleted)
         {
-            if (inMonth.HasValue)
+            if (inMonth.HasValue && inYear.HasValue)
             {
-                var month = inMonth.Value;
-                var year = inYear ?? DateTime.UtcNow.AddHours(13).Year;
+                var month = inMonth.Value;  
+                var year = inYear ?? DateTime.Now.AddHours(13).Year;
 
                 Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
@@ -243,12 +243,24 @@ public static class EventSpec
         }
     }
 
+    public class GetRegisterUsersSpec : Specification<EventRegistration>
+    {
+        public GetRegisterUsersSpec(Guid eventId)
+        {
+            Filter(e => e.EventId == eventId);
+
+            Include(u => u.User!);
+            Include(u => u.Event!);
+        }
+    }
+
+
     public class GetEventReminderSpec : Specification<Event>
     {
         public GetEventReminderSpec(int ReminderThresholdMinutes)
         {
-            Filter(e => e.Status == EventStatus.Upcoming && e.StartTime > DateTime.Now &&
-                                                          e.StartTime <= DateTime.Now.AddMinutes(ReminderThresholdMinutes));
+            Filter(e => e.Status == EventStatus.Upcoming && e.StartTime > DateTime.Now.AddHours(13) &&
+                                                          e.StartTime <= DateTime.Now.AddHours(13).AddMinutes(ReminderThresholdMinutes));
         }
     }
 
@@ -320,7 +332,7 @@ public static class EventSpec
             if (inMonth.HasValue)
             {
                 var month = inMonth.Value;
-                var year = inYear ?? DateTime.UtcNow.Year;
+                var year = inYear ?? DateTime.Now.AddHours(13).Year;
 
                 Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
             }
