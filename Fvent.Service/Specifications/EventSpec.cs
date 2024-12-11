@@ -412,7 +412,9 @@ public static class EventSpec
                 Include("Registrations.User");
             }
 
-            OrderBy(u => u.StartTime, true);
+            Include(e => e.EventMedias!);
+
+            OrderBy(u => u.EndTime, true);
         }
     }
 }
