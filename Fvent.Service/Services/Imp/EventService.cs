@@ -417,7 +417,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             {
                 _event.Status = EventStatus.Upcoming;
                 var notificationReq = new CreateNotificationReq(
-                    userId,
+                    _event.Organizer.UserId,
                     _event.EventId,
                     "Sự kiện của bạn đã được phê duyệt!", 
                     $"Sự kiện \"{_event.EventName}\" của bạn đã được phê duyệt. Hãy chuẩn bị thật tốt để tổ chức sự kiện thành công nhé!"
@@ -430,7 +430,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
                 _event.Status = EventStatus.Rejected;
 
                 var notificationReq = new CreateNotificationReq(
-                    userId,
+                     _event.Organizer.UserId,
                     _event.EventId,
                     "Sự kiện của bạn đã bị từ chối", 
                     $"Rất tiếc, sự kiện \"{_event.EventName}\" của bạn đã không được phê duyệt. Vui lòng kiểm tra lại thông tin hoặc liên hệ ban tổ chức để biết thêm chi tiết."

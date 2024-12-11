@@ -82,6 +82,17 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                                               users.PageSize, users.Count, users.TotalItems, users.TotalPages);
     }
 
+    public async Task<PageResult<GetListUserRes>> GetListBannedUser(GetListUsersReq req)
+    {
+        var spec = new GetListBannedUsersSpec(req.Username, req.Email, req.RoleName, req.Verified, req.OrderBy,
+                                        req.IsDescending, req.PageNumber, req.PageSize).SetIgnoreQueryFilters(true);
+
+        var users = await uOW.Users.GetPageAsync(spec);
+
+        return new PageResult<GetListUserRes>(users.Items.Select(u => u.ToResponse<GetListUserRes>()), users.PageNumber,
+                                              users.PageSize, users.Count, users.TotalItems, users.TotalPages);
+    }
+
     public async Task<UserRes> Get(Guid id)
     {
         var user = await _Get(id);
@@ -129,6 +140,27 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         await uOW.SaveChangesAsync();
     }
+
+    public async Task UnBan(Guid id)
+    {
+        var spec = new GetUserSpec(id).SetIgnoreQueryFilters(true);
+
+        // Find the user with the specified ID
+        var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
+            ?? throw new NotFoundException(typeof(User));
+
+        // Check if the user is actually soft-deleted
+        if (!user.IsDeleted)
+        {
+            throw new InvalidOperationException("The specified user is not deleted.");
+        }
+        user.IsDeleted = false;
+        user.DeletedAt = null;
+
+        // Save the changes
+        await uOW.SaveChangesAsync();
+    }
+
     #endregion
 
     #region User Account
@@ -323,7 +355,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         if (storedToken != null)
         {
-            uOW.VerificationToken.Delete(storedToken); // Remove the existing token before generating a new one
+            uOW.VerificationToken.Delete(storedToken); 
         }
 
         var token = Guid.NewGuid().ToString();
@@ -360,7 +392,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             ?? throw new NotFoundException(typeof(User));
 
         // Step 4: Update user's password
-        user.Password = newPassword;
+        user.Password = HS.ToSHA256(newPassword);
         await uOW.SaveChangesAsync();
 
         // Step 5: Remove the token after successful reset
@@ -374,12 +406,12 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             ?? throw new NotFoundException(typeof(User));
 
         // Verify the old password
-        if (user.Password.CompareTo(oldPassword) != 0)
+        if (HS.ToSHA256(user.Password).CompareTo(HS.ToSHA256(oldPassword)) != 0)
         {
             throw new UnauthorizedAccessException("Old password is incorrect.");
         }
 
-        user.Password = newPassword;
+        user.Password = HS.ToSHA256(newPassword);
         await uOW.SaveChangesAsync();
     }
 

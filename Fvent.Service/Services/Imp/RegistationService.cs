@@ -15,6 +15,11 @@ namespace Fvent.Service.Services.Imp
     {
         public async Task<IdRes> RegisterFreeEvent(Guid eventId, Guid userId)
         {
+            var user = await uOW.Users.GetByIdAsync(userId);
+            if(user.IsBanned)
+            {
+                throw new Exception("Your account has been banned");
+            }
             var spec = new GetEventSpec(eventId);
             var events = await uOW.Events.FindFirstOrDefaultAsync(spec)
                 ?? throw new NotFoundException(typeof(Event));

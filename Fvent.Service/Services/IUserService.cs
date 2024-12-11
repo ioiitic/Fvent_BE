@@ -13,9 +13,11 @@ public interface IUserService
 
     #region User
     Task<PageResult<GetListUserRes>> GetList(GetListUsersReq req);
+    Task<PageResult<GetListUserRes>> GetListBannedUser(GetListUsersReq req);
     Task<UserRes> Get(Guid id);
     Task<IdRes> Update(Guid id, UpdateUserReq req);
     Task Delete(Guid id);
+    Task UnBan(Guid id);
     #endregion
 
     #region User Account

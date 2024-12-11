@@ -27,6 +27,15 @@ public class UsersController(IUserService userService, IEventService eventServic
         return Ok(res);
     }
 
+    [HttpGet("getListBannedUser")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> GetListBannedUser([FromQuery] GetListUsersReq req)
+    {
+        var res = await userService.GetListBannedUser(req);
+
+        return Ok(res);
+    }
+
     /// <summary>
     /// Get own info
     /// </summary>
@@ -78,6 +87,15 @@ public class UsersController(IUserService userService, IEventService eventServic
     public async Task<IActionResult> DeleteUser([FromRoute] Guid userId)
     {
         await userService.Delete(userId);
+
+        return Ok();
+    }
+
+    [HttpPost("{userId}/unban")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> UnbanUser([FromRoute] Guid userId)
+    {
+        await userService.UnBan(userId);
 
         return Ok();
     }

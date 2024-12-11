@@ -185,12 +185,24 @@ public class MyBackgroundService : BackgroundService
                             var notification = notificationReq.ToNotification();
                             await uOW.Notification.AddAsync(notification);
 
+                            await uOW.SaveChangesAsync();
+
                             user.MissedCheckInsCount++;
                             if(user.MissedCheckInsCount >3)
                             {
                                 user.IsBanned = true;
                                 user.BanStartDate = DateTime.Now.AddHours(13);
                                 user.BanEndDate = DateTime.Now.AddHours(13).AddMonths(1);
+
+                                notificationReq = new CreateNotificationReq(
+                                    user.UserId,
+                                    _event.EventId,
+                                    "Thông báo về việc tạm ngừng tham gia sự kiện",
+                                    "Bạn đã bỏ lỡ quá nhiều sự kiện liên tiếp. Chúng tôi rất tiếc phải thông báo rằng tài khoản của bạn sẽ bị tạm ngừng tham gia sự kiện trong 1 tháng. Mong bạn tuân thủ các quy định trong tương lai!"
+                                );
+
+                                notification = notificationReq.ToNotification();
+                                await uOW.Notification.AddAsync(notification);
                             }
 
                             await uOW.SaveChangesAsync();

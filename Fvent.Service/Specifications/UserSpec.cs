@@ -39,6 +39,38 @@ public static class UserSpec
             Include(u => u.Role!);
         }
     }
+    public class GetListBannedUsersSpec : Specification<User>
+    {
+        public GetListBannedUsersSpec(string? username, string? email, string? roleName, string? verified, string? orderBy,
+                                bool isDescending, int pageNumber, int pageSize)
+        {
+            Filter(u => u.IsDeleted == true);
+            if (!string.IsNullOrEmpty(username))
+            {
+                Filter(u => u.Username.Contains(username));
+            }
+            if (!string.IsNullOrEmpty(email))
+            {
+                Filter(u => u.Email.Contains(email));
+            }
+            if (!string.IsNullOrEmpty(roleName))
+            {
+                Filter(u => u.Role!.RoleName.Contains(roleName));
+            }
+
+            // Filter by verified status if provided
+            if (!string.IsNullOrEmpty(verified) && Enum.TryParse<VerifiedStatus>(verified, true, out var verifiedStatus))
+            {
+                Filter(e => e.Verified == verifiedStatus);
+            }
+
+            OrderBy(u => u.Verified, false);
+            ThenBy(u => u.Email, false);
+            AddPagination(pageNumber, pageSize);
+
+            Include(u => u.Role!);
+        }
+    }
 
     public class GetUserSpec : Specification<User>
     {
