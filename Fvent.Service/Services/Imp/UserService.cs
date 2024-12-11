@@ -413,7 +413,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             ?? throw new NotFoundException(typeof(User));
 
         // Verify the old password
-        if (HS.ToSHA256(user.Password).CompareTo(HS.ToSHA256(oldPassword)) != 0)
+        if (user.Password.CompareTo(HS.ToSHA256(oldPassword)) != 0)
         {
             throw new UnauthorizedAccessException("Old password is incorrect.");
         }
