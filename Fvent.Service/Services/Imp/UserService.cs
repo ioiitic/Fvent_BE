@@ -137,6 +137,9 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             ?? throw new NotFoundException(typeof(User));
 
         uOW.Users.Delete(user);
+        // Send verification email
+        var emailBody = EmailTemplates.PermanentAccountDeletionTemplate.Replace("{userName}", user.Username);
+        await emailService.SendEmailAsync(user.Email, "Thông Báo Về Việc Khóa Tài Khoản", emailBody);
 
         await uOW.SaveChangesAsync();
     }
@@ -156,6 +159,10 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         }
         user.IsDeleted = false;
         user.DeletedAt = null;
+
+        // Send verification email
+        var emailBody = EmailTemplates.UnbanUserNotificationTemplate.Replace("{userName}", user.Username).Replace("{loginLink}", "https://fvent.example.com/login");
+        await emailService.SendEmailAsync(user.Email, "Thông Báo Gỡ Khóa Tài Khoản", emailBody);
 
         // Save the changes
         await uOW.SaveChangesAsync();
@@ -320,7 +327,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var emailBody = EmailTemplates.ModeratorWelcomeTemplate.Replace("{moderatorName}", moderator.Username)
                                                                .Replace("{loginLink}", "https://fvent.example.com/login");
 
-        await emailService.SendEmailAsync(moderator.Email, "Welcome to Fvent as Moderator", emailBody);
+        await emailService.SendEmailAsync(moderator.Email, "Chào mừng đến Fvent!", emailBody);
 
         return moderator.UserId.ToResponse();
     }
@@ -369,9 +376,9 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var resetLink = GenerateResetLink(user.UserId, token);
 
         // Step 5: Load email template and send email
-        var emailBody = EmailTemplates.PasswordResetTemplate.Replace("{resetLink}", resetLink);
+        var emailBody = EmailTemplates.PasswordResetTemplate.Replace("{resetLink}", resetLink).Replace("{userName}", user.Username);
 
-        await emailService.SendEmailAsync(user.Email, "Reset Your Password", emailBody);
+        await emailService.SendEmailAsync(user.Email, "Yêu Cầu Đặt Lại Mật Khẩu", emailBody);
     }
 
     public async Task ResetPasswordAsync(Guid userId, string token, string newPassword)

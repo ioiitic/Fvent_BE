@@ -22,6 +22,11 @@ public class FormService(IUnitOfWork uOW, IRegistationService registationService
 
     public async Task<IdRes> SubmitForm(Guid eventId, Guid userId, FormSubmitReq req)
     {
+        var user = await uOW.Users.GetByIdAsync(userId);
+        if (user.IsBanned)
+        {
+            throw new Exception("Your account has been banned");
+        }
         var formSubmit = req.ToSubmit(eventId, userId);
         await uOW.FormSubmit.AddAsync(formSubmit);
         await uOW.SaveChangesAsync();
