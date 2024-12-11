@@ -587,14 +587,31 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
         var eventDetails = events.GroupBy(r => new { r.EndTime.Month, r.EndTime.Year })
             .Select(e => new EventReportDetailRes(e.Select(r => r.EventId).Distinct().Count(),
                                                   e.Key.Month,
-                                                  e.Key.Year));
+                                                  e.Key.Year)).ToList();
+
+        eventDetails = eventDetails.OrderBy(ed => ed.Month).ToList();
 
         var registrationDetail = lstRegistered.GroupBy(r => new { r.RegistrationTime.Month, r.RegistrationTime.Year })
-            .Select(g => new RegistrationReportDetailInfo(g.Select(r => r.UserId).Count(), g.Key.Month, g.Key.Year));
+            .Select(g => new RegistrationReportDetailInfo(g.Select(r => r.UserId).Count(), g.Key.Month, g.Key.Year)).ToList();
+
+        for (var i = 1; i <= 12; i++)
+        {
+            if (!eventDetails.Any(ed => ed.Month == i))
+            {
+                eventDetails.Add(new EventReportDetailRes(0, i, eventDetails[0].Year));
+            }
+            if (!registrationDetail.Any(ed => ed.Month == i))
+            {
+                registrationDetail.Add(new RegistrationReportDetailInfo(0, i, registrationDetail[0].Year));
+            }
+        }
+
+        eventDetails = eventDetails.OrderBy(ed => ed.Month).ToList();
+        registrationDetail = registrationDetail.OrderBy(ed => ed.Month).ToList();
 
         return new EventReportRes(noOfEvents, lstRegistered.Count, noOfUserAttended.Count(), noOfUserNotAttended.Count(),
-                                  eventDetails.ToList(), noOfUserAttended.ToList(), noOfUserNotAttended.ToList(),
-                                  registrationDetail.ToList());
+                                  eventDetails, noOfUserAttended.ToList(), noOfUserNotAttended.ToList(),
+                                  registrationDetail);
     }
 
     public async Task<EventReportForOrgRes> ReportForOrganizer(Guid userId, DateTime startDate, DateTime endDate)
