@@ -265,6 +265,8 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     public async Task<IdRes> ApproveUser(Guid id, bool isApproved, string processNote)
     {
+        var serviceKeyPath = Path.Combine(AppContext.BaseDirectory, "firebase-service-key.json");
+        var firebaseService = new FirebaseService(serviceKeyPath);
         var spec = new GetUserSpec(id);
         var user = await uOW.Users.FindFirstOrDefaultAsync(spec)
             ?? throw new NotFoundException(typeof(User));
@@ -277,8 +279,18 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                 user.UserId,
                 null, 
                 "Xác minh tài khoản thành công!",
-                $"Chúc mừng! Tài khoản của bạn đã được xác minh thành công. Giờ đây, bạn có thể sử dụng đầy đủ các tính năng của hệ thống. Hãy bắt đầu khám phá ngay nhé!" 
+                "Chúc mừng! Tài khoản của bạn đã được xác minh thành công. Giờ đây, bạn có thể sử dụng đầy đủ các tính năng của hệ thống. Hãy bắt đầu khám phá ngay nhé!" 
             );
+
+            if(user.FcmToken is not null)
+            {
+                // Send a single notification to the user
+                await firebaseService.SendNotificationAsync(
+                    user.FcmToken,
+                   "Xác minh tài khoản thành công!",
+                   "Chúc mừng! Tài khoản của bạn đã được xác minh thành công. Giờ đây, bạn có thể sử dụng đầy đủ các tính năng của hệ thống. Hãy bắt đầu khám phá ngay nhé!"
+                );
+            }
 
             var notification = notificationReq.ToNotification();
             await uOW.Notification.AddAsync(notification);
@@ -294,6 +306,16 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                 "Yêu cầu xác minh tài khoản bị từ chối",
                 "Rất tiếc! Yêu cầu xác minh tài khoản của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và gửi yêu cầu xác minh mới nếu cần thiết." 
             );
+
+            if (user.FcmToken is not null)
+            {
+                // Send a single notification to the user
+                await firebaseService.SendNotificationAsync(
+                    user.FcmToken,
+                    "Yêu cầu xác minh tài khoản bị từ chối",
+                    "Rất tiếc! Yêu cầu xác minh tài khoản của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và gửi yêu cầu xác minh mới nếu cần thiết."
+                );
+            }
 
             var notification = notificationReq.ToNotification();
             await uOW.Notification.AddAsync(notification);

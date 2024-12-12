@@ -453,7 +453,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
     {
         var spec = new GetEventRegistrationSpec(eventId, userId);
         var _event = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
-            ?? throw new NotFoundException(typeof(EventRegistration));
+            ?? throw new ValidationException("Bạn chưa đăng kí sự kiện này, vui lòng hãy đăng kí và quay lại checkin");
 
         var checkEvent = _event.Event
             ?? throw new NotFoundException(typeof(Event));

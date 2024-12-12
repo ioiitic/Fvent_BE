@@ -13,6 +13,7 @@ public static class UserSpec
         public GetListUsersSpec(string? username, string? email, string? roleName, string? verified, string? orderBy,
                                 bool isDescending, int pageNumber, int pageSize)
         {
+            Filter(u => u.RoleId != (int)UserRole.Admin);
             if (!string.IsNullOrEmpty(username))
             {
                 Filter(u => u.Username.Contains(username));

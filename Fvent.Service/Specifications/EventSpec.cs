@@ -187,12 +187,18 @@ public static class EventSpec
     {
         public GetRegisteredEventsSpec(Guid userId, int? inMonth, int? inYear, bool isCompleted)
         {
-            if (inMonth.HasValue && inYear.HasValue)
+            if (inMonth.HasValue)
             {
                 var month = inMonth.Value;  
                 var year = inYear ?? DateTime.Now.AddHours(13).Year;
 
                 Filter(e => (e.StartTime.Month == month && e.StartTime.Year == year || e.EndTime.Month == month && e.EndTime.Year == year));
+            }
+            else if (inYear.HasValue)
+            {
+                var year = inYear;
+
+                Filter(e => (e.StartTime.Year == year || e.EndTime.Year == year));
             }
 
             if (isCompleted)
