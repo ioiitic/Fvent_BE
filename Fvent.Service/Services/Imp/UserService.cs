@@ -202,7 +202,10 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                 studentId = studentId.Length >= 8 ? studentId[^8..].ToUpper() : studentId.ToUpper();
 
                 // Assign VerifiedStatus.Verified and set StudentId
-                existingUser.Verified = VerifiedStatus.Verified;
+                if (req.Role.Equals("student"))
+                {
+                    existingUser.Verified = VerifiedStatus.Verified;
+                }
                 existingUser.StudentId = studentId;
             }
 
@@ -282,7 +285,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                 "Chúc mừng! Tài khoản của bạn đã được xác minh thành công. Giờ đây, bạn có thể sử dụng đầy đủ các tính năng của hệ thống. Hãy bắt đầu khám phá ngay nhé!" 
             );
 
-            if(user.FcmToken is not null)
+            if(!string.IsNullOrEmpty(user?.FcmToken))
             {
                 // Send a single notification to the user
                 await firebaseService.SendNotificationAsync(
@@ -307,7 +310,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                 "Rất tiếc! Yêu cầu xác minh tài khoản của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và gửi yêu cầu xác minh mới nếu cần thiết." 
             );
 
-            if (user.FcmToken is not null)
+            if (!string.IsNullOrEmpty(user?.FcmToken))
             {
                 // Send a single notification to the user
                 await firebaseService.SendNotificationAsync(
