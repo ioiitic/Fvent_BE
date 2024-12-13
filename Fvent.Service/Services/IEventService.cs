@@ -33,6 +33,5 @@ public interface IEventService
     #region Report
     Task<EventReportRes> Report(DateTime startDate, DateTime endDate);
     Task<EventReportForOrgRes> ReportForOrganizer(Guid userId, DateTime startDate, DateTime endDate);
-    Task<EventReportDetailRes> ReportByEvent(Guid eventId);
     #endregion
 }

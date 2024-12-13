@@ -438,13 +438,5 @@ public class EventsController(IEventService eventService, IRatingService ratingS
 
         return Ok(res);
     }
-
-    [HttpGet("{eventId}/report")]
-    public async Task<IActionResult> ReportByEvent(Guid eventId)
-    {
-        var res = await eventService.ReportByEvent(eventId);
-
-        return Ok(res);
-    }
     #endregion
 }

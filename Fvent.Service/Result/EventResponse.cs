@@ -13,12 +13,10 @@ public record EventBannerRes(Guid EventId, string PosterImg);
 public record FormDetailsRes(string Name, string Type, IList<string> Options);
 
 public record EventReportDetailForOrgRes(Guid EventId, string EventName, string Status, string PosterImg, string ThumbnailImg, int NoOfRegistered, int NoOfUsersAttended);
-public record EventReportForOrgRes(IList<EventReportDetailForOrgRes> Events);
+public record EventReportForOrgRes(int NoOfEvents, int NoOfRegistered, int NoOfUsersAttended, int NoOfUsersNotAttended, IList<EventReportDetailForOrgRes> Events);
 
 public record UserReportInfo(Guid UserId, string Username, string AvatarUrl, int NoOfEvents);
-public record EventReportDetailRes(int NoOfEvents, int Month, int Year);
-public record RegistrationReportDetailInfo(int NoOfRegistered, int Month, int Year);
+public record EventReportDetailInfo(int NoOfRegistered, int NoOfEvents, int Month, int Year);
 public record EventReportRes(int NoOfEvents, int NoOfRegistered, int NoOfUsersAttended, int NoOfUsersNotAttended,
-                             IList<EventReportDetailRes> Details, IList<UserReportInfo> UsersAttended,
-                             IList<UserReportInfo> UsersNotAttended,
-                             IList<RegistrationReportDetailInfo> RegistrationDetails);
+                             IList<EventReportDetailInfo> Details, IList<UserReportInfo> UsersAttended,
+                             IList<UserReportInfo> UsersNotAttended);
