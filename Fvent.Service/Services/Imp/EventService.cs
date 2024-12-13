@@ -585,24 +585,46 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
         var test = lstRegistered.GroupBy(r => new { r.Event!.EndTime.Month, r.Event.EndTime.Year });
 
         var eventDetails = events.GroupBy(r => new { r.EndTime.Month, r.EndTime.Year })
-            .Select(e => new EventReportDetailRes(e.Select(r => r.EventId).Distinct().Count(),
-                                                  e.Key.Month,
-                                                  e.Key.Year)).ToList();
+            .Select(e => new
+            {
+                Count = e.Select(r => r.EventId).Distinct().Count(),
+                e.Key.Month,
+                e.Key.Year
+            }).ToList();
 
         eventDetails = eventDetails.OrderBy(ed => ed.Month).ToList();
 
         var registrationDetail = lstRegistered.GroupBy(r => new { r.RegistrationTime.Month, r.RegistrationTime.Year })
-            .Select(g => new RegistrationReportDetailInfo(g.Select(r => r.UserId).Count(), g.Key.Month, g.Key.Year)).ToList();
+            .Select(g => new
+            {
+                Count = g.Select(r => r.UserId).Count(),
+                g.Key.Month,
+                g.Key.Year
+            }).ToList();
+
+        IList<EventReportDetailInfo> details = [];
 
         for (var i = 1; i <= 12; i++)
         {
-            if (!eventDetails.Any(ed => ed.Month == i))
+            if (!eventDetails.Any(ed => ed.Month == i) && !registrationDetail.Any(ed => ed.Month == i))
             {
-                eventDetails.Add(new EventReportDetailRes(0, i, eventDetails[0].Year));
+                details.Add(new EventReportDetailInfo(0, 0, i, eventDetails[0].Year));
+                continue;
             }
-            if (!registrationDetail.Any(ed => ed.Month == i))
+            if (registrationDetail.Any(ed => ed.Month == i) && eventDetails.Any(ed => ed.Month == i))
             {
-                registrationDetail.Add(new RegistrationReportDetailInfo(0, i, registrationDetail[0].Year));
+                details.Add(new EventReportDetailInfo(eventDetails.First(ed => ed.Month == i).Count, registrationDetail.First(ed => ed.Month == i).Count, i, eventDetails[0].Year));
+                continue;
+            }
+            if (registrationDetail.Any(ed => ed.Month == i))
+            {
+                details.Add(new EventReportDetailInfo(0, registrationDetail.First(ed => ed.Month == i).Count, i, eventDetails[0].Year));
+                continue;
+            }
+            if (eventDetails.Any(ed => ed.Month == i))
+            {
+                details.Add(new EventReportDetailInfo(eventDetails.First(ed => ed.Month == i).Count, 0, i, eventDetails[0].Year));
+                continue;
             }
         }
 
@@ -610,8 +632,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
         registrationDetail = registrationDetail.OrderBy(ed => ed.Month).ToList();
 
         return new EventReportRes(noOfEvents, lstRegistered.Count, noOfUserAttended.Count(), noOfUserNotAttended.Count(),
-                                  eventDetails, noOfUserAttended.ToList(), noOfUserNotAttended.ToList(),
-                                  registrationDetail);
+                                  details, noOfUserAttended.ToList(), noOfUserNotAttended.ToList());
     }
 
     public async Task<EventReportForOrgRes> ReportForOrganizer(Guid userId, DateTime startDate, DateTime endDate)
@@ -619,6 +640,24 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
         var spec = new GetEventForReportSpec(userId, startDate, endDate);
 
         var events = await uOW.Events.GetListAsync(spec);
+
+        var noOfEvents = events.Count();
+        var lstRegistered = events.Aggregate(new List<EventRegistration>(), (r, e) =>
+        {
+            e.Registrations.ForEach(r => r.Event = e);
+            r.AddRange(e.Registrations!);
+            return r;
+        });
+        var noOfUserAttended = lstRegistered.Where(r => r.IsCheckIn).GroupBy(r => r.UserId)
+            .Select(g => new UserReportInfo(g.Key,
+                                            g.Select(r => r.User!.Username).First(),
+                                            g.Select(r => r.User!.AvatarUrl).First(),
+                                            g.Select(r => r.EventId).Distinct().Count()));
+        var noOfUserNotAttended = lstRegistered.Where(r => !r.IsCheckIn).GroupBy(r => r.UserId)
+            .Select(g => new UserReportInfo(g.Key,
+                                            g.Select(r => r.User!.Username).First(),
+                                            g.Select(r => r.User!.AvatarUrl).First(),
+                                            g.Select(r => r.EventId).Distinct().Count()));
 
         events = events.Take(10).ToList();
 
@@ -634,12 +673,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
             return res;
         });
 
-        return new EventReportForOrgRes(res.ToList());
-    }
-
-    public Task<EventReportDetailRes> ReportByEvent(Guid eventId)
-    {
-        throw new NotImplementedException();
+        return new EventReportForOrgRes(noOfEvents, lstRegistered.Count, noOfUserAttended.Count(), noOfUserNotAttended.Count(), res.ToList());
     }
     #endregion
 
