@@ -101,6 +101,11 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
             throw new Exception("Null specification");
         }
 
+        if (spec.IgnoreQueryFilters)
+        {
+            query = query.IgnoreQueryFilters();
+        }
+
         if (spec.Selections is not null)
             query = query.Select(spec.Selections);
 

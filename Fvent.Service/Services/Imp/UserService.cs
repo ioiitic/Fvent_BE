@@ -11,6 +11,7 @@ using static Fvent.Service.Specifications.UserSpec;
 using JS = Fvent.Service.Utils.JwtService;
 using HS = Fvent.Service.Utils.HashService;
 using static Fvent.Service.Specifications.EventSpec;
+using Fvent.BO.Enums;
 
 namespace Fvent.Service.Services.Imp;
 
@@ -114,7 +115,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(req.StudentId));
         if (existingStudent != null && existingStudent.UserId != user.UserId)
         {
-            throw new Exception($"Student ID {req.StudentId} is already in use");
+            throw new Exception($"Mã số sinh viên {req.StudentId} đã tồn tại!");
         }
 
         user.Update(req.Username,
@@ -123,7 +124,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
             req.StudentId);
 
         if (uOW.IsUpdate(user))
-            user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedAt = DateTime.Now.AddHours(13);
 
         await uOW.SaveChangesAsync();
 
@@ -161,7 +162,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         user.DeletedAt = null;
 
         // Send verification email
-        var emailBody = EmailTemplates.UnbanUserNotificationTemplate.Replace("{userName}", user.Username).Replace("{loginLink}", "https://fvent.example.com/login");
+        var emailBody = EmailTemplates.UnbanUserNotificationTemplate.Replace("{userName}", user.Username).Replace("{loginLink}", "https://fvent.vercel.app/dang-nhap");
         await emailService.SendEmailAsync(user.Email, "Thông Báo Gỡ Khóa Tài Khoản", emailBody);
 
         // Save the changes
@@ -183,7 +184,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         {
             if (existingUser.EmailVerified)
             {
-                throw new ValidationException("This email has been used");
+                throw new ValidationException("Email này đã được sử dụng");
             }
 
             // Update user info
@@ -202,7 +203,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                 studentId = studentId.Length >= 8 ? studentId[^8..].ToUpper() : studentId.ToUpper();
 
                 // Assign VerifiedStatus.Verified and set StudentId
-                if (req.Role.Equals("student"))
+                if (req.Role == UserRole.Student)
                 {
                     existingUser.Verified = VerifiedStatus.Verified;
                 }
@@ -216,7 +217,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(studentId));
         if (existingStudent != null)
         {
-            throw new Exception($"Student ID {req.StudentId} is already in use");
+            throw new Exception($"Mã số sinh viên {req.StudentId} đã tồn tại");
         }
 
         // Generate and save verification token
@@ -254,12 +255,12 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
         var existingStudent = await uOW.Users.FindFirstOrDefaultAsync(new GetUserByStudentIdSpec(user.StudentId));
         if (existingStudent != null)
         {
-            throw new Exception($"Student ID {user.StudentId} is already in use");
+            throw new Exception($"Mã số sinh viên {user.StudentId} đã tồn tại!");
         }
 
         user.CardUrl = cardUrl;
         user.Verified = VerifiedStatus.UnderVerify;
-        user.UpdatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTime.Now.AddHours(13);
 
         await uOW.SaveChangesAsync();
 
@@ -350,7 +351,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         // Send a notification email with initial login instructions (optional)
         var emailBody = EmailTemplates.ModeratorWelcomeTemplate.Replace("{moderatorName}", moderator.Username)
-                                                               .Replace("{loginLink}", "https://fvent.example.com/login");
+                                                               .Replace("{loginLink}", "https://fvent.vercel.app/dang-nhap");
 
         await emailService.SendEmailAsync(moderator.Email, "Chào mừng đến Fvent!", emailBody);
 

@@ -45,7 +45,7 @@ public static class UserSpec
         public GetListBannedUsersSpec(string? username, string? email, string? roleName, string? verified, string? orderBy,
                                 bool isDescending, int pageNumber, int pageSize)
         {
-            Filter(u => u.IsDeleted == true);
+            Filter(u => u.IsDeleted);
             if (!string.IsNullOrEmpty(username))
             {
                 Filter(u => u.Username.Contains(username));

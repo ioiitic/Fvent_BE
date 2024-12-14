@@ -49,7 +49,7 @@ public static class ServiceConfigs
 
         services.AddRepository();
 
-        //services.AddHostedService<MyBackgroundService>();
+        services.AddHostedService<MyBackgroundService>();
 
         services.AddHttpClient<ExpoNotificationService>();
 
