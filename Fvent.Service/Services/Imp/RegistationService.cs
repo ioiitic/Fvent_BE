@@ -33,7 +33,7 @@ namespace Fvent.Service.Services.Imp
             {
                 if (events.MaxAttendees == 0)
                 {
-                    throw new ValidationException("Event has reach limit attendees!");
+                    throw new ValidationException("Sự kiện này đã hết chỗ trống!");
                 }
                 events.MaxAttendees = events.MaxAttendees - 1;
             }
@@ -48,6 +48,11 @@ namespace Fvent.Service.Services.Imp
             var spec = new GetEventRegistrationSpec(eventId, userId);
             var regis = await uOW.EventRegistration.FindFirstOrDefaultAsync(spec)
                 ?? throw new NotFoundException(typeof(EventRegistration));
+
+            if (regis.IsCheckIn)
+            {
+                throw new Exception("Sau khi tham gia bạn không thể hủy đăng ký!");
+            }
 
             uOW.EventRegistration.Delete(regis);
 

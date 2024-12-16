@@ -187,8 +187,13 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
                 throw new ValidationException("Email này đã được sử dụng");
             }
 
+            if (existingUser.Verified == VerifiedStatus.Verified)
+            {
+                studentId = existingUser.StudentId;
+            }
+
             // Update user info
-            existingUser.Update(req.Username, req.Password, req.PhoneNumber, req.StudentId, req.Role);
+            existingUser.Update(req.Username, req.Password, req.PhoneNumber, studentId, req.Role);
         }
         else
         {

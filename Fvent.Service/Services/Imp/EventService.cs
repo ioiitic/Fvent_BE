@@ -108,10 +108,16 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
 
             // Set flags based on results
             isReviewed = !eventReview.IsNullOrEmpty();
-            isOverlap = !eventOverlap.IsNullOrEmpty();
             isRegistered = eventRegis is not null;
             isCheckIn = eventRegis?.IsCheckIn ?? false;
-
+            if (isRegistered)
+            {
+                isOverlap = false;
+            }
+            else
+            {
+                isOverlap = !eventOverlap.IsNullOrEmpty();
+            }
             // Logic to determine if the user can review
             if (_event.EndTime <= DateTime.Now && _event.EndTime >= DateTime.Now.AddDays(-2) &&
                 eventRegis?.IsCheckIn == true)
