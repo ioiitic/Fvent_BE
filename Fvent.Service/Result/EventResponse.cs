@@ -16,7 +16,7 @@ public record EventReportDetailForOrgRes(Guid EventId, string EventName, string 
 public record EventReportForOrgRes(int NoOfEvents, int NoOfRegistered, int NoOfUsersAttended, int NoOfUsersNotAttended, IList<EventReportDetailForOrgRes> Events);
 
 public record UserReportInfo(Guid UserId, string Username, string AvatarUrl, int NoOfEvents);
-public record EventReportDetailInfo(int NoOfRegistered, int NoOfEvents, int Month, int Year);
+public record EventReportDetailInfo(int NoOfEvents, int NoOfRegistered, int Month, int Year);
 public record EventReportRes(int NoOfEvents, int NoOfRegistered, int NoOfUsersAttended, int NoOfUsersNotAttended,
                              IList<EventReportDetailInfo> Details, IList<UserReportInfo> UsersAttended,
                              IList<UserReportInfo> UsersNotAttended);

@@ -119,7 +119,7 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
                 isOverlap = !eventOverlap.IsNullOrEmpty();
             }
             // Logic to determine if the user can review
-            if (_event.EndTime <= DateTime.Now && _event.EndTime >= DateTime.Now.AddDays(-2) &&
+            if (_event.EndTime <= DateTime.Now.AddHours(13) && _event.EndTime >= DateTime.Now.AddDays(-2).AddHours(13) &&
                 eventRegis?.IsCheckIn == true)
             {
                 canReview = true;
@@ -188,6 +188,10 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
         {
             throw new UnauthorizedAccessException("This account not have permission.");
         }
+        if(req.MaxAttendees is not null && req.MaxAttendees <=0)
+        {
+            throw new ValidationException("Số lượng người đăng ký phải lớn hơn 0.");
+        }
 
         Event _event = req.ToEvent(organizerId);
 
@@ -243,6 +247,11 @@ public class EventService(IUnitOfWork uOW, IEmailService emailService) : IEventS
 
         if (_event.OrganizerId != organizerId)
             throw new UnauthorizedAccessException("You do not have permission to update this event.");
+
+        if (req.MaxAttendees is not null && req.MaxAttendees <=0)
+        {
+            throw new ValidationException("Số lượng người đăng ký phải lớn hơn 0.");
+        }
 
         // Update Form Details
         if (req.CreateFormDetailsReq is not null)

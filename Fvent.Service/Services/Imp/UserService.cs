@@ -339,7 +339,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
     public async Task<IdRes> RegisterModerator(CreateModeratReq req)
     {
-        var existingUserSpec = new GetUserSpec(req.Email, "moderator");
+        var existingUserSpec = new GetUserSpec(req.Email);
         var existingUser = await uOW.Users.FindFirstOrDefaultAsync(existingUserSpec);
 
         if (existingUser != null)
@@ -349,7 +349,7 @@ public class UserService(IUnitOfWork uOW, IConfiguration configuration, IEmailSe
 
         // Convert the request to a User entity
         var moderator = req.ToModerator();
-
+        moderator.Password =  HS.ToSHA256(req.Password);
         // Add the moderator user to the database and save
         await uOW.Users.AddAsync(moderator);
         await uOW.SaveChangesAsync();

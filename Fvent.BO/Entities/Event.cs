@@ -72,6 +72,7 @@ public class Event : ISoftDelete
         LinkEvent = linkEvent ?? LinkEvent;
         PasswordMeeting = passwordMeeting ?? PasswordMeeting;
         MaxAttendees = maxAttendees ?? MaxAttendees;
+        SubMaxAttendees = maxAttendees ?? MaxAttendees;
         EventTypeId = eventTypeId ?? EventTypeId;
     }
 }
